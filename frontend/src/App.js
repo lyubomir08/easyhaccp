@@ -1,10 +1,13 @@
 import appStyles from './App.module.css'
-import AuthCard from './components/AuthCard/AuthCard';
+
+import MainCard from './components/MainCard/MainCard';
+import NavigationCard from './components/NavigationCard/NavigationCard';
 
 function App() {
   return (
     <div className={appStyles.app}>
-      <AuthCard/>
+      <NavigationCard/>
+      <MainCard/>
     </div>
   );
 }
