@@ -1,8 +1,10 @@
-import './App.css';
+import appStyles from './App.module.css'
+import AuthCard from './components/AuthCard/AuthCard';
 
 function App() {
   return (
-    <div className="App">
+    <div className={appStyles.app}>
+      <AuthCard/>
     </div>
   );
 }
