@@ -25,6 +25,8 @@
     padding: 4px;
 
     font-size: 14px;
+    text-decoration: none;
+    color: black;
 }
 
 .navigation > *::after {
