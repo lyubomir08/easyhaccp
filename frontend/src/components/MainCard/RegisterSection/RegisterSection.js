@@ -137,7 +137,6 @@ export default function RegisterSection(){
             />
           </div>
 
-          {/* Username */}
           <div className={styles.inputGroup}>
             <input
               type="text"
@@ -159,7 +158,7 @@ export default function RegisterSection(){
                   type="text"
                   name="name"
                   placeholder="Име"
-                  value={obj.name}
+                  value={obj.name || ""}
                   onChange={(e) => handleObjectChange(index, e)}
                   required
                 />
@@ -170,7 +169,7 @@ export default function RegisterSection(){
                   type="text"
                   name="adress"
                   placeholder="Адрес"
-                  value={obj.adress}
+                  value={obj.adress || ""}
                   onChange={(e) => handleObjectChange(index, e)}
                   required
                 />
@@ -181,7 +180,7 @@ export default function RegisterSection(){
                   type="text"
                   name="workingHours"
                   placeholder='Работно време'
-                  value={obj.workingHours}
+                  value={obj.workingHours || ""}
                   onChange={(e) => handleObjectChange(index, e)}
                 />
               </div>
