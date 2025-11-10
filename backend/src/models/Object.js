@@ -11,4 +11,4 @@ const objectSchema = new mongoose.Schema({
 
 objectSchema.index({ firm_id: 1 });
 
-export default mongoose.model("Object", objectSchema);
+export default mongoose.model("ObjectModel", objectSchema);
