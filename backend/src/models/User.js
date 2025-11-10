@@ -6,8 +6,8 @@ const userSchema = new mongoose.Schema({
     email: { type: String, trim: true },
     role: { type: String, enum: ["owner", "manager", "admin"], default: "owner" },
     firm_id: { type: mongoose.Schema.Types.ObjectId, ref: "Firm" },
-    object_id: { type: mongoose.Schema.Types.ObjectId, ref: "Object" },
-    active: { type: Boolean, default: true },
+    object_id: { type: mongoose.Schema.Types.ObjectId, ref: "ObjectModel" },
+    active: { type: Boolean, default: false },
     created_at: { type: Date, default: Date.now }
 }, { versionKey: false });
 
