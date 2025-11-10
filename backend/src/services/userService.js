@@ -1,7 +1,7 @@
 import Firm from "../models/Firm.js";
 import ObjectModel from "../models/Object.js";
 import User from "../models/User.js";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import jwt from "../utils/jwt.js";
 import dotenv from "dotenv";
 
