@@ -46,19 +46,35 @@ const registerFirmRequest = async (formData) => {
             object_type: obj.type,
         });
         createdObjects.push(newObject);
+
+        if (obj.mol) {
+            const existingMol = await User.findOne({ username: obj.mol.username });
+            if (existingMol) throw new Error(`Потребител ${obj.mol.username} вече съществува.`);
+
+            await User.create({
+                username: obj.mol.username,
+                email: obj.mol.email,
+                role: "manager",
+                firm_id: newFirm._id,
+                object_id: newObject._id,
+                active: false,
+            });
+        }
     }
 
-    const newUser = await User.create({
+    const newOwner = await User.create({
         username,
         email,
         role: "owner",
         firm_id: newFirm._id,
+        active: false,
     });
 
     return {
-        message: "Registration request submitted successfully.",
+        message: "Заявката за регистрация е изпратена успешно.",
         firmId: newFirm._id,
-        userId: newUser._id,
+        ownerId: newOwner._id,
+        objectIds: createdObjects.map(o => o._id),
     };
 };
 
