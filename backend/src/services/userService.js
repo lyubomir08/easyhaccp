@@ -4,6 +4,7 @@ import User from "../models/User.js";
 import bcrypt from "bcrypt";
 import jwt from "../utils/jwt.js";
 import dotenv from "dotenv";
+import { sendActivationEmail } from "./emailService.js";
 
 dotenv.config();
 
@@ -105,7 +106,31 @@ const loginUser = async (username, password) => {
     };
 };
 
+const activateUserAccount = async (userId) => {
+    const user = await User.findById(userId);
+    if (!user) throw new Error("User not found");
+
+    if (user.active && user.password_hash) {
+        throw new Error("User is already activated");
+    }
+
+    const plainPassword = Math.random().toString(36).slice(-10);
+    const hashedPassword = await bcrypt.hash(plainPassword, 10);
+
+    user.password_hash = hashedPassword;
+    user.active = true;
+    await user.save();
+
+    await sendActivationEmail(user.email, user.username, plainPassword);
+
+    return {
+        message: `User ${user.username} activated successfully`,
+        emailSentTo: user.email,
+    };
+};
+
 export default {
     registerFirmRequest,
     loginUser,
+    activateUserAccount,
 };
