@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 
 import connectDB from "./config/db.js";
 
+import adminRoutes from "./routes/adminRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 // import firmRoutes from "./routes/firmRoutes.js";
 // import objectRoutes from "./routes/objectRoutes.js";
@@ -30,6 +31,7 @@ app.use(express.json());
 // app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
 // app.use("/api/firms", firmRoutes);
 // app.use("/api/objects", objectRoutes);
