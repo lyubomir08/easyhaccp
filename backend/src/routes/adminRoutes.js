@@ -4,9 +4,9 @@ import authMiddleware from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-router.put("/activate-user/:userId", authMiddleware, async (req, res, next) => {
+router.put("/activate-user/:userId", authMiddleware, (req, res, next) => {
     if (!req.isAdmin) {
-        return res.status(403).json({ message: "Access denied. Admins only." });
+        return res.status(403).json({ message: "Admins only" });
     }
     next();
 }, adminController.activateUser);
