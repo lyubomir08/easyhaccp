@@ -1,0 +1,210 @@
+/*General container */
+.registerContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+
+    padding: 2rem 1rem;
+    margin: 0 auto;
+
+    width: 60%;
+}
+
+/* Title + info */
+.registerContainer h4 {
+    font-size: 1.5rem;
+    color: #1090c9;
+
+    margin-bottom: 0.4rem;
+}
+
+.notice {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #444;
+    line-height: 1.4;
+
+    max-width: 600px;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    width: 100%;
+}
+
+.formContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+
+    width: 100%;
+    max-width: 500px;
+    max-height: 50vh;
+
+    overflow-y: auto;
+
+    padding-right: 10px;
+}
+
+.inputGroup {
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.inputGroup input,
+.inputGroup select {
+    border: none;
+    border-bottom: 2px solid #e0e0e0;
+    outline: none;
+
+    padding: 10px 4px 6px 0;
+
+    font-size: 1rem;
+
+    background-color: transparent;
+
+    transition: border-color 0.3s ease, transform 0.2s ease;
+}
+
+.inputGroup select {
+    appearance: none;
+
+    background-color: transparent;
+
+    border-radius: 0;
+
+    cursor: pointer;
+}
+
+.inputGroup label {
+    position: absolute;
+    top: 10px;
+    left: 0;
+
+    color: #888;
+    font-size: 0.95rem;
+
+    pointer-events: none;
+
+    transition: all 0.25s ease;
+}
+
+.inputGroup input:focus,
+.inputGroup select:focus {
+    border-bottom-color: #1090c9;
+
+    transform: translateY(-2px);
+}
+
+/* Section header for objects */
+h5 {
+    margin-top: 0.8rem;
+    margin-bottom: 0.8rem;
+
+    font-size: 1.1rem;
+    color: #1090c9;
+    text-align: left;
+
+    width: 100%;
+}
+
+/* Object group box */
+.objectGroup {
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+
+    padding: 1rem;
+    margin-bottom: 1rem;
+
+    background-color: #f9fafb;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.nextButton{
+    display: flex;
+    gap: 10px;
+    margin-top: 1rem;
+}
+
+/* Buttons */
+.addButton,
+.removeButton,
+.submitButton {
+    background-color: #1090c9;
+
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+
+    border: none;
+    border-radius: 14px;
+
+    padding: 10px 14px;
+
+    cursor: pointer;
+
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+
+    box-shadow: 0 6px 12px rgba(16, 144, 201, 0.2);
+
+    align-self: flex-start;
+}
+
+.addButton:hover,
+.removeButton:hover,
+.submitButton:hover {
+    background-color: #18a4df;
+
+    transform: translateY(-2px);
+
+    box-shadow: 0 8px 16px rgba(16, 144, 201, 0.25);
+}
+
+.addButton:active,
+.removeButton:active,
+.submitButton:active {
+    transform: translateY(0);
+
+    background-color: #0f86bc;
+
+    box-shadow: 0 3px 8px rgba(16, 144, 201, 0.2);
+}
+
+/* Differentiate remove button */
+.removeButton {
+    background-color: #ff5b5b;
+
+    box-shadow: 0 6px 12px rgba(255, 91, 91, 0.2);
+}
+
+.removeButton:hover {
+    background-color: #ff7373;
+}
+
+.removeButton:active {
+    background-color: #e84b4b;
+}
+
+/* Scrollbar styling*/
+.formContainer::-webkit-scrollbar {
+    width: 6px;
+}
+.formContainer::-webkit-scrollbar-thumb {
+    background-color: rgba(16, 144, 201, 0.4);
+
+    border-radius: 10px;
+}
+.formContainer::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(16, 144, 201, 0.6);
+}
