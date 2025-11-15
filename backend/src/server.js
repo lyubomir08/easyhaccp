@@ -31,8 +31,6 @@ app.use(cookieParser());
 app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", dashboardRoutes);
-// app.use("/api/firms", firmRoutes);
-// app.use("/api/objects", objectRoutes);
 
 const startServer = async () => {
   await connectDB();
