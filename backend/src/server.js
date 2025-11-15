@@ -7,10 +7,7 @@ import connectDB from "./config/db.js";
 
 import adminRoutes from "./routes/adminRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
-// import firmRoutes from "./routes/firmRoutes.js";
-// import objectRoutes from "./routes/objectRoutes.js";
-
-// import authMiddleware from "./middlewares/authMiddleware.js";
+import dashboardRoutes from "./routes/dashboardRoutes.js";
 
 dotenv.config();
 
@@ -33,8 +30,7 @@ app.use(cookieParser());
 
 app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
-// app.use("/api/firms", firmRoutes);
-// app.use("/api/objects", objectRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 const startServer = async () => {
   await connectDB();
