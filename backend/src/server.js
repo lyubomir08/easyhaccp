@@ -8,6 +8,8 @@ import connectDB from "./config/db.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
+import employeeRoutes from "./routes/employeeRoutes.js";
+import foodGroupRoutes from "./routes/foodGroupRoutes.js";
 
 dotenv.config();
 
@@ -31,6 +33,8 @@ app.use(cookieParser());
 app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/employees", employeeRoutes);
+app.use("/api/food-groups", foodGroupRoutes);
 
 const startServer = async () => {
   await connectDB();
