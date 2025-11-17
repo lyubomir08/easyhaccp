@@ -13,6 +13,7 @@ import dashboardRoutes from "./routes/dashboardRoutes.js";
 import employeeRoutes from "./routes/employeeRoutes.js";
 import foodGroupRoutes from "./routes/foodGroupRoutes.js";
 import recipeRoutes from "./routes/recipeRoutes.js";
+import supplierRoutes from "./routes/supplierRoutes.js";
 
 dotenv.config();
 
@@ -35,10 +36,13 @@ app.use(cookieParser());
 
 app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
+
 app.use("/api/dashboard", dashboardRoutes);
+
 app.use("/api/employees", employeeRoutes);
 app.use("/api/food-groups", foodGroupRoutes);
 app.use("/api/recipes", recipeRoutes);
+app.use("/api/suppliers", supplierRoutes);
 
 const startServer = async () => {
   await connectDB();
