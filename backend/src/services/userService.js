@@ -93,8 +93,8 @@ const loginUser = async (username, password) => {
             userId: user._id,
             username: user.username,
             role: user.role,
-            firmId: user.firm_id,
-            objectId: user.object_id,
+            firm_id: user.firm_id,
+            object_id: user.object_id,
             active: user.active
         },
         process.env.JWT_SECRET,
