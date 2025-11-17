@@ -8,7 +8,7 @@ router.use(authMiddleware);
 
 router.get("/:objectId", employeeController.getEmployees);
 router.post("/", employeeController.addEmployee);
-router.put("/:employeeId", employeeController.editEmployee);
-router.delete("/:employeeId", employeeController.removeEmployee);
+router.put("/edit/:employeeId", employeeController.editEmployee);
+router.delete("/delete/:employeeId", employeeController.removeEmployee);
 
 export default router;

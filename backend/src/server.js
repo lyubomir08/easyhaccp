@@ -7,9 +7,14 @@ import connectDB from "./config/db.js";
 
 import adminRoutes from "./routes/adminRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+
 import dashboardRoutes from "./routes/dashboardRoutes.js";
+
 import employeeRoutes from "./routes/employeeRoutes.js";
 import foodGroupRoutes from "./routes/foodGroupRoutes.js";
+import recipeRoutes from "./routes/recipeRoutes.js";
+import supplierRoutes from "./routes/supplierRoutes.js";
+import fridgeRoutes from "./routes/fridgeRoutes.js";
 
 dotenv.config();
 
@@ -32,15 +37,20 @@ app.use(cookieParser());
 
 app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
+
 app.use("/api/dashboard", dashboardRoutes);
+
 app.use("/api/employees", employeeRoutes);
 app.use("/api/food-groups", foodGroupRoutes);
+app.use("/api/recipes", recipeRoutes);
+app.use("/api/suppliers", supplierRoutes);
+app.use("/api/fridges", fridgeRoutes);
 
 const startServer = async () => {
-  await connectDB();
-  app.listen(process.env.PORT, () => {
-    console.log(`Server running on port ${process.env.PORT}`);
-  });
+    await connectDB();
+    app.listen(process.env.PORT, () => {
+        console.log(`Server running on port ${process.env.PORT}`);
+    });
 };
 
 startServer();
