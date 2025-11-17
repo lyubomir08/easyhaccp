@@ -56,6 +56,23 @@ const getFoodGroupsByObject = async (req, res) => {
 const updateFoodGroup = async (req, res) => {
     try {
         const { groupId } = req.params;
+        const user = req.user;
+
+        const existingGroup = await foodGroupService.getFoodGroupById(groupId);
+        if (!existingGroup) {
+            return res.status(404).json({ message: "Food group not found" });
+        }
+
+        const object = await ObjectModel.findById(existingGroup.object_id);
+
+        if (req.isManager && user.object_id !== object._id.toString()) {
+            return res.status(403).json({ message: "Managers can only update their own object." });
+        }
+
+        if (req.isOwner && object.firm_id.toString() !== user.firm_id) {
+            return res.status(403).json({ message: "Owners can only update within their firm." });
+        }
+
         const updatedFoodGroup = await foodGroupService.updateFoodGroup(groupId, req.body);
         res.status(200).json(updatedFoodGroup);
     } catch (err) {
@@ -66,6 +83,23 @@ const updateFoodGroup = async (req, res) => {
 const deleteFoodGroup = async (req, res) => {
     try {
         const { groupId } = req.params;
+        const user = req.user;
+
+        const existingGroup = await foodGroupService.getFoodGroupById(groupId);
+        if (!existingGroup) {
+            return res.status(404).json({ message: "Food group not found" });
+        }
+
+        const object = await ObjectModel.findById(existingGroup.object_id);
+
+        if (req.isManager && user.object_id !== object._id.toString()) {
+            return res.status(403).json({ message: "Managers can only delete in their own object." });
+        }
+
+        if (req.isOwner && object.firm_id.toString() !== user.firm_id) {
+            return res.status(403).json({ message: "Owners can only delete within their firm." });
+        }
+
         await foodGroupService.deleteFoodGroup(groupId);
         res.status(200).json({ message: "Food group deleted successfully" });
     } catch (err) {
