@@ -16,6 +16,7 @@ import recipeRoutes from "./routes/recipeRoutes.js";
 import supplierRoutes from "./routes/supplierRoutes.js";
 import fridgeRoutes from "./routes/fridgeRoutes.js";
 import fryerRoutes from "./routes/fryerRoutes.js";
+import roomRoutes from "./routes/roomRoutes.js";
 
 dotenv.config();
 
@@ -47,6 +48,7 @@ app.use("/api/recipes", recipeRoutes);
 app.use("/api/suppliers", supplierRoutes);
 app.use("/api/fridges", fridgeRoutes);
 app.use("/api/fryers", fryerRoutes);
+app.use("/api/rooms", roomRoutes);
 
 const startServer = async () => {
     await connectDB();
