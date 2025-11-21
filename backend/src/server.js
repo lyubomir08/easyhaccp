@@ -20,6 +20,8 @@ import roomRoutes from "./routes/roomRoutes.js";
 import disinfectantRoutes from "./routes/disinfectantRoutes.js";
 import clientRoutes from "./routes/clientRoutes.js";
 
+import foodLogRoutes from "./routes/foodLogRoutes.js";
+
 dotenv.config();
 
 const app = express();
@@ -53,6 +55,7 @@ app.use("/api/fryers", fryerRoutes);
 app.use("/api/rooms", roomRoutes);
 app.use("/api/disinfectants", disinfectantRoutes);
 app.use("/api/clients", clientRoutes);
+app.use("/api/food-logs", foodLogRoutes);
 
 const startServer = async () => {
     await connectDB();
