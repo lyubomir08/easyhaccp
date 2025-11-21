@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const personalHygieneLogSchema = new mongoose.Schema({
-    object_id: { type: mongoose.Schema.Types.ObjectId, ref: "Object", required: true },
+    object_id: { type: mongoose.Schema.Types.ObjectId, ref: "ObjectModel", required: true },
     date: { type: Date, required: true },
     employee_id: { type: mongoose.Schema.Types.ObjectId, ref: "Employee", required: true },
     health_status: { type: String, enum: ["healthy", "sick"], required: true },

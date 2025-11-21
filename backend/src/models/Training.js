@@ -6,7 +6,7 @@ const participantSchema = new mongoose.Schema({
 }, { _id: false });
 
 const trainingSchema = new mongoose.Schema({
-    object_id: { type: mongoose.Schema.Types.ObjectId, ref: "Object", required: true },
+    object_id: { type: mongoose.Schema.Types.ObjectId, ref: "ObjectModel", required: true },
     topic: { type: String, trim: true },
     lecturer: { type: String, trim: true },
     date: { type: Date },

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const foodGroupSchema = new mongoose.Schema({
-    object_id: { type: mongoose.Schema.Types.ObjectId, ref: "Object", required: true },
+    object_id: { type: mongoose.Schema.Types.ObjectId, ref: "ObjectModel", required: true },
     food_name: { type: String, required: true, trim: true },
     food_type: { type: String, trim: true },
     cooking_temp: { type: Number },

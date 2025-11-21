@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const producedFoodSchema = new mongoose.Schema({
     date: { type: Date, required: true },
-    object_id: { type: mongoose.Schema.Types.ObjectId, ref: "Object", required: true },
+    object_id: { type: mongoose.Schema.Types.ObjectId, ref: "ObjectModel", required: true },
     recipe_id: { type: mongoose.Schema.Types.ObjectId, ref: "Recipe" },
     portions: { type: Number },
     ingredient_id: { type: mongoose.Schema.Types.ObjectId, ref: "FoodGroup" },

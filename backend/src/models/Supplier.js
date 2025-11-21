@@ -6,7 +6,7 @@ const supplierSchema = new mongoose.Schema({
     address: { type: String },
     goods_type: { type: String, trim: true },
     registration_number: { type: String, trim: true },
-    object_id: { type: mongoose.Schema.Types.ObjectId, ref: "Object", required: true },
+    object_id: { type: mongoose.Schema.Types.ObjectId, ref: "ObjectModel", required: true },
 }, { versionKey: false });
 
 export default mongoose.model("Supplier", supplierSchema);

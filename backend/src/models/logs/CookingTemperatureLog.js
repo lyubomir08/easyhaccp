@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const cookingTemperatureLogSchema = new mongoose.Schema({
-    object_id: { type: mongoose.Schema.Types.ObjectId, ref: "Object", required: true },
+    object_id: { type: mongoose.Schema.Types.ObjectId, ref: "ObjectModel", required: true },
     date: { type: Date, required: true },
     food_group_id: { type: mongoose.Schema.Types.ObjectId, ref: "FoodGroup" },
     measured_temp: { type: Number },
