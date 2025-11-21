@@ -59,7 +59,7 @@ app.use("/api/disinfectants", disinfectantRoutes);
 app.use("/api/clients", clientRoutes);
 
 app.use("/api/food-logs", foodLogRoutes);
-app.use("/api/hygiene-log", hygieneLogRoutes);
+app.use("/api/hygiene-logs", hygieneLogRoutes);
 
 const startServer = async () => {
     await connectDB();
