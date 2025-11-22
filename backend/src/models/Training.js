@@ -10,7 +10,8 @@ const trainingSchema = new mongoose.Schema({
     topic: { type: String, trim: true },
     lecturer: { type: String, trim: true },
     date: { type: Date },
-    participants: [participantSchema]
+    participants: [participantSchema],
+    created_at: { type: Date, default: Date.now }
 }, { versionKey: false });
 
 export default mongoose.model("Training", trainingSchema);
