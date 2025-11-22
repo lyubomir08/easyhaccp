@@ -24,6 +24,8 @@ import foodLogRoutes from "./routes/foodLogRoutes.js";
 import hygieneLogRoutes from "./routes/hygieneLogRoutes.js";
 
 
+import oilChangeRoutes from "./routes/oilChangeRoutes.js";
+
 dotenv.config();
 
 const app = express();
@@ -60,6 +62,9 @@ app.use("/api/clients", clientRoutes);
 
 app.use("/api/food-logs", foodLogRoutes);
 app.use("/api/hygiene-logs", hygieneLogRoutes);
+
+
+app.use("/api/fryer-oil", oilChangeRoutes);
 
 const startServer = async () => {
     await connectDB();
