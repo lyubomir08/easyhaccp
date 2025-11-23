@@ -5,9 +5,11 @@ const shipmentLogSchema = new mongoose.Schema({
     object_id: { type: mongoose.Schema.Types.ObjectId, ref: "ObjectModel", required: true },
     food_log_id: { type: mongoose.Schema.Types.ObjectId, ref: "FoodLog" },
     produced_food_id: { type: mongoose.Schema.Types.ObjectId, ref: "ProducedFood" },
-    quantity: { type: Number },
+    quantity: { type: Number, required: true },
     client_id: { type: mongoose.Schema.Types.ObjectId, ref: "Client" },
-    document: { type: String, trim: true }
+    document: { type: String, trim: true },
+    employee_id: { type: mongoose.Schema.Types.ObjectId, ref: "Employee" },
+    created_at: { type: Date, default: Date.now }
 }, { versionKey: false });
 
 shipmentLogSchema.index({ object_id: 1, date: -1 });

@@ -28,6 +28,7 @@ import hygieneLogRoutes from "./routes/hygieneLogRoutes.js";
 import oilChangeRoutes from "./routes/oilChangeRoutes.js";
 import cookingTempRoutes from "./routes/cookingTempRoutes.js";
 import producedFoodRoutes from "./routes/producedFoodRoutes.js";
+import shipmentRoutes from "./routes/shipmentRoutes.js";
 
 dotenv.config();
 
@@ -71,6 +72,7 @@ app.use("/api/hygiene-logs", hygieneLogRoutes);
 app.use("/api/fryer-oil", oilChangeRoutes);
 app.use("/api/cooking-temp", cookingTempRoutes);
 app.use("/api/produced-foods", producedFoodRoutes);
+app.use("/api/shipments", shipmentRoutes);
 
 const startServer = async () => {
     await connectDB();
