@@ -1,6 +1,6 @@
 import fridgeLogService from "../services/fridgeLogService.js";
 import ObjectModel from "../models/Object.js";
-import FridgeLog from "../models/logs/FridgeLog.js";
+import FridgeTemperatureLog from "../models/logs/FridgeTemperatureLog.js";
 
 const createFridgeLog = async (req, res) => {
     try {
@@ -46,7 +46,7 @@ const updateFridgeLog = async (req, res) => {
     try {
         const { logId } = req.params;
 
-        const log = await FridgeLog.findById(logId).populate("object_id");
+        const log = await FridgeTemperatureLog.findById(logId).populate("object_id");
         if (!log) return res.status(404).json({ message: "Fridge log not found" });
 
         const object = log.object_id;
@@ -68,7 +68,7 @@ const deleteFridgeLog = async (req, res) => {
     try {
         const { logId } = req.params;
 
-        const log = await FridgeLog.findById(logId).populate("object_id");
+        const log = await FridgeTemperatureLog.findById(logId).populate("object_id");
         if (!log) return res.status(404).json({ message: "Fridge log not found" });
 
         const object = log.object_id;
