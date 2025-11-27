@@ -24,8 +24,7 @@ import trainingRoutes from "./routes/trainingRoutes.js";
 import foodLogRoutes from "./routes/foodLogRoutes.js";
 import hygieneLogRoutes from "./routes/hygieneLogRoutes.js";
 import personalHygieneRoutes from "./routes/personalHygieneRoutes.js";
-
-
+import fridgeLogRoutes from "./routes/fridgeLogRoutes.js";
 import oilChangeRoutes from "./routes/oilChangeRoutes.js";
 import cookingTempRoutes from "./routes/cookingTempRoutes.js";
 import producedFoodRoutes from "./routes/producedFoodRoutes.js";
@@ -69,7 +68,7 @@ app.use("/api/trainings", trainingRoutes);
 app.use("/api/food-logs", foodLogRoutes);
 app.use("/api/hygiene-logs", hygieneLogRoutes);
 app.use("/api/personal-hygiene",personalHygieneRoutes);
-
+app.use("/api/fridge-logs",fridgeLogRoutes);
 app.use("/api/fryer-oil", oilChangeRoutes);
 app.use("/api/cooking-temp", cookingTempRoutes);
 app.use("/api/produced-foods", producedFoodRoutes);
