@@ -1,14 +1,18 @@
+const USER_KEY = "user";
+const TOKEN_KEY = "token";
+
 export function setUserData(userData) {
-    localStorage.setItem("user", JSON.stringify(userData));
-    localStorage.setItem("token", userData.token);
+    localStorage.setItem(USER_KEY, JSON.stringify(userData));
+    localStorage.setItem(TOKEN_KEY, userData.token);
 }
 
 export function getUserData() {
-    return JSON.parse(localStorage.getItem("user"));
+    const raw = localStorage.getItem(USER_KEY);
+    return raw ? JSON.parse(raw) : null;
 }
 
 export function getToken() {
-    return localStorage.getItem("token");
+    return localStorage.getItem(TOKEN_KEY);
 }
 
 export function getUserRole() {
@@ -17,6 +21,6 @@ export function getUserRole() {
 }
 
 export function clearUserData() {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
+    localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(TOKEN_KEY);
 }
