@@ -5,7 +5,7 @@ import * as authService from "../services/authService";
 export const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
-    const [user, setUser] = useState(getUserData());
+    const [user, setUser] = useState(() => getUserData());
     const [selectedFirmId, setSelectedFirmId] = useState(null);
     const [selectedObjectId, setSelectedObjectId] = useState(null);
 
@@ -34,6 +34,11 @@ export const UserProvider = ({ children }) => {
         setUser(data);
     };
 
+    // not logging in
+    const register = async (formData) => {
+        return await authService.register(formData);
+    };
+
     const logout = async () => {
         await authService.logout();
         setUser(null);
@@ -52,6 +57,7 @@ export const UserProvider = ({ children }) => {
                 isOwner: user?.role === "owner",
                 isManager: user?.role === "manager",
                 login,
+                register,
                 logout,
             }}
         >
