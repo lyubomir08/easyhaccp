@@ -1,20 +1,33 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter, Routes, Route } from "react-router";
 
-function App() {
-  const [count, setCount] = useState(0)
+import { UserProvider } from "./contexts/UserContext.jsx";
 
+import PublicGuard from "./guards/PublicGuard";
+import PrivateGuard from "./guards/PrivateGuard";
+import AdminGuard from "./guards/AdminGuard";
+
+import Login from "./components/login/Login.jsx";
+import Register from "./components/register/Register.jsx";
+// import Dashboard from "./components/pages/Dashboard";
+// import AdminPanel from "./components/pages/AdminPanel";
+
+export default function App() {
   return (
-    <>
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
-        <h1 className="text-4xl font-bold text-green-400">
-          Tailwind работи
-        </h1>
-      </div>
-    </>
-  )
-}
+    <UserProvider>
+      <Routes>
+        <Route element={<PublicGuard />}>
+          <Route path="/sign-in" element={<Login />} />
+          <Route path="/sign-up" element={<Register />} />
+        </Route>
 
-export default App
+        <Route element={<PrivateGuard />}>
+          {/* <Route path="/dashboard" element={<Dashboard />} /> */}
+
+          <Route element={<AdminGuard />}>
+            {/* <Route path="/app/admin" element={<AdminPanel />} /> */}
+          </Route>
+        </Route>
+      </Routes>
+    </UserProvider>
+  );
+}
