@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router";
+import { Routes, Route } from "react-router";
 
 import { UserProvider } from "./contexts/UserContext.jsx";
 
@@ -6,8 +6,8 @@ import PublicGuard from "./guards/PublicGuard";
 import PrivateGuard from "./guards/PrivateGuard";
 import AdminGuard from "./guards/AdminGuard";
 
-import Login from "./components/login/Login.jsx";
-import Register from "./components/register/Register.jsx";
+import Login from "./components/auth/login/Login.jsx";
+import Register from "./components/auth/register/Register.jsx";
 // import Dashboard from "./components/pages/Dashboard";
 // import AdminPanel from "./components/pages/AdminPanel";
 
