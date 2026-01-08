@@ -1,35 +1,32 @@
 export default function About() {
     return (
-        <div className="bg-white min-h-screen">
-            <div className="max-w-4xl mx-auto px-6 py-16">
+        <section className="h-[calc(100vh-75px)] overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-black flex items-center">
+            <div className="max-w-4xl mx-auto px-6 text-center text-white">
 
-                <h1 className="text-4xl font-bold text-slate-900 mb-6">
-                    За нас
+                <h1 className="text-4xl font-bold mb-6">
+                    За <span className="text-blue-500">EasyHACCP</span>
                 </h1>
 
-                <div className="space-y-6 text-slate-700 leading-relaxed text-lg">
+                <p className="text-lg text-slate-250 leading-relaxed mb-10">
+                    EasyHACCP е професионална платформа за изготвяне,
+                    внедряване и управление на цялостни HACCP системи,
+                    съобразени с реалните нужди на хранителния бизнес.
+                </p>
 
-                    <p>
-                        Фирма <strong>EasyHACCP</strong> е специализирана в изготвяне,
-                        внедряване и управление на цялостни системи за безопасност на храните
-                        (HACCP) в хранителни обекти.
+                <div className="border-l-4 border-blue-500 pl-6 inline-block text-left">
+                    <p className="text-xl font-semibold">
+                        Десислава Томова
                     </p>
-
-                    <p>
-                        Работим с ресторанти, търговски обекти, кетъринг фирми и производители,
-                        като осигуряваме пълно съответствие с нормативните изисквания.
+                    <p className="text-slate-300">
+                        Технолог по безопасност на храните
                     </p>
+                </div>
 
-                    <div className="border-t pt-6">
-                        <p className="font-semibold text-slate-900">
-                            Десислава Томова – технолог
-                        </p>
-                        <p>Телефон: …</p>
-                        <p>Email: …</p>
-                    </div>
-
+                <div className="mt-10 text-slate-250">
+                    <p>Телефон: —</p>
+                    <p>Email: —</p>
                 </div>
             </div>
-        </div>
+        </section>
     );
 }

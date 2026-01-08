@@ -6,10 +6,12 @@ import PublicGuard from "./guards/PublicGuard";
 import PrivateGuard from "./guards/PrivateGuard";
 import AdminGuard from "./guards/AdminGuard";
 
-import Login from "./components/auth/login/Login.jsx";
-import Register from "./components/auth/register/Register.jsx";
 import Header from "./components/layout/Header.jsx";
 import MainLayout from "./components/layout/MainLayout.jsx";
+
+import Home from "./components/home/Home.jsx";
+import Login from "./components/auth/login/Login.jsx";
+import Register from "./components/auth/register/Register.jsx";
 import About from "./components/about/About.jsx";
 
 export default function App() {
@@ -21,6 +23,7 @@ export default function App() {
                 <Route path="/about" element={<About />} />
 
                 <Route element={<PublicGuard />}>
+                    <Route path="/" element={<Home />}/>
                     <Route path="/sign-in" element={<Login />} />
                     <Route path="/sign-up" element={<Register />} />
                 </Route>

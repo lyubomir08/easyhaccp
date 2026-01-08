@@ -3,7 +3,7 @@ import logo from "../../assets/logo.png";
 
 export default function Home() {
     return (
-        <section className="min-h-[calc(100vh-80px)] bg-gradient-to-br from-slate-900 via-slate-800 to-black flex items-center">
+        <section className="h-[calc(100vh-75px)] overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-black flex items-center">
             <div className="max-w-6xl mx-auto px-6 w-full">
 
                 <div className="grid md:grid-cols-2 gap-12 items-center">
