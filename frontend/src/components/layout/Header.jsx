@@ -1,46 +1,67 @@
-import { Link } from "react-router";
+import { Link, NavLink } from "react-router";
 import useUser from "../../hooks/useUser";
 
 export default function Header() {
     const { user, logout } = useUser();
 
-    return (
-        <header className="bg-slate-900 text-white px-6 py-4 flex justify-between items-center">
-            <Link to="/" className="text-xl font-bold text-blue-400">
-                EasyHACCP
-            </Link>
+    const baseLink =
+        "text-slate-100 hover:text-white transition text-m";
 
-            <nav className="flex items-center gap-4">
-                <Link to="/about" className="hover:text-blue-400">
-                    За нас
+    return (
+        <header className="sticky top-0 z-50 bg-gradient-to-r from-slate-900 via-slate-800 to-black border-b border-slate-800">
+            <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+
+                <Link
+                    to="/"
+                    className="text-xl font-semibold text-white tracking-wide"
+                >
+                    Easy<span className="text-blue-500">HACCP</span>
                 </Link>
 
-                {!user && (
-                    <>
-                        <Link
-                            to="/sign-in"
-                            className="border border-blue-400 px-3 py-1 rounded hover:bg-blue-400 hover:text-black"
-                        >
-                            Вход
-                        </Link>
-                        <Link
-                            to="/sign-up"
-                            className="bg-blue-500 px-3 py-1 rounded text-black hover:bg-blue-400"
-                        >
-                            Регистрация
-                        </Link>
-                    </>
-                )}
+                <nav className="flex items-center gap-7">
 
-                {user && (
-                    <button
-                        onClick={logout}
-                        className="border border-red-400 px-3 py-1 rounded hover:bg-red-400 hover:text-black"
-                    >
-                        Изход
-                    </button>
-                )}
-            </nav>
+                    {!user && (
+                        <>
+                            <NavLink to="/" className={baseLink}>
+                                Начало
+                            </NavLink>
+
+                            <NavLink to="/about" className={baseLink}>
+                                За нас
+                            </NavLink>
+
+                            <NavLink
+                                to="/sign-in"
+                                className="px-4 py-2 rounded-md border border-slate-600 text-slate-200 hover:border-white hover:text-white transition"
+                            >
+                                Вход
+                            </NavLink>
+
+                            <NavLink
+                                to="/sign-up"
+                                className="px-4 py-2 rounded-md bg-white text-black font-medium hover:bg-slate-200 transition"
+                            >
+                                Регистрация
+                            </NavLink>
+                        </>
+                    )}
+
+                    {user && (
+                        <>
+                            <NavLink to="/dashboard" className={baseLink}>
+                                Табло
+                            </NavLink>
+
+                            <button
+                                onClick={logout}
+                                className="px-4 py-2 rounded-md border border-slate-600 text-slate-200 hover:border-white hover:text-white transition"
+                            >
+                                Изход
+                            </button>
+                        </>
+                    )}
+                </nav>
+            </div>
         </header>
     );
 }
