@@ -8,26 +8,29 @@ import AdminGuard from "./guards/AdminGuard";
 
 import Login from "./components/auth/login/Login.jsx";
 import Register from "./components/auth/register/Register.jsx";
-// import Dashboard from "./components/pages/Dashboard";
-// import AdminPanel from "./components/pages/AdminPanel";
+import Header from "./components/layout/Header.jsx";
+import MainLayout from "./components/layout/MainLayout.jsx";
+import About from "./components/about/About.jsx";
 
 export default function App() {
-  return (
-    <UserProvider>
-      <Routes>
-        <Route element={<PublicGuard />}>
-          <Route path="/sign-in" element={<Login />} />
-          <Route path="/sign-up" element={<Register />} />
-        </Route>
+    return (
+        <UserProvider>
+            <Header />
 
-        <Route element={<PrivateGuard />}>
-          {/* <Route path="/dashboard" element={<Dashboard />} /> */}
+            <Routes>
+                <Route path="/about" element={<About />} />
 
-          <Route element={<AdminGuard />}>
-            {/* <Route path="/app/admin" element={<AdminPanel />} /> */}
-          </Route>
-        </Route>
-      </Routes>
-    </UserProvider>
-  );
+                <Route element={<PublicGuard />}>
+                    <Route path="/sign-in" element={<Login />} />
+                    <Route path="/sign-up" element={<Register />} />
+                </Route>
+
+                <Route element={<PrivateGuard />}>
+                    <Route element={<MainLayout />}>
+
+                    </Route>
+                </Route>
+            </Routes>
+        </UserProvider>
+    );
 }
