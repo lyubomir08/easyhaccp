@@ -8,6 +8,7 @@ import AdminGuard from "./guards/AdminGuard";
 
 import Header from "./components/layout/Header.jsx";
 import MainLayout from "./components/layout/MainLayout.jsx";
+import Dashboard from "./components/dashboard/Dashboard.jsx";
 
 import Home from "./components/home/Home.jsx";
 import Login from "./components/auth/login/Login.jsx";
@@ -30,7 +31,7 @@ export default function App() {
 
                 <Route element={<PrivateGuard />}>
                     <Route element={<MainLayout />}>
-
+                        <Route path="/dashboard" element={<Dashboard />}/>
                     </Route>
                 </Route>
             </Routes>

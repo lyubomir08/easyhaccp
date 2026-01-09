@@ -4,20 +4,66 @@ import useUser from "../../hooks/useUser";
 export default function Sidebar() {
     const { role } = useUser();
 
-    const link = "block px-4 py-2 rounded hover:bg-slate-800";
+    const base =
+        "px-4 py-2 rounded-md transition text-slate-700 hover:bg-slate-100";
+
+    const active =
+        "bg-blue-50 text-blue-600 font-medium";
 
     return (
-        <aside className="w-64 bg-slate-900 text-white p-4">
-            <div className="text-xl font-bold mb-6">EasyHACCP</div>
+        <aside className="w-64 bg-white border-r border-slate-200 flex flex-col">
 
-            <nav className="flex flex-col gap-2">
-                <NavLink to="/dashboard" className={link}>Табло</NavLink>
-                <NavLink to="/objects" className={link}>Обекти</NavLink>
-                <NavLink to="/employees" className={link}>Служители</NavLink>
-                <NavLink to="/diaries" className={link}>Дневници</NavLink>
+            <div className="px-6 py-6 border-b border-slate-200 text-xl font-semibold">
+                Easy<span className="text-blue-500">HACCP</span>
+            </div>
+
+            <nav className="flex-1 px-4 py-6 flex flex-col gap-1">
+
+                <NavLink
+                    to="/dashboard"
+                    className={({ isActive }) =>
+                        `${base} ${isActive ? active : ""}`
+                    }
+                >
+                    Табло
+                </NavLink>
+
+                <NavLink
+                    to="/objects"
+                    className={({ isActive }) =>
+                        `${base} ${isActive ? active : ""}`
+                    }
+                >
+                    Обекти
+                </NavLink>
+
+                <NavLink
+                    to="/employees"
+                    className={({ isActive }) =>
+                        `${base} ${isActive ? active : ""}`
+                    }
+                >
+                    Служители
+                </NavLink>
+
+                <NavLink
+                    to="/diaries"
+                    className={({ isActive }) =>
+                        `${base} ${isActive ? active : ""}`
+                    }
+                >
+                    Дневници
+                </NavLink>
 
                 {role === "admin" && (
-                    <NavLink to="/admin/firms" className={link}>Фирми</NavLink>
+                    <NavLink
+                        to="/admin/firms"
+                        className={({ isActive }) =>
+                            `${base} ${isActive ? active : ""}`
+                        }
+                    >
+                        Фирми
+                    </NavLink>
                 )}
             </nav>
         </aside>
