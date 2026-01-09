@@ -10,4 +10,23 @@ const activateUser = async (req, res) => {
     }
 };
 
-export default { activateUser };
+const getInactiveUsers = async (req, res) => {
+    try {
+        const users = await userService.getInactiveUsers();
+        res.json(users);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+const activateFirm = async (req, res) => {
+    try {
+        const { firmId } = req.params;
+        const result = await userService.activateFirm(firmId);
+        res.json(result);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+export default { activateUser, getInactiveUsers, activateFirm };

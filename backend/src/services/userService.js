@@ -85,6 +85,14 @@ const loginUser = async (username, password) => {
 
     if (!user.active) throw new Error("Your account is not approved yet.");
 
+    if (user.firm_id) {
+        const firm = await Firm.findById(user.firm_id);
+
+        if (!firm || !firm.active) {
+            throw new Error("Firm is not approved yet.");
+        }
+    }
+
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) throw new Error("Invalid username or password.");
 
@@ -131,9 +139,34 @@ const activateUser = async (userId) => {
     return { message: `User ${user.username} activated.` };
 };
 
+const getInactiveUsers = async () => {
+    return User.find({ active: false })
+        .select("_id username role firm_id createdAt")
+        .sort({ createdAt: 1 });
+};
+
+const activateFirm = async (firmId) => {
+    const firm = await Firm.findById(firmId);
+    if (!firm) throw new Error("Firm not found");
+
+    firm.active = true;
+    await firm.save();
+
+    await User.updateMany(
+        { firm_id: firmId },
+        { active: true }
+    );
+
+    return {
+        message: `Firm ${firm.name} activated`,
+    };
+};
+
 export default {
     registerFirmRequest,
     loginUser,
     changePassword,
     activateUser,
+    getInactiveUsers,
+    activateFirm
 };

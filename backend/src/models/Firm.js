@@ -7,6 +7,7 @@ const firmSchema = new mongoose.Schema({
     mol: { type: String, trim: true },
     phone: { type: String, trim: true },
     email: { type: String, trim: true },
+    active: { type: Boolean, default: false, },
     created_at: { type: Date, default: Date.now }
 }, { versionKey: false });
 
