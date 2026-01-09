@@ -17,7 +17,7 @@ api.interceptors.response.use(
     (err) => {
         if (err.response?.status === 401) {
             clearUserData();
-            window.location.href = "/login";
+            window.location.href = "/sign-in";
         }
         return Promise.reject(err);
     }
