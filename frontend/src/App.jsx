@@ -24,14 +24,18 @@ export default function App() {
                 <Route path="/about" element={<About />} />
 
                 <Route element={<PublicGuard />}>
-                    <Route path="/" element={<Home />}/>
+                    <Route path="/" element={<Home />} />
                     <Route path="/sign-in" element={<Login />} />
                     <Route path="/sign-up" element={<Register />} />
                 </Route>
 
                 <Route element={<PrivateGuard />}>
                     <Route element={<MainLayout />}>
-                        <Route path="/dashboard" element={<Dashboard />}/>
+                        <Route path="/dashboard" element={<Dashboard />} />
+
+                        <Route element={<AdminGuard />}>
+                            {/* <Route path="/admin" element={<AdminPanel />} /> */}
+                        </Route>
                     </Route>
                 </Route>
             </Routes>
