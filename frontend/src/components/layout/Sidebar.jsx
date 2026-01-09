@@ -55,15 +55,11 @@ export default function Sidebar() {
                     Дневници
                 </NavLink>
 
-                {role === "admin" && (
-                    <NavLink
-                        to="/admin/firms"
-                        className={({ isActive }) =>
-                            `${base} ${isActive ? active : ""}`
-                        }
-                    >
-                        Фирми
-                    </NavLink>
+                {isAdmin && (
+                    <>
+                        <NavLink to="/admin">Admin Panel</NavLink>
+                        {/* <NavLink to="/admin/firms">Фирми</NavLink> */}
+                    </>
                 )}
             </nav>
         </aside>

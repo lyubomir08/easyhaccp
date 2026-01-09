@@ -20,16 +20,16 @@ export default function Header() {
 
                 <nav className="flex items-center gap-7">
 
+                    <NavLink to="/" className={baseLink}>
+                        Начало
+                    </NavLink>
+
+                    <NavLink to="/about" className={baseLink}>
+                        За нас
+                    </NavLink>
+
                     {!user && (
                         <>
-                            <NavLink to="/" className={baseLink}>
-                                Начало
-                            </NavLink>
-
-                            <NavLink to="/about" className={baseLink}>
-                                За нас
-                            </NavLink>
-
                             <NavLink
                                 to="/sign-in"
                                 className="px-4 py-2 rounded-md border border-slate-600 text-slate-200 hover:border-white hover:text-white transition"
