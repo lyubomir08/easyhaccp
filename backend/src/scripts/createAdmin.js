@@ -11,7 +11,7 @@ const password = await bcrypt.hash("Admin654123", 10);
 
 await User.create({
     username: "admin",
-    email: "admin@easyhaccp.bg",
+    email: "admin@gmail.com",
     role: "admin",
     password_hash: password,
     active: true

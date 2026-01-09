@@ -140,9 +140,26 @@ const activateUser = async (userId) => {
 };
 
 const getInactiveUsers = async () => {
-    return User.find({ active: false })
-        .select("_id username role firm_id createdAt")
-        .sort({ createdAt: 1 });
+    const users = await User.find({ active: false })
+        .populate("firm_id", "name")
+        .sort({ created_at: 1 });
+
+    const grouped = {};
+
+    for (const user of users) {
+        const firmId = user.firm_id._id.toString();
+
+        if (!grouped[firmId]) {
+            grouped[firmId] = {
+                firm: user.firm_id,
+                users: [],
+            };
+        }
+
+        grouped[firmId].users.push(user);
+    }
+
+    return Object.values(grouped);
 };
 
 const activateFirm = async (firmId) => {
