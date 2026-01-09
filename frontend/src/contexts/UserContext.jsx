@@ -41,6 +41,7 @@ export const UserProvider = ({ children }) => {
 
     const logout = async () => {
         await authService.logout();
+        clearUserData();
         setUser(null);
     };
 
