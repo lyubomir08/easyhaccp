@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router";
+import useUser from "../../../hooks/useUser";
 
 const EMPTY_OBJECT = {
     name: "",
@@ -12,6 +13,7 @@ const EMPTY_OBJECT = {
 };
 
 export default function Register() {
+    const { register } = useUser();
     const [form, setForm] = useState({
         bulstat: "",
         companyName: "",
@@ -23,6 +25,9 @@ export default function Register() {
         password: "",
         objects: [{ ...EMPTY_OBJECT }],
     });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
 
     const onChange = (e) => {
         setForm(state => ({ ...state, [e.target.name]: e.target.value }));
@@ -48,10 +53,20 @@ export default function Register() {
         }));
     };
 
-    const onSubmit = (e) => {
+    const onSubmit = async (e) => {
         e.preventDefault();
-        console.log("REGISTER DATA:", form);
-        // TODO: call API
+        setLoading(true);
+        setError(null);
+        setSuccess(null);
+
+        try {
+            const result = await register(form);
+            setSuccess(result.message);
+        } catch (err) {
+            setError(err.response?.data?.message || "Грешка при регистрация");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -275,11 +290,24 @@ export default function Register() {
                     </button>
                 </section>
 
+                {error && (
+                    <p className="text-red-600 text-sm text-center">
+                        {error}
+                    </p>
+                )}
+
+                {success && (
+                    <p className="text-green-600 text-sm text-center">
+                        {success}
+                    </p>
+                )}
+
                 <button
                     type="submit"
-                    className="w-full bg-blue-800 hover:bg-blue-900 text-white py-3 rounded-xl font-semibold transition"
+                    disabled={loading}
+                    className="w-full bg-blue-800 hover:bg-blue-900 text-white py-3 rounded-xl font-semibold transition disabled:opacity-60"
                 >
-                    Създай профил
+                    {loading ? "Изпращане..." : "Създай профил"}
                 </button>
 
                 <p className="text-center text-slate-600 text-sm">
