@@ -35,7 +35,7 @@ export default function App() {
                         <Route path="/dashboard" element={<Dashboard />} />
 
                         <Route element={<AdminGuard />}>
-                            <Route path="/dashboard/admin" element={<AdminApprovals />} />
+                            <Route path="/admin/approvals" element={<AdminApprovals />} />
                         </Route>
                     </Route>
                 </Route>
