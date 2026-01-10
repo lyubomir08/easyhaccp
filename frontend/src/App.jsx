@@ -9,7 +9,7 @@ import AdminGuard from "./guards/AdminGuard";
 import Header from "./components/layout/Header.jsx";
 import MainLayout from "./components/layout/MainLayout.jsx";
 import Dashboard from "./components/dashboard/Dashboard.jsx";
-import AdminPanel from "./components/admin/AdminPanel.jsx";
+import AdminApprovals from "./components/admin/AdminApprovals.jsx";
 
 import Home from "./components/home/Home.jsx";
 import Login from "./components/auth/login/Login.jsx";
@@ -35,7 +35,7 @@ export default function App() {
                         <Route path="/dashboard" element={<Dashboard />} />
 
                         <Route element={<AdminGuard />}>
-                            <Route path="/admin" element={<AdminPanel />} />
+                            <Route path="/dashboard/admin" element={<AdminApprovals />} />
                         </Route>
                     </Route>
                 </Route>
