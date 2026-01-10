@@ -129,6 +129,19 @@ const changePassword = async (userId, oldPass, newPass) => {
     return { message: "Password changed successfully." };
 };
 
+const getInactiveUsers = async () => {
+    return User.find({ active: false })
+        .populate("firm_id", "name bulstat")
+        .select("_id username role firm_id created_at")
+        .sort({ created_at: 1 });
+};
+
+const getInactiveFirms = async () => {
+    return Firm.find({ active: false })
+        .select("_id name bulstat created_at")
+        .sort({ created_at: 1 });
+};
+
 const activateUser = async (userId) => {
     const user = await User.findById(userId);
     if (!user) throw new Error("User not found");
@@ -136,30 +149,7 @@ const activateUser = async (userId) => {
     user.active = true;
     await user.save();
 
-    return { message: `User ${user.username} activated.` };
-};
-
-const getInactiveUsers = async () => {
-    const users = await User.find({ active: false })
-        .populate("firm_id", "name")
-        .sort({ created_at: 1 });
-
-    const grouped = {};
-
-    for (const user of users) {
-        const firmId = user.firm_id._id.toString();
-
-        if (!grouped[firmId]) {
-            grouped[firmId] = {
-                firm: user.firm_id,
-                users: [],
-            };
-        }
-
-        grouped[firmId].users.push(user);
-    }
-
-    return Object.values(grouped);
+    return { message: `User ${user.username} activated` };
 };
 
 const activateFirm = async (firmId) => {
@@ -169,14 +159,7 @@ const activateFirm = async (firmId) => {
     firm.active = true;
     await firm.save();
 
-    await User.updateMany(
-        { firm_id: firmId },
-        { active: true }
-    );
-
-    return {
-        message: `Firm ${firm.name} activated`,
-    };
+    return { message: `Firm ${firm.name} activated` };
 };
 
 export default {
@@ -185,5 +168,6 @@ export default {
     changePassword,
     activateUser,
     getInactiveUsers,
+    getInactiveFirms,
     activateFirm
 };

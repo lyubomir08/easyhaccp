@@ -1,32 +1,44 @@
 import userService from "../services/userService.js";
 
-const activateUser = async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const result = await userService.activateUser(userId);
-        res.status(200).json(result);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
-};
-
 const getInactiveUsers = async (req, res) => {
     try {
         const users = await userService.getInactiveUsers();
         res.json(users);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+};
+
+const getInactiveFirms = async (req, res) => {
+    try {
+        const firms = await userService.getInactiveFirms();
+        res.json(firms);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+};
+
+const activateUser = async (req, res) => {
+    try {
+        const result = await userService.activateUser(req.params.userId);
+        res.json(result);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
     }
 };
 
 const activateFirm = async (req, res) => {
     try {
-        const { firmId } = req.params;
-        const result = await userService.activateFirm(firmId);
+        const result = await userService.activateFirm(req.params.firmId);
         res.json(result);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
+    } catch (err) {
+        res.status(400).json({ message: err.message });
     }
 };
 
-export default { activateUser, getInactiveUsers, activateFirm };
+export default {
+    getInactiveUsers,
+    getInactiveFirms,
+    activateUser,
+    activateFirm,
+};

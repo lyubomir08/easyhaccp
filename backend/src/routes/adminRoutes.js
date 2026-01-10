@@ -15,6 +15,8 @@ router.use((req, res, next) => {
 
 router.get("/inactive-users", adminController.getInactiveUsers);
 router.put("/activate-user/:userId", adminController.activateUser);
+
+router.get("/inactive-firms", adminController.getInactiveFirms);
 router.put("/activate-firm/:firmId", adminController.activateFirm);
 
 export default router;
