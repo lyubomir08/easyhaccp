@@ -28,6 +28,7 @@ export default function Sidebar() {
                 {role === "admin" && (
                     <>
                         <div className={section}>Администрация</div>
+
                         <NavLink
                             to="/admin/approvals"
                             className={({ isActive }) =>
@@ -35,6 +36,60 @@ export default function Sidebar() {
                             }
                         >
                             Одобрения
+                        </NavLink>
+                        <NavLink
+                            to="/admin/companies"
+                            className={({ isActive }) =>
+                                `${link} ${isActive ? activeLink : ""}`
+                            }
+                        >
+                            Фирми
+                        </NavLink>
+                        <NavLink
+                            to="/admin/objects"
+                            className={({ isActive }) =>
+                                `${link} ${isActive ? activeLink : ""}`
+                            }
+                        >
+                            Обекти
+                        </NavLink>
+                    </>
+                )}
+
+                {role === "owner" && (
+                    <>
+                        <div className={section}>Моята фирма</div>
+
+                        <NavLink
+                            to="/company"
+                            className={({ isActive }) =>
+                                `${link} ${isActive ? activeLink : ""}`
+                            }
+                        >
+                            Профил на фирмата
+                        </NavLink>
+                        <NavLink
+                            to="/company/objects"
+                            className={({ isActive }) =>
+                                `${link} ${isActive ? activeLink : ""}`
+                            }
+                        >
+                            Моите обекти
+                        </NavLink>
+                    </>
+                )}
+
+                {role === "manager" && (
+                    <>
+                        <div className={section}>Моят обект</div>
+
+                        <NavLink
+                            to="/object"
+                            className={({ isActive }) =>
+                                `${link} ${isActive ? activeLink : ""}`
+                            }
+                        >
+                            Данни за обекта
                         </NavLink>
                     </>
                 )}
@@ -112,7 +167,6 @@ export default function Sidebar() {
                 }>
                     Смяна на мазнина
                 </NavLink>
-
                 <NavLink to="/diaries/cooking" className={({ isActive }) =>
                     `${link} ${isActive ? activeLink : ""}`
                 }>
