@@ -3,7 +3,7 @@ import {
     getAllFirms,
     deleteFirm,
 } from "../../../services/firmService";
-import EditFirmModal from "../AdminFirms/EditFirmModal";
+import EditFirmModal from "./EditFirmModal";
 
 export default function AdminFirms() {
     const [firms, setFirms] = useState([]);

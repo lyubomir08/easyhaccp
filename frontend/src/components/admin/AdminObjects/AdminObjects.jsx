@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getObjects, deleteObject } from "../../../services/objectService";
-import EditObjectModal from "../AdminObjects/EditObjectModal";
+import EditObjectModal from "./EditObjectModal";
 
 export default function AdminObjects() {
     const [objects, setObjects] = useState([]);
