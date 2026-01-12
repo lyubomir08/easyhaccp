@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import {
     getInactiveFirms,
     activateFirm,
-} from "../../services/adminService";
+} from "../../../services/adminService";
 
 export default function PendingFirms() {
     const [firms, setFirms] = useState([]);

@@ -53,6 +53,14 @@ export default function Sidebar() {
                         >
                             Обекти
                         </NavLink>
+                        <NavLink
+                            to="/admin/users"
+                            className={({ isActive }) =>
+                                `${link} ${isActive ? activeLink : ""}`
+                            }
+                        >
+                            Потребители
+                        </NavLink>
                     </>
                 )}
 

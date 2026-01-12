@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import {
     getInactiveUsers,
     activateUser,
-} from "../../services/adminService";
+} from "../../../services/adminService";
 
 export default function PendingUsers() {
     const [users, setUsers] = useState([]);

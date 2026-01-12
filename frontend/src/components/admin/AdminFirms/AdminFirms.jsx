@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import {
     getAllFirms,
     deleteFirm,
-} from "../../services/firmService";
-import EditFirmModal from "../../components/admin/EditFirmModal";
+} from "../../../services/firmService";
+import EditFirmModal from "../AdminFirms/EditFirmModal";
 
 export default function AdminFirms() {
     const [firms, setFirms] = useState([]);

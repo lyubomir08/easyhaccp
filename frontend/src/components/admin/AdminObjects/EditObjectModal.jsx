@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { updateObject } from "../../services/objectService";
+import { updateObject } from "../../../services/objectService";
 
 export default function EditObjectModal({ object, onClose, onUpdated }) {
     const [form, setForm] = useState({

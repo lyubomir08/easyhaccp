@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { updateFirm } from "../../services/firmService";
+import { updateFirm } from "../../../services/firmService";
 
 export default function EditFirmModal({ firm, onClose, onUpdated }) {
     const [form, setForm] = useState({
