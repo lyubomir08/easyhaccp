@@ -239,6 +239,28 @@ export default function Register() {
                                     Управител на обекта
                                 </p>
 
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <input
+                                        placeholder="Име"
+                                        value={obj.molFirstName}
+                                        onChange={e =>
+                                            onObjectChange(index, "molFirstName", e.target.value)
+                                        }
+                                        className="input"
+                                        required
+                                    />
+
+                                    <input
+                                        placeholder="Фамилия"
+                                        value={obj.molLastName}
+                                        onChange={e =>
+                                            onObjectChange(index, "molLastName", e.target.value)
+                                        }
+                                        className="input"
+                                        required
+                                    />
+                                </div>
+
                                 <input
                                     placeholder="Потребителско име"
                                     value={obj.molUsername}

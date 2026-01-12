@@ -61,6 +61,7 @@ const registerFirmRequest = async (formData) => {
                 username: obj.molUsername,
                 email: obj.molEmail,
                 role: "manager",
+                name: `${obj.molFirstName} ${obj.molLastName}`,
                 firm_id: newFirm._id,
                 object_id: newObject._id,
                 password_hash: hashedMolPass,
