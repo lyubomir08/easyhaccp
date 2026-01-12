@@ -162,6 +162,59 @@ const activateFirm = async (firmId) => {
     return { message: `Firm ${firm.name} activated` };
 };
 
+const getAllUsers = async () => {
+    return User.find()
+        .populate("firm_id", "name")
+        .populate("object_id", "name")
+        .select("-password_hash")
+        .sort({ created_at: -1 });
+};
+
+const getUsersByFirm = async (firmId) => {
+    return User.find({ firm_id: firmId })
+        .populate("object_id", "name")
+        .select("-password_hash")
+        .sort({ created_at: -1 });
+};
+
+const getUserById = async (userId) => {
+    const user = await User.findById(userId)
+        .populate("firm_id", "name")
+        .populate("object_id", "name")
+        .select("-password_hash");
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    return user;
+};
+
+const updateUser = async (userId, updateData) => {
+    const user = await User.findByIdAndUpdate(
+        userId,
+        updateData,
+        { new: true }
+    )
+        .populate("firm_id", "name")
+        .populate("object_id", "name")
+        .select("-password_hash");
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    return user;
+};
+
+const deleteUser = async (userId) => {
+    const user = await User.findByIdAndDelete(userId);
+    if (!user) {
+        throw new Error("User not found");
+    }
+    return true;
+};
+
 export default {
     registerFirmRequest,
     loginUser,
@@ -169,5 +222,10 @@ export default {
     activateUser,
     getInactiveUsers,
     getInactiveFirms,
-    activateFirm
+    activateFirm,
+    getAllUsers,
+    getUsersByFirm,
+    getUserById,
+    updateUser,
+    deleteUser
 };
