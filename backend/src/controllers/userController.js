@@ -1,5 +1,15 @@
 import userService from "../services/userService.js";
 
+const updateProfile = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const result = await userService.updateProfile(userId, req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
 const getUsers = async (req, res) => {
     try {
         if (req.isAdmin) {
@@ -119,4 +129,4 @@ const changePassword = async (req, res) => {
     }
 };
 
-export default { register, login, logout, changePassword, getUsers, getUserById, updateUser, deleteUser };
+export default { register, login, logout, changePassword, getUsers, getUserById, updateUser, deleteUser, updateProfile };

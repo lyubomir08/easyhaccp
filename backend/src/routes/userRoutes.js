@@ -10,6 +10,8 @@ router.get("/", userController.getUsers);
 router.get("/:userId", userController.getUserById);
 router.put("/edit/:userId", userController.updateUser);
 router.delete("/delete/:userId", userController.deleteUser);
+
 router.put("/change-password", userController.changePassword);
+router.put("/profile", userController.updateProfile);
 
 export default router;

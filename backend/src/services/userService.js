@@ -215,6 +215,29 @@ const deleteUser = async (userId) => {
     return true;
 };
 
+const updateProfile = async (userId, updateData) => {
+    const allowedFields = ["email"];
+    const filteredData = {};
+
+    for (const key of allowedFields) {
+        if (updateData[key] !== undefined) {
+            filteredData[key] = updateData[key];
+        }
+    }
+
+    const user = await User.findByIdAndUpdate(
+        userId,
+        filteredData,
+        { new: true }
+    ).select("-password_hash");
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    return user;
+};
+
 export default {
     registerFirmRequest,
     loginUser,
@@ -227,5 +250,6 @@ export default {
     getUsersByFirm,
     getUserById,
     updateUser,
-    deleteUser
+    deleteUser,
+    updateProfile
 };
