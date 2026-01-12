@@ -49,13 +49,11 @@ export default function EditUserModal({ userId, onClose, onUpdated }) {
 
     return (
         <div className="fixed inset-0 z-[9999]">
-            {/* BACKDROP */}
             <div
                 className="absolute inset-0 bg-black/40 backdrop-blur-md"
                 onClick={onClose}
             />
 
-            {/* MODAL */}
             <div className="relative z-10 flex min-h-screen items-center justify-center px-4">
                 <div className="bg-white w-full max-w-md rounded-xl shadow-2xl">
                     <div className="border-b px-6 py-4">
@@ -65,8 +63,17 @@ export default function EditUserModal({ userId, onClose, onUpdated }) {
                     </div>
 
                     <form onSubmit={onSubmit} className="px-6 py-5 space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium mb-1">
+                                Име
+                            </label>
+                            <input
+                                value={user.name || "—"}
+                                disabled
+                                className="w-full border rounded px-3 py-2 bg-slate-100"
+                            />
+                        </div>
 
-                        {/* USERNAME */}
                         <div>
                             <label className="block text-sm font-medium mb-1">
                                 Потребител
@@ -78,7 +85,6 @@ export default function EditUserModal({ userId, onClose, onUpdated }) {
                             />
                         </div>
 
-                        {/* EMAIL */}
                         <div>
                             <label className="block text-sm font-medium mb-1">
                                 Имейл
@@ -90,7 +96,6 @@ export default function EditUserModal({ userId, onClose, onUpdated }) {
                             />
                         </div>
 
-                        {/* FIRM */}
                         <div>
                             <label className="block text-sm font-medium mb-1">
                                 Фирма
@@ -102,7 +107,6 @@ export default function EditUserModal({ userId, onClose, onUpdated }) {
                             />
                         </div>
 
-                        {/* OBJECT */}
                         <div>
                             <label className="block text-sm font-medium mb-1">
                                 Обект
@@ -114,7 +118,6 @@ export default function EditUserModal({ userId, onClose, onUpdated }) {
                             />
                         </div>
 
-                        {/* ROLE */}
                         <div>
                             <label className="block text-sm font-medium mb-1">
                                 Роля
@@ -131,7 +134,6 @@ export default function EditUserModal({ userId, onClose, onUpdated }) {
                             </select>
                         </div>
 
-                        {/* ACTIVE */}
                         <label className="flex items-center gap-2">
                             <input
                                 type="checkbox"
@@ -142,7 +144,6 @@ export default function EditUserModal({ userId, onClose, onUpdated }) {
                             Активен
                         </label>
 
-                        {/* ACTIONS */}
                         <div className="flex justify-end gap-3 pt-4">
                             <button
                                 type="button"

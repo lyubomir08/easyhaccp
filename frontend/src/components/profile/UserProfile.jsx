@@ -60,6 +60,17 @@ export default function UserProfile() {
                     <form onSubmit={onProfileSubmit} className="space-y-5">
                         <div>
                             <label className="block text-sm font-medium mb-1">
+                                Име
+                            </label>
+                            <input
+                                value={user.name || "—"}
+                                disabled
+                                className="w-full rounded-md border border-slate-300 px-4 py-2.5 text-sm bg-slate-100"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium mb-1">
                                 Потребител
                             </label>
                             <input
