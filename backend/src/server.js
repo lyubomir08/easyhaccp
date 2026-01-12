@@ -10,6 +10,8 @@ import authRoutes from "./routes/authRoutes.js";
 
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 
+import firmRoutes from "./routes/firmRoutes.js";
+import objectRoutes from "./routes/objectRoutes.js";
 import employeeRoutes from "./routes/employeeRoutes.js";
 import foodGroupRoutes from "./routes/foodGroupRoutes.js";
 import recipeRoutes from "./routes/recipeRoutes.js";
@@ -54,6 +56,8 @@ app.use("/api/auth", authRoutes);
 
 app.use("/api/dashboard", dashboardRoutes);
 
+app.use("/api/firms", firmRoutes);
+app.use("/api/objects", objectRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/food-groups", foodGroupRoutes);
 app.use("/api/recipes", recipeRoutes);
