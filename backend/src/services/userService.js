@@ -39,6 +39,7 @@ const registerFirmRequest = async (formData) => {
     await User.create({
         username,
         email,
+        name: `${ownerFirstName} ${ownerLastName}`,
         role: "owner",
         firm_id: newFirm._id,
         password_hash: hashedOwnerPass,
