@@ -38,7 +38,7 @@ export default function Sidebar() {
                             Одобрения
                         </NavLink>
                         <NavLink
-                            to="/admin/companies"
+                            to="/admin/firms"
                             className={({ isActive }) =>
                                 `${link} ${isActive ? activeLink : ""}`
                             }

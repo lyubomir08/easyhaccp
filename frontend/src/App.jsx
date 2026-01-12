@@ -15,6 +15,7 @@ import Home from "./components/home/Home.jsx";
 import Login from "./components/auth/login/Login.jsx";
 import Register from "./components/auth/register/Register.jsx";
 import About from "./components/about/About.jsx";
+import AdminFirms from "./components/admin/AdminFirms.jsx";
 
 export default function App() {
     return (
@@ -36,6 +37,7 @@ export default function App() {
 
                         <Route element={<AdminGuard />}>
                             <Route path="/admin/approvals" element={<AdminApprovals />} />
+                            <Route path="/admin/firms" element={<AdminFirms />}/>
                         </Route>
                     </Route>
                 </Route>
