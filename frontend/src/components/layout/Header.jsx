@@ -58,6 +58,10 @@ export default function Header() {
                             >
                                 Изход
                             </button>
+
+                            <NavLink to="/profile" className={baseLink}>
+                                Профил
+                            </NavLink>
                         </>
                     )}
                 </nav>

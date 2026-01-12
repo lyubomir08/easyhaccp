@@ -19,6 +19,7 @@ import AdminFirms from "./components/admin/AdminFirms/AdminFirms.jsx";
 import AdminObjects from "./components/admin/AdminObjects/AdminObjects.jsx";
 import AdminUsers from "./components/admin/AdminUsers/AdminUsers.jsx";
 import ChangePassword from "./components/profile/ChangePassword.jsx";
+import UserProfile from "./components/profile/UserProfile.jsx";
 
 export default function App() {
     return (
@@ -37,6 +38,7 @@ export default function App() {
                 <Route element={<PrivateGuard />}>
                     <Route element={<MainLayout />}>
                         <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/profile" element={<UserProfile />}/>
                         <Route path="/profile/change-password" element={<ChangePassword />} />
 
                         <Route element={<AdminGuard />}>

@@ -49,6 +49,7 @@ export const UserProvider = ({ children }) => {
         <UserContext.Provider
             value={{
                 user,
+                setUser,
                 role: user?.role,
                 selectedFirmId,
                 setSelectedFirmId,
