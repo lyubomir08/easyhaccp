@@ -10,6 +10,11 @@ export const getObjectById = async (objectId) => {
     return data;
 };
 
+export const createObject = async (formData) => {
+    const { data } = await api.post("/objects/create", formData);
+    return data;
+};
+
 export const updateObject = async (objectId, formData) => {
     const { data } = await api.put(`/objects/edit/${objectId}`, formData);
     return data;
