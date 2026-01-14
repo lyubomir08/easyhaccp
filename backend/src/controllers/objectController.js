@@ -27,17 +27,35 @@ const getObjectById = async (req, res) => {
     try {
         const object = await objectService.getObjectById(req.params.objectId);
 
-        if (req.isOwner && object.firm_id._id.toString() !== req.user.firm_id) {
+        if (req.isOwner && object.firm_id._id.toString() !== req.user.firm_id.toString()) {
             return res.status(403).json({ message: "Access denied" });
         }
 
-        if (req.isManager && object._id.toString() !== req.user.object_id) {
+        if (req.isManager && object._id.toString() !== req.user.object_id.toString()) {
             return res.status(403).json({ message: "Access denied" });
         }
 
         res.status(200).json(object);
     } catch (err) {
         res.status(404).json({ message: err.message });
+    }
+};
+
+const createObject = async (req, res) => {
+    try {
+        if (!req.isAdmin && !req.isOwner) {
+            return res.status(403).json({ message: "Access denied" });
+        }
+
+        const data = {
+            ...req.body,
+            firm_id: req.isOwner ? req.user.firm_id : req.body.firm_id,
+        };
+
+        const object = await objectService.createObject(data);
+        res.status(201).json(object);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
     }
 };
 
@@ -84,6 +102,7 @@ const deleteObject = async (req, res) => {
 export default {
     getObjects,
     getObjectById,
+    createObject,
     updateObject,
     deleteObject,
 };

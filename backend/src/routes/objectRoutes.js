@@ -8,6 +8,7 @@ router.use(authMiddleware);
 
 router.get("/", objectController.getObjects);
 router.get("/:objectId", objectController.getObjectById);
+router.post("/create", objectController.createObject);
 router.put("/edit/:objectId", objectController.updateObject);
 router.delete("/delete/:objectId", objectController.deleteObject);
 
