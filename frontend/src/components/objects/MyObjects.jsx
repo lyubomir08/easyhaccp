@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
 import { getObjects, deleteObject } from "../../services/objectService";
 import EditObjectModal from "./EditObjectModal";
-import CreateObjectModal from "./CreateObjectModal";
 
 export default function MyObjects() {
     const [objects, setObjects] = useState([]);
     const [editingId, setEditingId] = useState(null);
-    const [creating, setCreating] = useState(false);
 
     useEffect(() => {
         loadObjects();
@@ -27,13 +25,6 @@ export default function MyObjects() {
         <div className="space-y-6 max-w-4xl mx-auto">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold">Моите обекти</h1>
-
-                <button
-                    onClick={() => setCreating(true)}
-                    className="bg-blue-600 text-white px-4 py-2 rounded"
-                >
-                    ➕ Нов обект
-                </button>
             </div>
 
             {objects.map(obj => (
@@ -69,13 +60,6 @@ export default function MyObjects() {
                     objectId={editingId}
                     onClose={() => setEditingId(null)}
                     onUpdated={loadObjects}
-                />
-            )}
-
-            {creating && (
-                <CreateObjectModal
-                    onClose={() => setCreating(false)}
-                    onCreated={loadObjects}
                 />
             )}
         </div>
