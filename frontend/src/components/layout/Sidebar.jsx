@@ -77,7 +77,7 @@ export default function Sidebar() {
                             Профил на фирмата
                         </NavLink>
                         <NavLink
-                            to="/firm/objects"
+                            to="/myObjects"
                             className={({ isActive }) =>
                                 `${link} ${isActive ? activeLink : ""}`
                             }

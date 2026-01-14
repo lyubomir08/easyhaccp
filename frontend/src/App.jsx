@@ -41,7 +41,7 @@ export default function App() {
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/profile" element={<UserProfile />}/>
                         <Route path="/profile/change-password" element={<ChangePassword />} />
-                        <Route path="/firm/objects" element={<MyObjects />}/>
+                        <Route path="/myObjects" element={<MyObjects />}/>
 
                         <Route element={<AdminGuard />}>
                             <Route path="/admin/approvals" element={<AdminApprovals />} />
