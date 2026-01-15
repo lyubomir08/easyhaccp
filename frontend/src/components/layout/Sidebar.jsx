@@ -92,7 +92,7 @@ export default function Sidebar() {
                         <div className={section}>Моят обект</div>
 
                         <NavLink
-                            to="/object"
+                            to="/myObject"
                             className={({ isActive }) =>
                                 `${link} ${isActive ? activeLink : ""}`
                             }
