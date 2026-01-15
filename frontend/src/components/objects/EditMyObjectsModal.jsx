@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getObjectById, updateObject } from "../../services/objectService";
 
-export default function EditObjectModal({ objectId, onClose, onUpdated }) {
+export default function EditMyObjectsModal({ objectId, onClose, onUpdated }) {
     const [form, setForm] = useState(null);
 
     useEffect(() => {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getObjects, deleteObject } from "../../services/objectService";
-import EditObjectModal from "./EditObjectModal";
+import EditMyObjectsModal from "./EditMyObjectsModal";
 
 export default function MyObjects() {
     const [objects, setObjects] = useState([]);
@@ -56,7 +56,7 @@ export default function MyObjects() {
             ))}
 
             {editingId && (
-                <EditObjectModal
+                <EditMyObjectsModal
                     objectId={editingId}
                     onClose={() => setEditingId(null)}
                     onUpdated={loadObjects}
