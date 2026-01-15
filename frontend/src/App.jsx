@@ -21,6 +21,7 @@ import AdminUsers from "./components/admin/AdminUsers/AdminUsers.jsx";
 import ChangePassword from "./components/profile/ChangePassword.jsx";
 import UserProfile from "./components/profile/UserProfile.jsx";
 import MyObjects from "./components/objects/MyObjects.jsx";
+import MyFirm from "./components/firm/MyFirm.jsx";
 
 export default function App() {
     return (
@@ -42,6 +43,7 @@ export default function App() {
                         <Route path="/profile" element={<UserProfile />}/>
                         <Route path="/profile/change-password" element={<ChangePassword />} />
                         <Route path="/myObjects" element={<MyObjects />}/>
+                        <Route path="/myFirm" element={<MyFirm />}/>
 
                         <Route element={<AdminGuard />}>
                             <Route path="/admin/approvals" element={<AdminApprovals />} />

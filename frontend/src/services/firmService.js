@@ -5,6 +5,11 @@ export const getAllFirms = async () => {
     return data;
 };
 
+export const getMyFirm = async () => {
+    const { data } = await api.get("/firms/my");
+    return data;
+};
+
 export const getFirmById = async (firmId) => {
     const { data } = await api.get(`/firms/${firmId}`);
     return data;

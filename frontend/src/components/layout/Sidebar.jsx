@@ -69,7 +69,7 @@ export default function Sidebar() {
                         <div className={section}>Моята фирма</div>
 
                         <NavLink
-                            to="/firm"
+                            to="/myFirm"
                             className={({ isActive }) =>
                                 `${link} ${isActive ? activeLink : ""}`
                             }
