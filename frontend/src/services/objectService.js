@@ -5,6 +5,11 @@ export const getObjects = async () => {
     return data;
 };
 
+export const getMyObject = async () => {
+    const { data } = await api.get("/objects");
+    return data[0];
+};
+
 export const getObjectById = async (objectId) => {
     const { data } = await api.get(`/objects/${objectId}`);
     return data;
