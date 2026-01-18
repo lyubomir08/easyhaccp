@@ -1,6 +1,7 @@
 import ProducedFood from "../models/logs/ProducedFood.js";
 import ObjectModel from "../models/Object.js";
 import Recipe from "../models/Recipe.js";
+import buildDateFilter from "../utils/buildDateFilter.js";
 
 const createProducedFood = async (data) => {
     const { object_id, recipe_id } = data;
@@ -16,9 +17,15 @@ const createProducedFood = async (data) => {
     return await ProducedFood.create(data);
 };
 
-const getProducedFoodsByObject = async (object_id) => {
-    return await ProducedFood.find({ object_id })
-        .populate("recipe_id ingredient_id")
+const getProducedFoodsByObject = async (object_id, queryParams) => {
+    const query = {
+        object_id,
+        ...buildDateFilter(queryParams, "date")
+    };
+
+    return await ProducedFood.find(query)
+        .populate("recipe_id")
+        .populate("ingredient_id")
         .sort({ date: -1 });
 };
 

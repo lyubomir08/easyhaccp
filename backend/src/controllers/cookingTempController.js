@@ -35,7 +35,7 @@ const getCookingTempLogs = async (req, res) => {
         if (req.isOwner && object.firm_id.toString() !== req.user.firm_id)
             return res.status(403).json({ message: "Owners can only view logs within their firm" });
 
-        const logs = await cookingTempService.getCookingTempLogsByObject(object_id);
+        const logs = await cookingTempService.getCookingTempLogsByObject(object_id, req.query);
         res.status(200).json(logs);
     } catch (err) {
         res.status(400).json({ message: err.message });

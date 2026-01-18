@@ -35,7 +35,7 @@ const getProducedFoods = async (req, res) => {
         if (req.isOwner && object.firm_id.toString() !== req.user.firm_id)
             return res.status(403).json({ message: "Owners can only view data within their firm" });
 
-        const list = await producedFoodService.getProducedFoodsByObject(object_id);
+        const list = await producedFoodService.getProducedFoodsByObject(object_id, req.query);
         res.status(200).json(list);
     } catch (err) {
         res.status(400).json({ message: err.message });

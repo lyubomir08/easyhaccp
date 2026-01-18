@@ -35,7 +35,7 @@ const getShipmentsByObject = async (req, res) => {
         if (req.isOwner && object.firm_id.toString() !== req.user.firm_id)
             return res.status(403).json({ message: "Owners can only view shipments within their firm" });
 
-        const list = await shipmentService.getShipmentsByObject(object_id);
+        const list = await shipmentService.getShipmentsByObject(object_id, req.query);
         res.status(200).json(list);
     } catch (err) {
         res.status(400).json({ message: err.message });

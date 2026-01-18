@@ -1,5 +1,6 @@
 import FridgeTemperatureLog from "../models/logs/FridgeTemperatureLog.js";
 import ObjectModel from "../models/Object.js";
+import buildDateFilter from "../utils/buildDateFilter.js";
 
 const createFridgeLog = async (data) => {
     const { object_id } = data;
@@ -10,11 +11,16 @@ const createFridgeLog = async (data) => {
     return await FridgeTemperatureLog.create(data);
 };
 
-const getFridgeLogsByObject = async (object_id) => {
-    return await FridgeTemperatureLog.find({ object_id })
-        .populate("fridge_id")    
-        .populate("employee_id")   
-        .sort({ createdAt: -1 });
+const getFridgeLogsByObject = async (object_id, queryParams) => {
+    const query = {
+        object_id,
+        ...buildDateFilter(queryParams, "date")
+    };
+
+    return await FridgeTemperatureLog.find(query)
+        .populate("fridge_id")
+        .populate("employee_id")
+        .sort({ date: -1 });
 };
 
 const updateFridgeLog = async (logId, updateData) => {
