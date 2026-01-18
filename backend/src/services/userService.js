@@ -192,10 +192,24 @@ const getUserById = async (userId) => {
     return user;
 };
 
-const updateUser = async (userId, updateData) => {
+const updateUser = async (userId, updateData, actor) => {
+    const allowedFieldsByRole = {
+        admin: ["username", "email", "role", "firm_id", "object_id", "active"],
+        owner: ["name", "email", "active"],
+    };
+
+    const allowedFields = allowedFieldsByRole[actor.role] || [];
+    const filteredData = {};
+
+    for (const key of allowedFields) {
+        if (updateData[key] !== undefined) {
+            filteredData[key] = updateData[key];
+        }
+    }
+
     const user = await User.findByIdAndUpdate(
         userId,
-        updateData,
+        filteredData,
         { new: true }
     )
         .populate("firm_id", "name")
