@@ -240,6 +240,19 @@ const updateProfile = async (userId, updateData) => {
     return user;
 };
 
+const getManagers = async ({ firmId, isAdmin }) => {
+    const filter = { role: "manager" };
+
+    if (!isAdmin) {
+        filter.firm_id = firmId;
+    }
+
+    return User.find(filter)
+        .populate("object_id", "name")
+        .select("-password_hash")
+        .sort({ created_at: -1 });
+};
+
 export default {
     registerFirmRequest,
     loginUser,
@@ -253,5 +266,6 @@ export default {
     getUserById,
     updateUser,
     deleteUser,
-    updateProfile
+    updateProfile,
+    getManagers
 };
