@@ -1,4 +1,5 @@
 import PersonalHygieneLog from "../models/logs/PersonalHygieneLog.js";
+import buildDateFilter from "../utils/buildDateFilter.js";
 
 const createPersonalHygieneLog = async (data) => {
     const log = new PersonalHygieneLog(data);
@@ -6,9 +7,15 @@ const createPersonalHygieneLog = async (data) => {
     return log;
 };
 
-const getPersonalHygieneLogsByObject = async (objectId) => {
-    const logs = await PersonalHygieneLog.find({ object_id: objectId }).sort({ createdAt: -1 });
-    return logs;
+const getPersonalHygieneLogsByObject = async (objectId, queryParams) => {
+    const query = {
+        object_id: objectId,
+        ...buildDateFilter(queryParams, "date")
+    };
+
+    return await PersonalHygieneLog.find(query)
+        .populate("employee_id")
+        .sort({ date: -1 });
 };
 
 const updatePersonalHygieneLog = async (logId, data) => {

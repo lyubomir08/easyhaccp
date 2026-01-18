@@ -3,6 +3,7 @@ import ObjectModel from "../models/Object.js";
 import FoodLog from "../models/logs/FoodLog.js";
 import ProducedFood from "../models/logs/ProducedFood.js";
 import Client from "../models/Client.js";
+import buildDateFilter from "../utils/buildDateFilter.js";
 
 const createShipment = async (data) => {
     const { object_id, food_log_id, produced_food_id, client_id } = data;
@@ -28,9 +29,17 @@ const createShipment = async (data) => {
     return await ShipmentLog.create(data);
 };
 
-const getShipmentsByObject = async (object_id) => {
-    return await ShipmentLog.find({ object_id })
-        .populate("food_log_id produced_food_id client_id employee_id")
+const getShipmentsByObject = async (object_id, queryParams) => {
+    const query = {
+        object_id,
+        ...buildDateFilter(queryParams, "date")
+    };
+
+    return await ShipmentLog.find(query)
+        .populate("food_log_id")
+        .populate("produced_food_id")
+        .populate("client_id")
+        .populate("employee_id")
         .sort({ date: -1 });
 };
 

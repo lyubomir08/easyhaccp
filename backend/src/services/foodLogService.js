@@ -1,5 +1,6 @@
 import FoodLog from "../models/logs/FoodLog.js";
 import ObjectModel from "../models/Object.js";
+import buildDateFilter from "../utils/buildDateFilter.js";
 
 const createFoodLog = async (data) => {
     const { object_id } = data;
@@ -10,12 +11,11 @@ const createFoodLog = async (data) => {
     return await FoodLog.create(data);
 };
 
-const getFoodLogs = async (object_id, startDate, endDate) => {
-    const query = { object_id };
-
-    if (startDate && endDate) {
-        query.date = { $gte: startDate, $lte: endDate };
-    }
+const getFoodLogs = async (object_id, queryParams) => {
+    const query = {
+        object_id,
+        ...buildDateFilter(queryParams, "date")
+    };
 
     return await FoodLog.find(query)
         .populate("supplier_id")
