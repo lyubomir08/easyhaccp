@@ -2,21 +2,25 @@ import recipeService from "../services/recipeService.js";
 import FoodGroup from "../models/FoodGroup.js";
 import ObjectModel from "../models/Object.js";
 
+/* ========= CREATE ========= */
 const createRecipe = async (req, res) => {
     try {
         const { food_group_id } = req.body;
         const user = req.user;
 
         const foodGroup = await FoodGroup.findById(food_group_id);
-        if (!foodGroup) return res.status(404).json({ message: "Food group not found" });
+        if (!foodGroup) {
+            return res.status(404).json({ message: "Food group not found" });
+        }
 
         const object = await ObjectModel.findById(foodGroup.object_id);
 
         if (req.isManager && user.object_id !== object._id.toString()) {
-            return res.status(403).json({ message: "Managers can only manage recipes in their own object." });
+            return res.status(403).json({ message: "Access denied" });
         }
+
         if (req.isOwner && object.firm_id.toString() !== user.firm_id) {
-            return res.status(403).json({ message: "Owners can only manage recipes within their firm." });
+            return res.status(403).json({ message: "Access denied" });
         }
 
         const recipe = await recipeService.createRecipe(req.body);
@@ -26,21 +30,25 @@ const createRecipe = async (req, res) => {
     }
 };
 
+/* ========= GET BY FOOD GROUP ========= */
 const getRecipesByFoodGroup = async (req, res) => {
     try {
         const { food_group_id } = req.params;
         const user = req.user;
 
         const foodGroup = await FoodGroup.findById(food_group_id);
-        if (!foodGroup) return res.status(404).json({ message: "Food group not found" });
+        if (!foodGroup) {
+            return res.status(404).json({ message: "Food group not found" });
+        }
 
         const object = await ObjectModel.findById(foodGroup.object_id);
 
         if (req.isManager && user.object_id !== object._id.toString()) {
-            return res.status(403).json({ message: "Managers can only view their own recipes." });
+            return res.status(403).json({ message: "Access denied" });
         }
+
         if (req.isOwner && object.firm_id.toString() !== user.firm_id) {
-            return res.status(403).json({ message: "Owners can only access recipes in their firm." });
+            return res.status(403).json({ message: "Access denied" });
         }
 
         const recipes = await recipeService.getRecipesByFoodGroup(food_group_id);
@@ -50,22 +58,26 @@ const getRecipesByFoodGroup = async (req, res) => {
     }
 };
 
+/* ========= UPDATE ========= */
 const updateRecipe = async (req, res) => {
     try {
         const { recipeId } = req.params;
         const user = req.user;
 
-        const recipe = await recipeService.getRecipesByFoodGroup(recipeId);
-        if (!recipe) return res.status(404).json({ message: "Recipe not found" });
+        const recipe = await recipeService.getRecipeById(recipeId);
+        if (!recipe) {
+            return res.status(404).json({ message: "Recipe not found" });
+        }
 
         const foodGroup = await FoodGroup.findById(recipe.food_group_id);
         const object = await ObjectModel.findById(foodGroup.object_id);
 
         if (req.isManager && user.object_id !== object._id.toString()) {
-            return res.status(403).json({ message: "Managers can only update their own recipes." });
+            return res.status(403).json({ message: "Access denied" });
         }
+
         if (req.isOwner && object.firm_id.toString() !== user.firm_id) {
-            return res.status(403).json({ message: "Owners can only update recipes within their firm." });
+            return res.status(403).json({ message: "Access denied" });
         }
 
         const updatedRecipe = await recipeService.updateRecipe(recipeId, req.body);
@@ -75,22 +87,26 @@ const updateRecipe = async (req, res) => {
     }
 };
 
+/* ========= DELETE ========= */
 const deleteRecipe = async (req, res) => {
     try {
         const { recipeId } = req.params;
         const user = req.user;
 
-        const recipe = await recipeService.getRecipesByFoodGroup(recipeId);
-        if (!recipe) return res.status(404).json({ message: "Recipe not found" });
+        const recipe = await recipeService.getRecipeById(recipeId);
+        if (!recipe) {
+            return res.status(404).json({ message: "Recipe not found" });
+        }
 
         const foodGroup = await FoodGroup.findById(recipe.food_group_id);
         const object = await ObjectModel.findById(foodGroup.object_id);
 
         if (req.isManager && user.object_id !== object._id.toString()) {
-            return res.status(403).json({ message: "Managers can only delete their own recipes." });
+            return res.status(403).json({ message: "Access denied" });
         }
+
         if (req.isOwner && object.firm_id.toString() !== user.firm_id) {
-            return res.status(403).json({ message: "Owners can only delete recipes within their firm." });
+            return res.status(403).json({ message: "Access denied" });
         }
 
         await recipeService.deleteRecipe(recipeId);

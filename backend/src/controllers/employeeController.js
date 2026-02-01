@@ -4,7 +4,10 @@ import ObjectModel from "../models/Object.js";
 const getEmployees = async (req, res) => {
     try {
         const { objectId } = req.params;
-        const { role, objectId: userObjectId, firmId: userFirmId } = req.user;
+        // Support both camelCase and snake_case from JWT
+        const userObjectId = req.user.objectId || req.user.object_id;
+        const userFirmId = req.user.firmId || req.user.firm_id;
+        const { role } = req.user;
 
         const object = await ObjectModel.findById(objectId);
         if (!object) return res.status(404).json({ message: "Object not found" });
@@ -27,13 +30,30 @@ const getEmployees = async (req, res) => {
 const addEmployee = async (req, res) => {
     try {
         const employeeData = req.body;
-        const { role, objectId: userObjectId, firmId: userFirmId } = req.user;
+        // Support both camelCase and snake_case from JWT
+        const userObjectId = req.user.objectId || req.user.object_id;
+        const userFirmId = req.user.firmId || req.user.firm_id;
+        const { role } = req.user;
+
+        console.log("=== ADD EMPLOYEE DEBUG ===");
+        console.log("User role:", role);
+        console.log("User objectId:", userObjectId);
+        console.log("User firmId:", userFirmId);
+        console.log("Employee data object_id:", employeeData.object_id);
+        console.log("req.user:", req.user);
 
         const object = await ObjectModel.findById(employeeData.object_id);
         if (!object) return res.status(404).json({ message: "Object not found" });
 
         if (role === "manager" && String(employeeData.object_id) !== String(userObjectId)) {
-            return res.status(403).json({ message: "Access denied. Not your object." });
+            return res.status(403).json({ 
+                message: "Access denied. Not your object.",
+                debug: {
+                    employeeObjectId: employeeData.object_id,
+                    userObjectId: userObjectId,
+                    match: String(employeeData.object_id) === String(userObjectId)
+                }
+            });
         }
 
         if (role === "owner" && String(object.firm_id) !== String(userFirmId)) {
@@ -51,7 +71,10 @@ const editEmployee = async (req, res) => {
     try {
         const { employeeId } = req.params;
         const updatedData = req.body;
-        const { role, objectId: userObjectId, firmId: userFirmId } = req.user;
+        // Support both camelCase and snake_case from JWT
+        const userObjectId = req.user.objectId || req.user.object_id;
+        const userFirmId = req.user.firmId || req.user.firm_id;
+        const { role } = req.user;
 
         const employee = await employeeService.getEmployeesById(employeeId);
         if (!employee) return res.status(404).json({ message: "Employee not found" });
@@ -77,7 +100,10 @@ const editEmployee = async (req, res) => {
 const removeEmployee = async (req, res) => {
     try {
         const { employeeId } = req.params;
-        const { role, objectId: userObjectId, firmId: userFirmId } = req.user;
+        // Support both camelCase and snake_case from JWT
+        const userObjectId = req.user.objectId || req.user.object_id;
+        const userFirmId = req.user.firmId || req.user.firm_id;
+        const { role } = req.user;
 
         const employee = await employeeService.getEmployeesById(employeeId);
         if (!employee) return res.status(404).json({ message: "Employee not found" });

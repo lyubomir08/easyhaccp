@@ -6,17 +6,21 @@ export const createSupplier = async (req, res) => {
     try {
         const { object_id, name, address, goods_type, registration_number } = req.body;
         const user = req.user;
+        
+        // Support both camelCase and snake_case from JWT
+        const userObjectId = user.objectId || user.object_id;
+        const userFirmId = user.firmId || user.firm_id;
 
         const object = await ObjectModel.findById(object_id);
         if (!object) {
             return res.status(404).json({ message: "Object not found" });
         }
 
-        if (req.isManager && String(user.objectId) !== String(object_id)) {
+        if (req.isManager && String(userObjectId) !== String(object_id)) {
             return res.status(403).json({ message: "Managers can only add suppliers to their own object" });
         }
 
-        if (req.isOwner && String(object.firm_id) !== String(user.firmId)) {
+        if (req.isOwner && String(object.firm_id) !== String(userFirmId)) {
             return res.status(403).json({ message: "Owners can only manage suppliers within their firm" });
         }
 
@@ -39,17 +43,21 @@ export const getSuppliersByObject = async (req, res) => {
     try {
         const { object_id } = req.params;
         const user = req.user;
+        
+        // Support both camelCase and snake_case from JWT
+        const userObjectId = user.objectId || user.object_id;
+        const userFirmId = user.firmId || user.firm_id;
 
         const object = await ObjectModel.findById(object_id);
         if (!object) {
             return res.status(404).json({ message: "Object not found" });
         }
 
-        if (req.isManager && String(user.objectId) !== String(object_id)) {
+        if (req.isManager && String(userObjectId) !== String(object_id)) {
             return res.status(403).json({ message: "Managers can only view suppliers in their own object" });
         }
 
-        if (req.isOwner && String(object.firm_id) !== String(user.firmId)) {
+        if (req.isOwner && String(object.firm_id) !== String(userFirmId)) {
             return res.status(403).json({ message: "Owners can only view suppliers within their firm" });
         }
 
@@ -64,6 +72,10 @@ export const updateSupplier = async (req, res) => {
     try {
         const { supplierId } = req.params;
         const user = req.user;
+        
+        // Support both camelCase and snake_case from JWT
+        const userObjectId = user.objectId || user.object_id;
+        const userFirmId = user.firmId || user.firm_id;
 
         const supplier = await Supplier.findById(supplierId).populate("object_id");
         if (!supplier) {
@@ -72,11 +84,11 @@ export const updateSupplier = async (req, res) => {
 
         const object = supplier.object_id;
 
-        if (req.isManager && String(user.objectId) !== String(object._id)) {
+        if (req.isManager && String(userObjectId) !== String(object._id)) {
             return res.status(403).json({ message: "Managers can only update suppliers in their own object" });
         }
 
-        if (req.isOwner && String(object.firm_id) !== String(user.firmId)) {
+        if (req.isOwner && String(object.firm_id) !== String(userFirmId)) {
             return res.status(403).json({ message: "Owners can only update suppliers within their firm" });
         }
 
@@ -91,6 +103,10 @@ export const deleteSupplier = async (req, res) => {
     try {
         const { supplierId } = req.params;
         const user = req.user;
+        
+        // Support both camelCase and snake_case from JWT
+        const userObjectId = user.objectId || user.object_id;
+        const userFirmId = user.firmId || user.firm_id;
 
         const supplier = await Supplier.findById(supplierId).populate("object_id");
         if (!supplier) {
@@ -99,11 +115,11 @@ export const deleteSupplier = async (req, res) => {
 
         const object = supplier.object_id;
 
-        if (req.isManager && String(user.objectId) !== String(object._id)) {
+        if (req.isManager && String(userObjectId) !== String(object._id)) {
             return res.status(403).json({ message: "Managers can only delete suppliers in their own object" });
         }
 
-        if (req.isOwner && String(object.firm_id) !== String(user.firmId)) {
+        if (req.isOwner && String(object.firm_id) !== String(userFirmId)) {
             return res.status(403).json({ message: "Owners can only delete suppliers within their firm" });
         }
 
