@@ -71,7 +71,8 @@ const updateUser = async (req, res) => {
 
         const updatedUser = await userService.updateUser(
             req.params.userId,
-            req.body
+            req.body,
+            req.user
         );
 
         res.json(updatedUser);
@@ -129,4 +130,21 @@ const changePassword = async (req, res) => {
     }
 };
 
-export default { register, login, logout, changePassword, getUsers, getUserById, updateUser, deleteUser, updateProfile };
+const getManagers = async (req, res) => {
+    try {
+        if (req.isManager) {
+            return res.status(403).json({ message: "Access denied" });
+        }
+
+        const managers = await userService.getManagers({
+            firmId: req.user.firm_id,
+            isAdmin: req.isAdmin
+        });
+
+        res.json(managers);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+export default { register, login, logout, changePassword, getUsers, getUserById, updateUser, deleteUser, updateProfile, getManagers };

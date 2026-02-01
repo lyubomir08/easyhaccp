@@ -1,5 +1,6 @@
 import HygieneLog from "../models/logs/HygieneLog.js";
 import ObjectModel from "../models/Object.js";
+import buildDateFilter from "../utils/buildDateFilter.js";
 
 const createHygieneLog = async (data) => {
     const { object_id } = data;
@@ -10,12 +11,11 @@ const createHygieneLog = async (data) => {
     return await HygieneLog.create(data);
 };
 
-const getHygieneLogs = async (object_id, startDate, endDate) => {
-    const query = { object_id };
-
-    if (startDate && endDate) {
-        query.date = { $gte: startDate, $lte: endDate };
-    }
+const getHygieneLogs = async (object_id, queryParams) => {
+    const query = {
+        object_id,
+        ...buildDateFilter(queryParams, "date")
+    };
 
     return await HygieneLog.find(query)
         .populate("room_id")

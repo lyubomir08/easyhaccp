@@ -1,5 +1,6 @@
 import FryerOilLog from "../models/logs/FryerOilLog.js";
 import ObjectModel from "../models/Object.js";
+import buildDateFilter from "../utils/buildDateFilter.js";
 
 const createFryerOilLog = async (data) => {
     const { object_id } = data;
@@ -10,8 +11,13 @@ const createFryerOilLog = async (data) => {
     return await FryerOilLog.create(data);
 };
 
-const getLogsByObject = async (object_id) => {
-    return await FryerOilLog.find({ object_id })
+const getLogsByObject = async (object_id, queryParams) => {
+    const query = {
+        object_id,
+        ...buildDateFilter(queryParams, "change_datetime")
+    };
+
+    return await FryerOilLog.find(query)
         .populate("fryer_id")
         .populate("employee_id")
         .sort({ change_datetime: -1, load_datetime: -1 });

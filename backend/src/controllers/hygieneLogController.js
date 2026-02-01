@@ -39,7 +39,7 @@ const getHygieneLogs = async (req, res) => {
             return res.status(403).json({ message: "Owners can only view logs inside their firm" });
         }
 
-        const logs = await hygieneLogService.getHygieneLogs(object_id);
+        const logs = await hygieneLogService.getHygieneLogs(object_id, req.query);
         res.status(200).json(logs);
 
     } catch (err) {

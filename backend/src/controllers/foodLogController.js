@@ -38,7 +38,7 @@ const getFoodLogs = async (req, res) => {
             return res.status(403).json({ message: "Owners can only view logs from their firm" });
         }
 
-        const logs = await foodLogService.getFoodLogs(object_id);
+        const logs = await foodLogService.getFoodLogs(object_id, req.query);
         res.status(200).json(logs);
 
     } catch (err) {
