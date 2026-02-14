@@ -3,9 +3,7 @@ import api from "../../../services/api";
 import ShipmentEditModal from "./ShipmentEditModal";
 
 const OBJECT_TYPE_LABELS = {
-    retail: "Търговия на дребно",
     wholesale: "Търговия на едро",
-    restaurant: "Заведение",
     catering: "Кетъринг",
 };
 
@@ -20,7 +18,7 @@ export default function ShipmentDiary() {
     const [editingLog, setEditingLog] = useState(null);
     const [search, setSearch] = useState("");
     const [error, setError] = useState("");
-    const [shipmentType, setShipmentType] = useState(""); // auto-detected from object
+    const [shipmentType, setShipmentType] = useState("");
 
     const [form, setForm] = useState({
         object_id: "",
@@ -28,6 +26,7 @@ export default function ShipmentDiary() {
         food_log_id: "",
         produced_food_id: "",
         quantity: "",
+        product_batch_number: "",
         client_id: "",
         document: "",
         employee_id: ""
@@ -35,42 +34,36 @@ export default function ShipmentDiary() {
 
     /* LOAD OBJECTS */
     useEffect(() => {
-        api.get("/objects").then(res => setObjects(res.data));
+        api.get("/objects").then(res => {
+            const filtered = res.data.filter(obj =>
+                obj.object_type === "wholesale" || obj.object_type === "catering"
+            );
+            setObjects(filtered);
+        });
     }, []);
 
     /* LOAD DEPENDENCIES */
     useEffect(() => {
         if (!form.object_id) return;
 
-        // Get selected object to determine type
         const selectedObject = objects.find(o => o._id === form.object_id);
-        
-        // Auto-detect shipment type based on object_type field
+
         if (selectedObject) {
-            if (selectedObject.object_type === "catering") {
-                setShipmentType("catering");
-            } else {
-                // wholesale, retail, restaurant all use food logs
-                setShipmentType("wholesale");
-            }
+            setShipmentType(selectedObject.object_type === "catering" ? "catering" : "wholesale");
         }
 
-        // Load food logs for wholesale/retail/restaurant
         api.get(`/food-logs/${form.object_id}`)
             .then(r => setFoodLogs(r.data))
             .catch(err => console.error("Error loading food logs:", err));
 
-        // Load produced foods for catering
         api.get(`/produced-foods/${form.object_id}`)
             .then(r => setProducedFoods(r.data))
             .catch(err => console.error("Error loading produced foods:", err));
 
-        // Load clients
         api.get(`/clients/${form.object_id}`)
             .then(r => setClients(r.data))
             .catch(err => console.error("Error loading clients:", err));
 
-        // Load employees
         api.get(`/employees/${form.object_id}`)
             .then(r => setEmployees(r.data))
             .catch(err => console.error("Error loading employees:", err));
@@ -94,7 +87,7 @@ export default function ShipmentDiary() {
         setForm(s => ({ ...s, [e.target.name]: e.target.value }));
     };
 
-    // Auto-fill data when selecting food log (wholesale)
+    // Auto-fill quantity when selecting food log (wholesale)
     const onFoodLogChange = (e) => {
         const id = e.target.value;
         const foodLog = foodLogs.find(f => f._id === id);
@@ -106,7 +99,7 @@ export default function ShipmentDiary() {
         }));
     };
 
-    // Auto-fill data when selecting produced food (catering)
+    // Auto-fill quantity AND batch number when selecting produced food (catering)
     const onProducedFoodChange = (e) => {
         const id = e.target.value;
         const produced = producedFoods.find(p => p._id === id);
@@ -114,7 +107,8 @@ export default function ShipmentDiary() {
         setForm(s => ({
             ...s,
             produced_food_id: id,
-            quantity: produced?.portions || ""
+            quantity: produced?.portions || "",
+            product_batch_number: produced?.product_batch_number || ""
         }));
     };
 
@@ -132,7 +126,6 @@ export default function ShipmentDiary() {
                 employee_id: form.employee_id || undefined
             };
 
-            // Add type-specific fields
             if (shipmentType === "wholesale") {
                 payload.food_log_id = form.food_log_id;
                 payload.client_id = form.client_id || undefined;
@@ -140,19 +133,18 @@ export default function ShipmentDiary() {
                 payload.produced_food_id = form.produced_food_id;
             }
 
-            // Remove undefined values
             Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
 
             await api.post("/shipments", payload);
             await loadLogs();
 
-            // Reset form
             setForm(s => ({
                 ...s,
                 date: "",
                 food_log_id: "",
                 produced_food_id: "",
                 quantity: "",
+                product_batch_number: "",
                 client_id: "",
                 document: "",
                 employee_id: ""
@@ -182,13 +174,16 @@ export default function ShipmentDiary() {
         const foodName = l.food_log_id?.food_group_id?.food_name?.toLowerCase() || "";
         const recipeName = l.produced_food_id?.recipe_id?.name?.toLowerCase() || "";
         const clientName = l.client_id?.name?.toLowerCase() || "";
-        
-        return foodName.includes(searchLower) || 
-               recipeName.includes(searchLower) || 
-               clientName.includes(searchLower);
+
+        return foodName.includes(searchLower) ||
+            recipeName.includes(searchLower) ||
+            clientName.includes(searchLower);
     });
 
     const visibleLogs = search ? filteredLogs : filteredLogs.slice(0, 10);
+
+    // Get selected produced food for display
+    const selectedProducedFood = producedFoods.find(p => p._id === form.produced_food_id);
 
     return (
         <div className="max-w-6xl mx-auto space-y-8 p-4">
@@ -197,7 +192,7 @@ export default function ShipmentDiary() {
             </h1>
 
             {/* OBJECT SELECTOR */}
-            <div>
+            <div className="bg-white border rounded-xl p-4">
                 <label className="block text-sm font-medium mb-2">Изберете обект</label>
                 <select
                     name="object_id"
@@ -207,9 +202,16 @@ export default function ShipmentDiary() {
                 >
                     <option value="">-- Избери обект --</option>
                     {objects.map(o => (
-                        <option key={o._id} value={o._id}>{o.name}</option>
+                        <option key={o._id} value={o._id}>
+                            {o.name} ({OBJECT_TYPE_LABELS[o.object_type]})
+                        </option>
                     ))}
                 </select>
+                {objects.length === 0 && (
+                    <p className="text-xs text-gray-500 mt-2">
+                        Няма налични обекти от тип "Търговия на едро" или "Кетъринг"
+                    </p>
+                )}
             </div>
 
             {/* FORM */}
@@ -221,22 +223,16 @@ export default function ShipmentDiary() {
                     >
                         <h2 className="text-lg font-semibold">Добави нова експедиция</h2>
 
-                        {/* SHOW AUTO-DETECTED TYPE */}
                         {shipmentType && (
                             <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
                                 <p className="text-sm text-blue-800">
-                                    <strong>Тип на обекта:</strong>{" "}
-                                    {(() => {
-                                        const obj = objects.find(o => o._id === form.object_id);
-                                        return obj ? OBJECT_TYPE_LABELS[obj.object_type] || obj.object_type : "";
-                                    })()}
-                                    {" → "}
+                                    <strong>Тип:</strong>{" "}
                                     <span className={`inline-block px-2 py-1 rounded text-xs ml-1 ${
                                         shipmentType === "wholesale"
                                             ? "bg-blue-600 text-white"
                                             : "bg-green-600 text-white"
                                     }`}>
-                                        {shipmentType === "wholesale" ? "Експедиция на едро" : "Експедиция кетъринг"}
+                                        {OBJECT_TYPE_LABELS[shipmentType]}
                                     </span>
                                 </p>
                             </div>
@@ -274,7 +270,7 @@ export default function ShipmentDiary() {
                                             <option value="">-- Избери храна --</option>
                                             {foodLogs.map(f => (
                                                 <option key={f._id} value={f._id}>
-                                                    {f.food_group_id?.food_name} - Партида: {f.batch_number}
+                                                    {f.product_type} | Партида: {f.batch_number} | Срок: {f.shelf_life}
                                                 </option>
                                             ))}
                                         </select>
@@ -307,7 +303,7 @@ export default function ShipmentDiary() {
 
                             {/* CATERING FIELDS */}
                             {shipmentType === "catering" && (
-                                <div>
+                                <div className="md:col-span-2">
                                     <label className="block text-sm font-medium mb-1">
                                         Готова храна (от дневник 3.3.7) <span className="text-red-500">*</span>
                                     </label>
@@ -318,15 +314,43 @@ export default function ShipmentDiary() {
                                         required
                                         className="border px-3 py-2 rounded-md w-full"
                                     >
-                                        <option value="">-- Избери храна --</option>
+                                        <option value="">-- Избери готова храна --</option>
                                         {producedFoods.map(p => (
                                             <option key={p._id} value={p._id}>
-                                                {p.recipe_id?.name || p.ingredient_id?.food_name} - Партида: {p.product_batch_number}
+                                                {p.recipe_id?.name || p.ingredient_id?.food_name || "Без име"}
+                                                {p.product_batch_number ? ` | ${p.product_batch_number}` : ""}
+                                                {` | ${new Date(p.date).toLocaleDateString("bg-BG")}`}
                                             </option>
                                         ))}
                                     </select>
                                     {producedFoods.length === 0 && (
-                                        <p className="text-xs text-gray-500 mt-1">Няма налични записи</p>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Няма налични записи в дневник 3.3.7
+                                        </p>
+                                    )}
+
+                                    {/* Show details of selected produced food */}
+                                    {selectedProducedFood && (
+                                        <div className="mt-2 bg-green-50 border border-green-200 rounded-md p-3 text-sm space-y-1">
+                                            {selectedProducedFood.product_batch_number && (
+                                                <div>
+                                                    <span className="text-gray-500">Партида:</span>{" "}
+                                                    <span className="font-medium">{selectedProducedFood.product_batch_number}</span>
+                                                </div>
+                                            )}
+                                            {selectedProducedFood.product_shelf_life && (
+                                                <div>
+                                                    <span className="text-gray-500">Срок на годност:</span>{" "}
+                                                    <span className="font-medium">{selectedProducedFood.product_shelf_life}</span>
+                                                </div>
+                                            )}
+                                            {selectedProducedFood.portions && (
+                                                <div>
+                                                    <span className="text-gray-500">Брой порции:</span>{" "}
+                                                    <span className="font-medium">{selectedProducedFood.portions}</span>
+                                                </div>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
                             )}
@@ -347,13 +371,30 @@ export default function ShipmentDiary() {
                                 />
                             </div>
 
+                            {/* BATCH NUMBER - само за кетъринг, автоматично */}
+                            {shipmentType === "catering" && (
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Партиден номер</label>
+                                    <input
+                                        disabled
+                                        name="product_batch_number"
+                                        value={form.product_batch_number}
+                                        placeholder="Автоматично при избор на храна"
+                                        className="border px-3 py-2 rounded-md w-full bg-slate-100 text-slate-700"
+                                    />
+                                    {form.product_batch_number && (
+                                        <p className="text-xs text-blue-600 mt-1">✓ Автоматично от дневник 3.3.7</p>
+                                    )}
+                                </div>
+                            )}
+
                             <div>
                                 <label className="block text-sm font-medium mb-1">Документ</label>
                                 <input
                                     name="document"
                                     value={form.document}
                                     onChange={onChange}
-                                    placeholder="Номер на документ"
+                                    placeholder="Документ"
                                     className="border px-3 py-2 rounded-md w-full"
                                 />
                             </div>
@@ -413,14 +454,14 @@ export default function ShipmentDiary() {
                                 <div className="space-y-1 flex-1">
                                     <div className="flex items-center gap-2">
                                         <h3 className="text-lg font-semibold">
-                                            {l.food_log_id 
-                                                ? l.food_log_id.food_group_id?.food_name 
-                                                : (l.produced_food_id?.recipe_id?.name || l.produced_food_id?.ingredient_id?.food_name)
+                                            {l.food_log_id
+                                                ? l.food_log_id.product_type
+                                                : (l.produced_food_id?.recipe_id?.name || l.produced_food_id?.ingredient_id?.food_name || "Без име")
                                             }
                                         </h3>
                                         <span className={`text-xs px-2 py-1 rounded ${
-                                            l.food_log_id 
-                                                ? "bg-blue-100 text-blue-700" 
+                                            l.food_log_id
+                                                ? "bg-blue-100 text-blue-700"
                                                 : "bg-green-100 text-green-700"
                                         }`}>
                                             {l.food_log_id ? "Търговия на едро" : "Кетъринг"}
@@ -431,14 +472,15 @@ export default function ShipmentDiary() {
                                         Количество: <span className="font-medium text-slate-800">{l.quantity}</span>
                                     </div>
 
+                                    {/* WHOLESALE DETAILS */}
                                     {l.food_log_id && (
                                         <>
                                             <div className="text-sm text-slate-600">
-                                                Партида: <span className="font-medium">{l.food_log_id.batch_number}</span>
+                                                Партиден номер: <span className="font-medium">{l.food_log_id.batch_number}</span>
                                             </div>
                                             {l.food_log_id.shelf_life && (
                                                 <div className="text-sm text-slate-600">
-                                                    Срок: {new Date(l.food_log_id.shelf_life).toLocaleString("bg-BG")}
+                                                    Срок: <span className="font-medium">{l.food_log_id.shelf_life}</span>
                                                 </div>
                                             )}
                                             {l.client_id && (
@@ -449,14 +491,22 @@ export default function ShipmentDiary() {
                                         </>
                                     )}
 
+                                    {/* CATERING DETAILS */}
                                     {l.produced_food_id && (
                                         <>
-                                            <div className="text-sm text-slate-600">
-                                                Партида: <span className="font-medium">{l.produced_food_id.product_batch_number}</span>
-                                            </div>
+                                            {l.produced_food_id.product_batch_number && (
+                                                <div className="text-sm text-slate-600">
+                                                    Партида: <span className="font-medium">{l.produced_food_id.product_batch_number}</span>
+                                                </div>
+                                            )}
                                             {l.produced_food_id.product_shelf_life && (
                                                 <div className="text-sm text-slate-600">
-                                                    Срок: {new Date(l.produced_food_id.product_shelf_life).toLocaleString("bg-BG")}
+                                                    Срок: <span className="font-medium">{l.produced_food_id.product_shelf_life}</span>
+                                                </div>
+                                            )}
+                                            {l.produced_food_id.portions && (
+                                                <div className="text-sm text-slate-600">
+                                                    Порции: <span className="font-medium">{l.produced_food_id.portions}</span>
                                                 </div>
                                             )}
                                         </>
@@ -470,7 +520,7 @@ export default function ShipmentDiary() {
 
                                     {l.employee_id && (
                                         <div className="text-sm text-slate-600">
-                                            Служител: {l.employee_id.first_name} {l.employee_id.last_name}
+                                            Служител: <span className="font-medium">{l.employee_id.first_name} {l.employee_id.last_name}</span>
                                         </div>
                                     )}
 

@@ -8,9 +8,9 @@ const producedFoodSchema = new mongoose.Schema({
     ingredient_id: { type: mongoose.Schema.Types.ObjectId, ref: "FoodGroup" },
     ingredient_quantity: { type: Number },
     ingredient_batch_number: { type: String, trim: true },
-    ingredient_shelf_life: { type: Date },
+    ingredient_shelf_life: { type: String },
     product_batch_number: { type: String, trim: true },
-    product_shelf_life: { type: Date }
+    product_shelf_life: { type: String }
 }, { versionKey: false });
 
 producedFoodSchema.index({ object_id: 1, date: -1 });

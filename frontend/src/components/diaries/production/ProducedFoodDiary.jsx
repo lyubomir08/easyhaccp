@@ -5,12 +5,13 @@ import ProducedFoodEditModal from "./ProducedFoodEditModal";
 export default function ProducedFoodDiary() {
     const [objects, setObjects] = useState([]);
     const [recipes, setRecipes] = useState([]);
-    const [ingredients, setIngredients] = useState([]);
+    const [foodLogs, setFoodLogs] = useState([]);
     const [logs, setLogs] = useState([]);
 
     const [editingLog, setEditingLog] = useState(null);
     const [search, setSearch] = useState("");
     const [error, setError] = useState("");
+    const [selectedFoodLogId, setSelectedFoodLogId] = useState("");
 
     const [form, setForm] = useState({
         object_id: "",
@@ -23,14 +24,12 @@ export default function ProducedFoodDiary() {
         ingredient_shelf_life: "",
         product_batch_number: "",
         product_shelf_life: "",
-        recipe_production_number: "",
         recipe_production_date: ""
     });
 
-    /* OBJECTS */
+    /* OBJECTS - само кетъринг */
     useEffect(() => {
         api.get("/objects").then(res => {
-            // Filter only catering objects
             const cateringObjects = res.data.filter(obj => obj.object_type === "catering");
             setObjects(cateringObjects);
         });
@@ -40,43 +39,33 @@ export default function ProducedFoodDiary() {
     useEffect(() => {
         if (!form.object_id) return;
 
-        console.log("Loading data for object_id:", form.object_id);
-
-        // Option 1: Try object-specific endpoints
         const loadObjectSpecificData = async () => {
+            // Рецепти
             try {
-                // Try recipes by object
                 const recipesRes = await api.get(`/recipes/object/${form.object_id}`);
-                console.log("Recipes response:", recipesRes.data);
                 setRecipes(recipesRes.data);
-            } catch (err) {
-                console.error("No recipes/object endpoint:", err.response?.status);
-
-                // Fallback: Get food groups first, then recipes
+            } catch {
                 try {
                     const foodGroupsRes = await api.get(`/food-groups/${form.object_id}`);
-                    console.log("Food groups response:", foodGroupsRes.data);
-                    setIngredients(foodGroupsRes.data);
-
-                    // Now get recipes for each food group
-                    if (foodGroupsRes.data && foodGroupsRes.data.length > 0) {
-                        const allRecipes = [];
-                        for (const group of foodGroupsRes.data) {
-                            try {
-                                const groupRecipes = await api.get(`/recipes/group/${group._id}`);
-                                console.log(`Recipes for group ${group._id}:`, groupRecipes.data);
-                                allRecipes.push(...groupRecipes.data);
-                            } catch (err) {
-                                console.error(`Error loading recipes for group ${group._id}:`, err);
-                            }
-                        }
-                        setRecipes(allRecipes);
+                    const allRecipes = [];
+                    for (const group of foodGroupsRes.data) {
+                        try {
+                            const groupRecipes = await api.get(`/recipes/group/${group._id}`);
+                            allRecipes.push(...groupRecipes.data);
+                        } catch {}
                     }
-                } catch (err2) {
-                    console.error("Error loading food groups:", err2);
-                    setIngredients([]);
+                    setRecipes(allRecipes);
+                } catch {
                     setRecipes([]);
                 }
+            }
+
+            // Суровини от дневник 3.3.1
+            try {
+                const foodLogsRes = await api.get(`/food-logs/${form.object_id}`);
+                setFoodLogs(foodLogsRes.data);
+            } catch {
+                setFoodLogs([]);
             }
         };
 
@@ -86,78 +75,84 @@ export default function ProducedFoodDiary() {
 
     const loadLogs = async () => {
         if (!form.object_id) return;
-        const res = await api.get(`/produced-foods/${form.object_id}`);
-        setLogs(res.data);
+        try {
+            const res = await api.get(`/produced-foods/${form.object_id}`);
+            setLogs(res.data);
+        } catch {
+            setLogs([]);
+        }
     };
 
+    /* ИЗБОР НА РЕЦЕПТА - партида = номер + дата/час, автоматично взима датата */
     const onRecipeChange = (e) => {
         const id = e.target.value;
         const recipe = recipes.find(r => r._id === id);
 
         if (recipe) {
-            // Auto-fill срок на годност = текуща дата + 3 часа (за готвени ястия)
             const now = new Date();
-            const shelfLife = new Date(now.getTime() + 3 * 60 * 60 * 1000); // +3 hours
-            const shelfLifeString = shelfLife.toISOString().slice(0, 16);
-
-            // Auto-fill партиден номер = номер на рецепта + дата
-            const productBatchNumber = `${recipe.name || 'Рецепта'} - ${now.toLocaleDateString('bg-BG')}`;
+            const recipeNumber = recipe.recipe_number || (recipes.findIndex(r => r._id === id) + 1);
+            const productBatchNumber = `Рецепта №${recipeNumber} - ${now.toLocaleDateString("bg-BG")}`;
 
             setForm(s => ({
                 ...s,
                 recipe_id: id,
-                product_shelf_life: shelfLifeString,
                 product_batch_number: productBatchNumber,
-                recipe_production_number: recipe.name || '',
-                recipe_production_date: now.toISOString().slice(0, 16)
+                product_shelf_life: recipe.shelf_life || "3 часа",
+                recipe_production_date: now.toISOString()  // Автоматично взима текущата дата
             }));
         } else {
-            setForm(s => ({
-                ...s,
-                recipe_id: id
-            }));
+            setForm(s => ({ ...s, recipe_id: id }));
         }
     };
 
-    const onIngredientChange = async (e) => {
+    /* ИЗБОР НА СУРОВИНА ОТ ДНЕВНИК 3.3.1 */
+    const onFoodLogChange = (e) => {
         const id = e.target.value;
-        const ingredient = ingredients.find(i => i._id === id);
+        setSelectedFoodLogId(id);
 
-        if (ingredient) {
-            // Try to get latest food diary entry for this ingredient to auto-fill batch number and shelf life
-            try {
-                // Call API to get latest food diary entry for this ingredient
-                const response = await api.get(`/food-diary/latest/${form.object_id}/${id}`);
-                
-                if (response.data) {
-                    const latestEntry = response.data;
-                    
-                    setForm(s => ({
-                        ...s,
-                        ingredient_id: id,
-                        ingredient_batch_number: latestEntry.batch_number || '',
-                        ingredient_shelf_life: latestEntry.shelf_life 
-                            ? new Date(latestEntry.shelf_life).toISOString().slice(0, 16) 
-                            : ''
-                    }));
-                } else {
-                    setForm(s => ({
-                        ...s,
-                        ingredient_id: id
-                    }));
-                }
-            } catch (err) {
-                console.log("No food diary entry found, manual input required");
-                setForm(s => ({
-                    ...s,
-                    ingredient_id: id
-                }));
-            }
-        } else {
+        if (!id) {
             setForm(s => ({
                 ...s,
-                ingredient_id: id
+                ingredient_id: "",
+                ingredient_quantity: "",
+                ingredient_batch_number: "",
+                ingredient_shelf_life: ""
             }));
+            return;
+        }
+
+        try {
+            const foodLog = foodLogs.find(f => f._id === id);
+            if (!foodLog) return;
+
+            const ingredientId = foodLog.food_group_id
+                ? (typeof foodLog.food_group_id === "object" ? foodLog.food_group_id._id : foodLog.food_group_id)
+                : "";
+
+            let shelfLife = "";
+            if (foodLog.shelf_life) {
+                // Check if shelf_life is a valid date or just a string like "3 часа"
+                const dateValue = new Date(foodLog.shelf_life);
+                if (!isNaN(dateValue.getTime())) {
+                    // Valid date - format it
+                    shelfLife = dateValue.toLocaleString("bg-BG", {
+                        day: "2-digit", month: "2-digit", year: "numeric",
+                        hour: "2-digit", minute: "2-digit"
+                    });
+                } else {
+                    // Not a date - use as is (e.g., "3 часа")
+                    shelfLife = foodLog.shelf_life;
+                }
+            }
+
+            setForm(s => ({
+                ...s,
+                ingredient_id: String(ingredientId || ""),
+                ingredient_batch_number: foodLog.batch_number || "",
+                ingredient_shelf_life: shelfLife
+            }));
+        } catch (err) {
+            console.error("Error in onFoodLogChange:", err);
         }
     };
 
@@ -170,7 +165,6 @@ export default function ProducedFoodDiary() {
         e.preventDefault();
         setError("");
 
-        // Validation
         if (!form.date) {
             setError("Моля, въведете дата");
             return;
@@ -190,27 +184,18 @@ export default function ProducedFoodDiary() {
                 ingredient_id: form.ingredient_id || undefined,
                 ingredient_quantity: form.ingredient_quantity ? Number(form.ingredient_quantity) : undefined,
                 ingredient_batch_number: form.ingredient_batch_number || undefined,
-                ingredient_shelf_life: form.ingredient_shelf_life
-                    ? new Date(form.ingredient_shelf_life).toISOString()
-                    : undefined,
+                ingredient_shelf_life: form.ingredient_shelf_life || undefined,
                 product_batch_number: form.product_batch_number || undefined,
-                product_shelf_life: form.product_shelf_life
-                    ? new Date(form.product_shelf_life).toISOString()
-                    : undefined,
-                recipe_production_number: form.recipe_production_number || undefined,
-                recipe_production_date: form.recipe_production_date
-                    ? new Date(form.recipe_production_date).toISOString()
-                    : undefined
+                product_shelf_life: form.product_shelf_life || undefined,
+                recipe_production_date: form.recipe_production_date || undefined
             };
 
-            // Remove undefined values
             Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
 
-            console.log("Sending payload:", payload);
             await api.post("/produced-foods", payload);
             await loadLogs();
 
-            // Reset form
+            setSelectedFoodLogId("");
             setForm(s => ({
                 ...s,
                 date: "",
@@ -222,29 +207,14 @@ export default function ProducedFoodDiary() {
                 ingredient_shelf_life: "",
                 product_batch_number: "",
                 product_shelf_life: "",
-                recipe_production_number: "",
                 recipe_production_date: ""
             }));
         } catch (err) {
             console.error("Full error:", err);
-            console.error("Error response:", err.response);
-            console.error("Error data:", err.response?.data);
-
-            let errorMessage = "Неизвестна грешка";
-            if (err.response?.data) {
-                if (typeof err.response.data === 'string') {
-                    errorMessage = err.response.data;
-                } else if (err.response.data.message) {
-                    errorMessage = err.response.data.message;
-                } else if (err.response.data.error) {
-                    errorMessage = err.response.data.error;
-                } else {
-                    errorMessage = JSON.stringify(err.response.data);
-                }
-            } else if (err.message) {
-                errorMessage = err.message;
-            }
-
+            const errorMessage = err.response?.data?.message
+                || err.response?.data?.error
+                || err.message
+                || "Неизвестна грешка";
             setError("Грешка при запис: " + errorMessage);
         }
     };
@@ -252,12 +222,10 @@ export default function ProducedFoodDiary() {
     /* DELETE */
     const onDelete = async id => {
         if (!confirm("Сигурни ли сте, че искате да изтриете този запис?")) return;
-
         try {
             await api.delete(`/produced-foods/delete/${id}`);
             await loadLogs();
-        } catch (err) {
-            console.error(err);
+        } catch {
             alert("Грешка при изтриване");
         }
     };
@@ -301,6 +269,8 @@ export default function ProducedFoodDiary() {
                         <h2 className="text-lg font-semibold">Добави нов запис</h2>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                            {/* ДАТА */}
                             <div>
                                 <label className="block text-sm font-medium mb-1">
                                     Дата и час <span className="text-red-500">*</span>
@@ -315,60 +285,31 @@ export default function ProducedFoodDiary() {
                                 />
                             </div>
 
+                            {/* СУРОВИНА ОТ ДНЕВНИК 3.3.1 */}
                             <div>
-                                <label className="block text-sm font-medium mb-1">Рецепта</label>
+                                <label className="block text-sm font-medium mb-1">
+                                    Суровина (от дневник 3.3.1)
+                                </label>
                                 <select
-                                    name="recipe_id"
-                                    value={form.recipe_id}
-                                    onChange={onRecipeChange}
-                                    className="border px-3 py-2 rounded-md w-full"
-                                >
-                                    <option value="">-- Избери рецепта --</option>
-                                    {recipes.length === 0 && (
-                                        <option disabled>Няма налични рецепти</option>
-                                    )}
-                                    {recipes.map(r => (
-                                        <option key={r._id} value={r._id}>{r.name}</option>
-                                    ))}
-                                </select>
-                                {recipes.length === 0 && (
-                                    <p className="text-xs text-gray-500 mt-1">Няма рецепти за този обект</p>
-                                )}
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Брой порции</label>
-                                <input
-                                    type="number"
-                                    name="portions"
-                                    value={form.portions}
-                                    onChange={onChange}
-                                    placeholder="Брой порции"
-                                    className="border px-3 py-2 rounded-md w-full"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Суровина</label>
-                                <select
-                                    name="ingredient_id"
-                                    value={form.ingredient_id}
-                                    onChange={onIngredientChange}
+                                    value={selectedFoodLogId}
+                                    onChange={onFoodLogChange}
                                     className="border px-3 py-2 rounded-md w-full"
                                 >
                                     <option value="">-- Избери суровина --</option>
-                                    {ingredients.length === 0 && (
-                                        <option disabled>Няма налични суровини</option>
-                                    )}
-                                    {ingredients.map(i => (
-                                        <option key={i._id} value={i._id}>{i.food_name}</option>
+                                    {foodLogs.map(f => (
+                                        <option key={f._id} value={f._id}>
+                                            {f.food_group_id?.food_name || f.product_type} — Партида: {f.batch_number}
+                                        </option>
                                     ))}
                                 </select>
-                                {ingredients.length === 0 && (
-                                    <p className="text-xs text-gray-500 mt-1">Няма суровини за този обект</p>
+                                {foodLogs.length === 0 && (
+                                    <p className="text-xs text-orange-500 mt-1">
+                                        Няма суровини в дневник 3.3.1
+                                    </p>
                                 )}
                             </div>
 
+                            {/* КОЛИЧЕСТВО СУРОВИНА */}
                             <div>
                                 <label className="block text-sm font-medium mb-1">Количество суровина</label>
                                 <input
@@ -382,89 +323,114 @@ export default function ProducedFoodDiary() {
                                 />
                             </div>
 
+                            {/* ПАРТИДА СУРОВИНА - автоматично */}
                             <div>
-                                <label className="block text-sm font-medium mb-1">Партида суровина</label>
+                                <label className="block text-sm font-medium mb-1">Партиден номер (суровина)</label>
                                 <input
+                                    type="text"
                                     name="ingredient_batch_number"
                                     value={form.ingredient_batch_number}
                                     onChange={onChange}
-                                    placeholder="Партида суровина"
-                                    className="border px-3 py-2 rounded-md w-full"
+                                    placeholder="Автоматично от дневник 3.3.1"
+                                    className={`border px-3 py-2 rounded-md w-full ${form.ingredient_batch_number ? "bg-blue-50 border-blue-300" : ""}`}
                                 />
-                                {form.ingredient_id && form.ingredient_batch_number && (
-                                    <p className="text-xs text-blue-600 mt-1">✓ Автоматично от дневник 3.3.1</p>
+                                {form.ingredient_batch_number && (
+                                    <p className="text-xs text-blue-600 mt-1">✓ От дневник 3.3.1</p>
                                 )}
                             </div>
 
+                            {/* СРОК НА СУРОВИНА - string */}
                             <div>
                                 <label className="block text-sm font-medium mb-1">Срок на годност (суровина)</label>
                                 <input
-                                    type="datetime-local"
+                                    type="text"
                                     name="ingredient_shelf_life"
                                     value={form.ingredient_shelf_life}
                                     onChange={onChange}
-                                    className="border px-3 py-2 rounded-md w-full"
+                                    placeholder="Автоматично от дневник 3.3.1"
+                                    readOnly={!!selectedFoodLogId}
+                                    className={`border px-3 py-2 rounded-md w-full ${form.ingredient_shelf_life ? "bg-blue-50 border-blue-300" : ""}`}
                                 />
-                                {form.ingredient_id && form.ingredient_shelf_life && (
-                                    <p className="text-xs text-blue-600 mt-1">✓ Автоматично от дневник 3.3.1</p>
+                                {form.ingredient_shelf_life && (
+                                    <p className="text-xs text-blue-600 mt-1">✓ От дневник 3.3.1</p>
                                 )}
                             </div>
 
+                            {/* РЕЦЕПТА */}
                             <div>
-                                <label className="block text-sm font-medium mb-1">Партида продукт</label>
+                                <label className="block text-sm font-medium mb-1">
+                                    Количество ГОТОВ ПРОДУКТ - РЕЦЕПТИ
+                                </label>
+                                <select
+                                    name="recipe_id"
+                                    value={form.recipe_id}
+                                    onChange={onRecipeChange}
+                                    className="border px-3 py-2 rounded-md w-full"
+                                >
+                                    <option value="">-- Избери рецепта --</option>
+                                    {recipes.map(r => (
+                                        <option key={r._id} value={r._id}>{r.name}</option>
+                                    ))}
+                                </select>
+                                {recipes.length === 0 && (
+                                    <p className="text-xs text-gray-500 mt-1">Няма рецепти</p>
+                                )}
+                            </div>
+
+                            {/* БРОЙ ПОРЦИИ */}
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Брой порции</label>
                                 <input
+                                    type="number"
+                                    name="portions"
+                                    value={form.portions}
+                                    onChange={onChange}
+                                    placeholder="Брой порции"
+                                    className="border px-3 py-2 rounded-md w-full"
+                                />
+                            </div>
+
+                            {/* ПАРТИДА ПРОДУКТ */}
+                            <div>
+                                <label className="block text-sm font-medium mb-1">
+                                    Партиден номер на готовия продукт
+                                </label>
+                                <input
+                                    type="text"
                                     name="product_batch_number"
                                     value={form.product_batch_number}
-                                    onChange={onChange}
-                                    placeholder="Партида продукт"
-                                    className="border px-3 py-2 rounded-md w-full"
+                                    readOnly
+                                    placeholder="Автоматично при избор на рецепта"
+                                    className={`border px-3 py-2 rounded-md w-full ${form.product_batch_number ? "bg-blue-50 border-blue-300" : "bg-slate-50"}`}
                                 />
-                                {form.recipe_id && (
-                                    <p className="text-xs text-blue-600 mt-1">✓ Автоматично попълнено от рецепта</p>
+                                {form.product_batch_number && (
+                                    <p className="text-xs text-blue-600 mt-1">✓ Номер на рецепта + дата</p>
                                 )}
                             </div>
 
+                            {/* СРОК НА ПРОДУКТ */}
                             <div>
-                                <label className="block text-sm font-medium mb-1">Срок на годност (продукт)</label>
+                                <label className="block text-sm font-medium mb-1">
+                                    Срок на годност на готовия продукт
+                                </label>
                                 <input
-                                    type="datetime-local"
+                                    type="text"
                                     name="product_shelf_life"
                                     value={form.product_shelf_life}
                                     onChange={onChange}
+                                    placeholder="напр. 3 часа"
                                     className="border px-3 py-2 rounded-md w-full"
                                 />
-                                {form.recipe_id && (
-                                    <p className="text-xs text-blue-600 mt-1">✓ Автоматично: +3 часа</p>
+                                {form.recipe_id && form.product_shelf_life && (
+                                    <p className="text-xs text-blue-600 mt-1">✓ Автоматично</p>
                                 )}
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Номер на рецепта + дата на производство</label>
-                                <input
-                                    name="recipe_production_number"
-                                    value={form.recipe_production_number}
-                                    onChange={onChange}
-                                    placeholder="Номер на рецепта"
-                                    className="border px-3 py-2 rounded-md w-full"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Дата на производство (рецепта)</label>
-                                <input
-                                    type="datetime-local"
-                                    name="recipe_production_date"
-                                    value={form.recipe_production_date}
-                                    onChange={onChange}
-                                    className="border px-3 py-2 rounded-md w-full"
-                                />
-                            </div>
                         </div>
 
                         {error && (
                             <div className="bg-red-50 border border-red-200 rounded-md p-3">
                                 <p className="text-red-700 text-sm">{error}</p>
-                                <p className="text-red-600 text-xs mt-1">Отворете конзолата (F12) за повече детайли</p>
                             </div>
                         )}
 
@@ -478,6 +444,7 @@ export default function ProducedFoodDiary() {
                         </div>
                     </form>
 
+                    {/* SEARCH */}
                     <div>
                         <label className="block text-sm font-medium mb-2">Търсене</label>
                         <input
@@ -488,6 +455,7 @@ export default function ProducedFoodDiary() {
                         />
                     </div>
 
+                    {/* LIST */}
                     <div className="space-y-4">
                         {visibleLogs.map(l => (
                             <div key={l._id} className="bg-white border rounded-xl p-5">
@@ -496,16 +464,10 @@ export default function ProducedFoodDiary() {
                                         {l.recipe_id?.name || l.ingredient_id?.food_name || "Без име"}
                                     </div>
                                     <div className="flex gap-3">
-                                        <button
-                                            onClick={() => setEditingLog(l)}
-                                            className="text-blue-600 hover:text-blue-800 text-sm"
-                                        >
+                                        <button onClick={() => setEditingLog(l)} className="text-blue-600 hover:text-blue-800 text-sm">
                                             Редактирай
                                         </button>
-                                        <button
-                                            onClick={() => onDelete(l._id)}
-                                            className="text-red-600 hover:text-red-800 text-sm"
-                                        >
+                                        <button onClick={() => onDelete(l._id)} className="text-red-600 hover:text-red-800 text-sm">
                                             Изтрий
                                         </button>
                                     </div>
@@ -514,24 +476,8 @@ export default function ProducedFoodDiary() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
                                     <div>
                                         <span className="text-gray-500 font-medium">Дата:</span>{" "}
-                                        <span className="text-gray-800">
-                                            {new Date(l.date).toLocaleString("bg-BG")}
-                                        </span>
+                                        <span className="text-gray-800">{new Date(l.date).toLocaleString("bg-BG")}</span>
                                     </div>
-
-                                    {l.recipe_id && (
-                                        <div>
-                                            <span className="text-gray-500 font-medium">Готов продукт (рецепта):</span>{" "}
-                                            <span className="text-red-600 font-semibold">{l.recipe_id.name}</span>
-                                        </div>
-                                    )}
-
-                                    {l.portions && (
-                                        <div>
-                                            <span className="text-gray-500 font-medium">Брой порции:</span>{" "}
-                                            <span className="text-gray-800">{l.portions}</span>
-                                        </div>
-                                    )}
 
                                     {l.ingredient_id && (
                                         <div>
@@ -549,49 +495,50 @@ export default function ProducedFoodDiary() {
 
                                     {l.ingredient_batch_number && (
                                         <div>
-                                            <span className="text-gray-500 font-medium">Партиден номер на суровината:</span>{" "}
+                                            <span className="text-gray-500 font-medium">Партида суровина:</span>{" "}
                                             <span className="text-gray-800">{l.ingredient_batch_number}</span>
                                         </div>
                                     )}
 
                                     {l.ingredient_shelf_life && (
                                         <div>
-                                            <span className="text-gray-500 font-medium">Срок на годност (суровина):</span>{" "}
-                                            <span className="text-gray-800">
-                                                {new Date(l.ingredient_shelf_life).toLocaleString("bg-BG")}
-                                            </span>
+                                            <span className="text-gray-500 font-medium">Срок суровина:</span>{" "}
+                                            <span className="text-gray-800">{l.ingredient_shelf_life}</span>
+                                        </div>
+                                    )}
+
+                                    {l.recipe_id && (
+                                        <div>
+                                            <span className="text-gray-500 font-medium">Готов продукт (рецепта):</span>{" "}
+                                            <span className="text-red-600 font-semibold">{l.recipe_id.name}</span>
+                                        </div>
+                                    )}
+
+                                    {l.portions && (
+                                        <div>
+                                            <span className="text-gray-500 font-medium">Брой порции:</span>{" "}
+                                            <span className="text-gray-800">{l.portions}</span>
                                         </div>
                                     )}
 
                                     {l.product_batch_number && (
                                         <div>
-                                            <span className="text-gray-500 font-medium">Партиден номер на готовия продукт:</span>{" "}
+                                            <span className="text-gray-500 font-medium">Партида продукт:</span>{" "}
                                             <span className="text-gray-800">{l.product_batch_number}</span>
                                         </div>
                                     )}
 
                                     {l.product_shelf_life && (
                                         <div>
-                                            <span className="text-gray-500 font-medium">Срок на годност на готовия продукт:</span>{" "}
-                                            <span className="text-gray-800">
-                                                {new Date(l.product_shelf_life).toLocaleString("bg-BG")}
-                                            </span>
-                                        </div>
-                                    )}
-
-                                    {l.recipe_production_number && (
-                                        <div>
-                                            <span className="text-gray-500 font-medium">Номер на рецепта + дата:</span>{" "}
-                                            <span className="text-gray-800">{l.recipe_production_number}</span>
+                                            <span className="text-gray-500 font-medium">Срок продукт:</span>{" "}
+                                            <span className="text-gray-800">{l.product_shelf_life}</span>
                                         </div>
                                     )}
 
                                     {l.recipe_production_date && (
                                         <div>
-                                            <span className="text-gray-500 font-medium">Дата на производство:</span>{" "}
-                                            <span className="text-gray-800">
-                                                {new Date(l.recipe_production_date).toLocaleString("bg-BG")}
-                                            </span>
+                                            <span className="text-gray-500 font-medium">Произведено на:</span>{" "}
+                                            <span className="text-gray-800">{new Date(l.recipe_production_date).toLocaleString("bg-BG")}</span>
                                         </div>
                                     )}
                                 </div>
@@ -599,9 +546,7 @@ export default function ProducedFoodDiary() {
                         ))}
 
                         {visibleLogs.length === 0 && (
-                            <p className="text-slate-500 text-sm text-center py-8">
-                                Няма записи
-                            </p>
+                            <p className="text-slate-500 text-sm text-center py-8">Няма записи</p>
                         )}
 
                         {!search && logs.length > 10 && (
@@ -617,7 +562,7 @@ export default function ProducedFoodDiary() {
                 <ProducedFoodEditModal
                     log={editingLog}
                     recipes={recipes}
-                    ingredients={ingredients}
+                    foodLogs={foodLogs}
                     onClose={() => setEditingLog(null)}
                     onSaved={loadLogs}
                 />

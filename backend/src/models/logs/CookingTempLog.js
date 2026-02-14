@@ -5,7 +5,7 @@ const cookingTempLogSchema = new mongoose.Schema({
     date: { type: Date, required: true },
     food_group_id: { type: mongoose.Schema.Types.ObjectId, ref: "FoodGroup", required: true },
     measured_temp: { type: Number, required: true },
-    shelf_life: { type: Date },
+    shelf_life: { type: String }, // Changed from Date to String
     employee_id: { type: mongoose.Schema.Types.ObjectId, ref: "Employee" },
     created_at: { type: Date, default: Date.now }
 }, { versionKey: false });

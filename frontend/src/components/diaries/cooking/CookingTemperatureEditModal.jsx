@@ -12,7 +12,7 @@ export default function CookingTemperatureEditModal({
         date: log.date.slice(0, 16),
         food_group_id: log.food_group_id?._id || "",
         measured_temp: log.measured_temp || "",
-        shelf_life: log.shelf_life ? log.shelf_life.slice(0, 16) : "",
+        shelf_life: log.shelf_life || "",
         employee_id: log.employee_id?._id || ""
     });
 
@@ -30,7 +30,7 @@ export default function CookingTemperatureEditModal({
                 date: new Date(form.date).toISOString(),
                 food_group_id: form.food_group_id,
                 measured_temp: Number(form.measured_temp),
-                shelf_life: form.shelf_life ? new Date(form.shelf_life).toISOString() : undefined,
+                shelf_life: form.shelf_life || undefined,
                 employee_id: form.employee_id || undefined
             };
 
@@ -38,7 +38,6 @@ export default function CookingTemperatureEditModal({
             Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
 
             await api.put(`/cooking-temp/edit/${log._id}`, payload);
-
             await onSaved();
             onClose();
         } catch (err) {
@@ -109,10 +108,11 @@ export default function CookingTemperatureEditModal({
                     <div>
                         <label className="block text-sm font-medium mb-1">Срок на годност</label>
                         <input
-                            type="datetime-local"
+                            type="text"
                             name="shelf_life"
                             value={form.shelf_life}
                             onChange={onChange}
+                            placeholder="напр. 24 часа"
                             className="border px-3 py-2 rounded-md w-full"
                         />
                     </div>

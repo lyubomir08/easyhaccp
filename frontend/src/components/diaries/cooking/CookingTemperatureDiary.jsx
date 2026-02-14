@@ -65,7 +65,7 @@ export default function CookingTemperatureDiary() {
             ...s,
             food_group_id: id,
             measured_temp: food?.cooking_temp || "",
-            shelf_life: food?.shelf_life ? food.shelf_life.slice(0, 16) : ""
+            shelf_life: food?.shelf_life || ""
         }));
     };
 
@@ -80,7 +80,7 @@ export default function CookingTemperatureDiary() {
                 date: new Date(form.date).toISOString(),
                 food_group_id: form.food_group_id,
                 measured_temp: Number(form.measured_temp),
-                shelf_life: form.shelf_life ? new Date(form.shelf_life).toISOString() : undefined,
+                shelf_life: form.shelf_life || undefined,
                 employee_id: form.employee_id || undefined
             };
 
@@ -135,7 +135,7 @@ export default function CookingTemperatureDiary() {
             </h1>
 
             {/* OBJECT SELECTOR */}
-            <div>
+            <div className="bg-white border rounded-xl p-4">
                 <label className="block text-sm font-medium mb-2">Изберете обект</label>
                 <select
                     name="object_id"
@@ -214,10 +214,11 @@ export default function CookingTemperatureDiary() {
                             <div>
                                 <label className="block text-sm font-medium mb-1">Срок на годност</label>
                                 <input
-                                    type="datetime-local"
+                                    type="text"
                                     name="shelf_life"
                                     value={form.shelf_life}
                                     onChange={onChange}
+                                    placeholder="напр. 24 часа"
                                     className="border px-3 py-2 rounded-md w-full"
                                 />
                             </div>
@@ -295,11 +296,11 @@ export default function CookingTemperatureDiary() {
                                         )}
                                     </div>
 
-                                    {l.shelf_life && (
+                                    {l.food_group_id?.shelf_life && (
                                         <div className="text-sm text-slate-600">
                                             Годен до:{" "}
                                             <span className="font-medium text-slate-800">
-                                                {new Date(l.shelf_life).toLocaleString("bg-BG")}
+                                                {l.food_group_id.shelf_life}
                                             </span>
                                         </div>
                                     )}

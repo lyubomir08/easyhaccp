@@ -17,6 +17,7 @@ export default function ShipmentEditModal({
         food_log_id: log.food_log_id?._id || "",
         produced_food_id: log.produced_food_id?._id || "",
         quantity: log.quantity || "",
+        product_batch_number: log.produced_food_id?.product_batch_number || "",
         client_id: log.client_id?._id || "",
         document: log.document || "",
         employee_id: log.employee_id?._id || ""
@@ -26,6 +27,31 @@ export default function ShipmentEditModal({
 
     const onChange = e =>
         setForm(s => ({ ...s, [e.target.name]: e.target.value }));
+
+    // Auto-fill при смяна на храна (wholesale)
+    const onFoodLogChange = (e) => {
+        const id = e.target.value;
+        const foodLog = foodLogs.find(f => f._id === id);
+
+        setForm(s => ({
+            ...s,
+            food_log_id: id,
+            quantity: foodLog?.quantity || ""
+        }));
+    };
+
+    // Auto-fill при смяна на готова храна (catering)
+    const onProducedFoodChange = (e) => {
+        const id = e.target.value;
+        const produced = producedFoods.find(p => p._id === id);
+
+        setForm(s => ({
+            ...s,
+            produced_food_id: id,
+            quantity: produced?.portions || "",
+            product_batch_number: produced?.product_batch_number || ""
+        }));
+    };
 
     const onSubmit = async e => {
         e.preventDefault();
@@ -39,7 +65,6 @@ export default function ShipmentEditModal({
                 employee_id: form.employee_id || undefined
             };
 
-            // Add type-specific fields
             if (shipmentType === "wholesale") {
                 payload.food_log_id = form.food_log_id;
                 payload.client_id = form.client_id || undefined;
@@ -47,11 +72,9 @@ export default function ShipmentEditModal({
                 payload.produced_food_id = form.produced_food_id;
             }
 
-            // Remove undefined values
             Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
 
             await api.put(`/shipments/edit/${log._id}`, payload);
-
             await onSaved();
             onClose();
         } catch (err) {
@@ -59,6 +82,9 @@ export default function ShipmentEditModal({
             setError("Грешка при актуализация");
         }
     };
+
+    // Selected produced food for details panel
+    const selectedProducedFood = producedFoods.find(p => p._id === form.produced_food_id);
 
     return (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -68,17 +94,19 @@ export default function ShipmentEditModal({
                 </h2>
 
                 <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Shipment Type Badge */}
+
+                    {/* TYPE BADGE */}
                     <div className="md:col-span-2">
                         <span className={`text-xs px-3 py-1 rounded ${
-                            shipmentType === "wholesale" 
-                                ? "bg-blue-100 text-blue-700" 
+                            shipmentType === "wholesale"
+                                ? "bg-blue-100 text-blue-700"
                                 : "bg-green-100 text-green-700"
                         }`}>
                             {shipmentType === "wholesale" ? "Търговия на едро" : "Кетъринг"}
                         </span>
                     </div>
 
+                    {/* ДАТА */}
                     <div className="md:col-span-2">
                         <label className="block text-sm font-medium mb-1">
                             Дата и час <span className="text-red-500">*</span>
@@ -103,14 +131,14 @@ export default function ShipmentEditModal({
                                 <select
                                     name="food_log_id"
                                     value={form.food_log_id}
-                                    onChange={onChange}
+                                    onChange={onFoodLogChange}
                                     required
                                     className="border px-3 py-2 rounded-md w-full"
                                 >
                                     <option value="">-- Избери храна --</option>
                                     {foodLogs.map(f => (
                                         <option key={f._id} value={f._id}>
-                                            {f.food_group_id?.food_name} - Партида: {f.batch_number}
+                                            {f.product_type} | Партида: {f.batch_number} | Срок: {f.shelf_life}
                                         </option>
                                     ))}
                                 </select>
@@ -147,20 +175,47 @@ export default function ShipmentEditModal({
                             <select
                                 name="produced_food_id"
                                 value={form.produced_food_id}
-                                onChange={onChange}
+                                onChange={onProducedFoodChange}
                                 required
                                 className="border px-3 py-2 rounded-md w-full"
                             >
                                 <option value="">-- Избери храна --</option>
                                 {producedFoods.map(p => (
                                     <option key={p._id} value={p._id}>
-                                        {p.recipe_id?.name || p.ingredient_id?.food_name} - Партида: {p.product_batch_number}
+                                        {p.recipe_id?.name || p.ingredient_id?.food_name || "Без име"}
+                                        {p.product_batch_number ? ` | ${p.product_batch_number}` : ""}
+                                        {` | ${new Date(p.date).toLocaleDateString("bg-BG")}`}
                                     </option>
                                 ))}
                             </select>
+
+                            {/* Детайли на избраната храна */}
+                            {selectedProducedFood && (
+                                <div className="mt-2 bg-green-50 border border-green-200 rounded-md p-3 text-sm space-y-1">
+                                    {selectedProducedFood.product_batch_number && (
+                                        <div>
+                                            <span className="text-gray-500">Партида:</span>{" "}
+                                            <span className="font-medium">{selectedProducedFood.product_batch_number}</span>
+                                        </div>
+                                    )}
+                                    {selectedProducedFood.product_shelf_life && (
+                                        <div>
+                                            <span className="text-gray-500">Срок на годност:</span>{" "}
+                                            <span className="font-medium">{selectedProducedFood.product_shelf_life}</span>
+                                        </div>
+                                    )}
+                                    {selectedProducedFood.portions && (
+                                        <div>
+                                            <span className="text-gray-500">Брой порции:</span>{" "}
+                                            <span className="font-medium">{selectedProducedFood.portions}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     )}
 
+                    {/* КОЛИЧЕСТВО */}
                     <div>
                         <label className="block text-sm font-medium mb-1">
                             Количество <span className="text-red-500">*</span>
@@ -177,17 +232,35 @@ export default function ShipmentEditModal({
                         />
                     </div>
 
+                    {/* ПАРТИДЕН НОМЕР - само за кетъринг, автоматично */}
+                    {shipmentType === "catering" && (
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Партиден номер</label>
+                            <input
+                                disabled
+                                value={form.product_batch_number}
+                                placeholder="Автоматично при избор на храна"
+                                className="border px-3 py-2 rounded-md w-full bg-slate-100 text-slate-700"
+                            />
+                            {form.product_batch_number && (
+                                <p className="text-xs text-blue-600 mt-1">✓ Автоматично от дневник 3.3.7</p>
+                            )}
+                        </div>
+                    )}
+
+                    {/* ДОКУМЕНТ */}
                     <div>
                         <label className="block text-sm font-medium mb-1">Документ</label>
                         <input
                             name="document"
                             value={form.document}
                             onChange={onChange}
-                            placeholder="Номер на документ"
+                            placeholder="Документ"
                             className="border px-3 py-2 rounded-md w-full"
                         />
                     </div>
 
+                    {/* СЛУЖИТЕЛ */}
                     <div className="md:col-span-2">
                         <label className="block text-sm font-medium mb-1">Служител</label>
                         <select
