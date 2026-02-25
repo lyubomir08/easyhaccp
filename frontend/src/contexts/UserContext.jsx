@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect } from "react";
 import { getUserData, setUserData, clearUserData } from "../utils/storage";
 import * as authService from "../services/authService";
+import api from "../services/api";
 
 export const UserContext = createContext();
 
@@ -8,12 +9,14 @@ export const UserProvider = ({ children }) => {
     const [user, setUser] = useState(() => getUserData());
     const [selectedFirmId, setSelectedFirmId] = useState(null);
     const [selectedObjectId, setSelectedObjectId] = useState(null);
+    const [objectTypes, setObjectTypes] = useState([]); // ["catering", "wholesale", ...]
 
     useEffect(() => {
         if (!user) {
             clearUserData();
             setSelectedFirmId(null);
             setSelectedObjectId(null);
+            setObjectTypes([]);
             return;
         }
 
@@ -27,6 +30,17 @@ export const UserProvider = ({ children }) => {
         if (user.role === "owner") {
             setSelectedFirmId(user.firm_id);
         }
+
+        // Зареди типовете обекти
+        if (user.role !== "admin") {
+            api.get("/objects").then(res => {
+                const types = res.data.map(o => o.object_type).filter(Boolean);
+                setObjectTypes([...new Set(types)]);
+            }).catch(() => setObjectTypes([]));
+        } else {
+            // Админът вижда всичко
+            setObjectTypes(["catering", "wholesale"]);
+        }
     }, [user]);
 
     const login = async (username, password) => {
@@ -34,7 +48,6 @@ export const UserProvider = ({ children }) => {
         setUser(data);
     };
 
-    // not logging in
     const register = async (formData) => {
         return await authService.register(formData);
     };
@@ -44,6 +57,9 @@ export const UserProvider = ({ children }) => {
         clearUserData();
         setUser(null);
     };
+
+    const isCatering = objectTypes.includes("catering");
+    const isWholesale = objectTypes.includes("wholesale");
 
     return (
         <UserContext.Provider
@@ -58,6 +74,9 @@ export const UserProvider = ({ children }) => {
                 isAdmin: user?.role === "admin",
                 isOwner: user?.role === "owner",
                 isManager: user?.role === "manager",
+                objectTypes,
+                isCatering,
+                isWholesale,
                 login,
                 register,
                 logout,

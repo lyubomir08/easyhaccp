@@ -23,8 +23,8 @@ export default function About() {
                 </div>
 
                 <div className="mt-10 text-slate-250">
-                    <p>Телефон: —</p>
-                    <p>Email: —</p>
+                    <p>Телефон: — +359898333313</p>
+                    <p>Email: — yeti-slujeben@abv.bg</p>
                 </div>
             </div>
         </section>

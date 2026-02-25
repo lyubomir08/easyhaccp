@@ -4,7 +4,6 @@ import api from "../../services/api";
 export default function EditRecipeModal({
     recipe,
     foodGroups,
-    needsQuantity,
     onClose,
     onUpdated,
 }) {
@@ -59,82 +58,103 @@ export default function EditRecipeModal({
 
     return (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl p-6 w-full max-w-3xl space-y-4">
+            <div className="bg-white rounded-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto space-y-4">
                 <h2 className="text-lg font-medium">Редактиране на рецепта</h2>
 
-                <input
-                    value={form.name}
-                    onChange={(e) =>
-                        setForm(s => ({ ...s, name: e.target.value }))
-                    }
-                    className="border px-3 py-2 rounded-md w-full"
-                    placeholder="Име на рецепта"
-                />
+                <div>
+                    <label className="block text-sm font-medium mb-1">Име на рецепта</label>
+                    <input
+                        value={form.name}
+                        onChange={(e) =>
+                            setForm(s => ({ ...s, name: e.target.value }))
+                        }
+                        className="border px-3 py-2 rounded-md w-full"
+                        placeholder="Име на рецепта"
+                        required
+                    />
+                </div>
 
-                {form.items.map((item, idx) => (
-                    <div key={idx} className="flex gap-3 items-center">
-                        <select
-                            value={item.food_group_id}
-                            onChange={(e) =>
-                                onChangeItem(idx, "food_group_id", e.target.value)
-                            }
-                            className="border px-3 py-2 rounded-md flex-1"
-                        >
-                            {foodGroups.map(f => (
-                                <option key={f._id} value={f._id}>
-                                    {f.food_name}
-                                </option>
-                            ))}
-                        </select>
+                <div className="border-t pt-4">
+                    <label className="block text-sm font-medium mb-2">Съставки</label>
+                    {form.items.map((item, idx) => (
+                        <div key={idx} className="grid grid-cols-12 gap-3 mb-3">
+                            <div className="col-span-4">
+                                <select
+                                    value={item.food_group_id}
+                                    onChange={(e) =>
+                                        onChangeItem(idx, "food_group_id", e.target.value)
+                                    }
+                                    className="border px-3 py-2 rounded-md w-full"
+                                >
+                                    {foodGroups.map(f => (
+                                        <option key={f._id} value={f._id}>
+                                            {f.food_name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
 
-                        <input
-                            value={item.product}
-                            onChange={(e) =>
-                                onChangeItem(idx, "product", e.target.value)
-                            }
-                            className="border px-3 py-2 rounded-md flex-1"
-                            placeholder="Продукт"
-                        />
+                            <div className="col-span-4">
+                                <input
+                                    value={item.product}
+                                    onChange={(e) =>
+                                        onChangeItem(idx, "product", e.target.value)
+                                    }
+                                    className="border px-3 py-2 rounded-md w-full"
+                                    placeholder="Продукт"
+                                    required
+                                />
+                            </div>
 
-                        {needsQuantity && (
-                            <input
-                                type="number"
-                                value={item.quantity}
-                                onChange={(e) =>
-                                    onChangeItem(idx, "quantity", e.target.value)
-                                }
-                                className="border px-3 py-2 rounded-md w-28"
-                                placeholder="Кол-во"
-                            />
-                        )}
+                            <div className="col-span-3">
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={item.quantity}
+                                    onChange={(e) =>
+                                        onChangeItem(idx, "quantity", e.target.value)
+                                    }
+                                    className="border px-3 py-2 rounded-md w-full"
+                                    placeholder="Количество"
+                                />
+                            </div>
 
-                        <button
-                            onClick={() => removeItem(idx)}
-                            className="text-red-600 text-sm"
-                        >
-                            ✕
-                        </button>
-                    </div>
-                ))}
+                            <div className="col-span-1 flex items-center">
+                                {form.items.length > 1 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => removeItem(idx)}
+                                        className="text-red-600 text-lg hover:text-red-800 w-full"
+                                    >
+                                        ✕
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
 
                 <div className="flex justify-between pt-4 border-t">
                     <button
+                        type="button"
                         onClick={addItem}
-                        className="text-blue-600 text-sm"
+                        className="text-blue-600 text-sm hover:text-blue-800"
                     >
                         + Добави продукт
                     </button>
 
                     <div className="flex gap-3">
                         <button
+                            type="button"
                             onClick={onClose}
-                            className="border px-4 py-2 rounded-md"
+                            className="border px-4 py-2 rounded-md hover:bg-gray-50"
                         >
                             Отказ
                         </button>
                         <button
+                            type="button"
                             onClick={onSave}
-                            className="bg-blue-600 text-white px-6 py-2 rounded-md"
+                            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
                         >
                             Запази
                         </button>

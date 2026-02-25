@@ -1,10 +1,13 @@
 import Recipe from "../models/Recipe.js";
 
 const createRecipe = async (data) => {
-    // Auto-assign recipe number based on food_group_id
-    const count = await Recipe.countDocuments({ food_group_id: data.food_group_id });
-    const recipeNumber = count + 1;
-    
+    // Глобален recipe_number - взима максималния от ВСИЧКИ рецепти
+    const last = await Recipe.findOne()
+        .sort({ recipe_number: -1 })
+        .select("recipe_number");
+
+    const recipeNumber = last ? last.recipe_number + 1 : 1;
+
     return await Recipe.create({
         ...data,
         recipe_number: recipeNumber
@@ -12,7 +15,7 @@ const createRecipe = async (data) => {
 };
 
 const getRecipesByFoodGroup = async (food_group_id) => {
-    return await Recipe.find({ food_group_id }).sort({ recipe_number: 1 }); // Sort by recipe number
+    return await Recipe.find({ food_group_id }).sort({ recipe_number: 1 });
 };
 
 const getRecipeById = async (recipeId) => {
@@ -20,7 +23,6 @@ const getRecipeById = async (recipeId) => {
 };
 
 const updateRecipe = async (recipeId, data) => {
-    // Don't allow updating recipe_number
     const { recipe_number, ...updateData } = data;
     return await Recipe.findByIdAndUpdate(recipeId, updateData, { new: true });
 };

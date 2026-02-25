@@ -6,7 +6,7 @@ const foodLogSchema = new mongoose.Schema({
     supplier_id: { type: mongoose.Schema.Types.ObjectId, ref: "Supplier", required: true },
     product_type: { type: String, required: true, trim: true },
     batch_number: { type: String, required: true, trim: true },
-    shelf_life: { type: String, required: true, trim: true },  
+    shelf_life: {type: Date, required: true },  
     quantity: { type: Number, required: true },
     transport_type: { type: String, trim: true },
     document: { type: String, trim: true },

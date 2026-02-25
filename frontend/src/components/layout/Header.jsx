@@ -48,9 +48,9 @@ export default function Header() {
 
                     {user && (
                         <>
-                            <NavLink to="/dashboard" className={baseLink}>
+                            {/* <NavLink to="/dashboard" className={baseLink}>
                                 Табло
-                            </NavLink>
+                            </NavLink> */}
 
                             <button
                                 onClick={logout}

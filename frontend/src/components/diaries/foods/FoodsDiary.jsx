@@ -4,11 +4,9 @@ import EditFoodLogModal from "./EditFoodLogModal";
 
 export default function FoodsDiary() {
     const [objects, setObjects] = useState([]);
-    const [foodGroups, setFoodGroups] = useState([]);
     const [suppliers, setSuppliers] = useState([]);
     const [employees, setEmployees] = useState([]);
     const [allLogs, setAllLogs] = useState([]);
-
     const [editingLog, setEditingLog] = useState(null);
     const [search, setSearch] = useState("");
     const [error, setError] = useState("");
@@ -17,7 +15,7 @@ export default function FoodsDiary() {
         object_id: "",
         date: "",
         supplier_id: "",
-        food_group_id: "",
+        product_type: "",
         batch_number: "",
         shelf_life: "",
         quantity: "",
@@ -32,8 +30,6 @@ export default function FoodsDiary() {
 
     useEffect(() => {
         if (!form.object_id) return;
-
-        api.get(`/food-groups/${form.object_id}`).then(r => setFoodGroups(r.data));
         api.get(`/suppliers/object/${form.object_id}`).then(r => setSuppliers(r.data));
         api.get(`/employees/${form.object_id}`).then(r => setEmployees(r.data));
         loadLogs();
@@ -48,25 +44,6 @@ export default function FoodsDiary() {
         setForm(s => ({ ...s, [e.target.name]: e.target.value }));
     };
 
-    const onFoodGroupChange = (e) => {
-        const id = e.target.value;
-        const foodGroup = foodGroups.find(f => f._id === id);
-
-        if (foodGroup && foodGroup.shelf_life) {
-          
-            setForm(s => ({
-                ...s,
-                food_group_id: id,
-                shelf_life: foodGroup.shelf_life  
-            }));
-        } else {
-            setForm(s => ({
-                ...s,
-                food_group_id: id
-            }));
-        }
-    };
-
     const onSubmit = async (e) => {
         e.preventDefault();
         setError("");
@@ -76,24 +53,20 @@ export default function FoodsDiary() {
                 object_id: form.object_id,
                 date: form.date,
                 supplier_id: form.supplier_id,
-                product_type:
-                    foodGroups.find(f => f._id === form.food_group_id)?.food_name,
+                product_type: form.product_type,
                 batch_number: form.batch_number,
-                shelf_life: form.shelf_life, 
+                shelf_life: form.shelf_life,
                 quantity: Number(form.quantity),
                 transport_type: form.transport_type,
                 document: form.document,
                 employee_id: form.employee_id
             });
-
             loadLogs();
-            
-            
             setForm(s => ({
                 ...s,
                 date: "",
                 supplier_id: "",
-                food_group_id: "",
+                product_type: "",
                 batch_number: "",
                 shelf_life: "",
                 quantity: "",
@@ -124,7 +97,7 @@ export default function FoodsDiary() {
     const visibleLogs = search ? filteredLogs : filteredLogs.slice(0, 10);
 
     return (
-        <div className="max-w-5xl mx-auto space-y-8">
+        <div className="max-w-5xl mx-auto space-y-8 p-4">
             <h1 className="text-2xl font-semibold">
                 Дневник за храни и опаковки
             </h1>
@@ -157,23 +130,23 @@ export default function FoodsDiary() {
                     >
                         <div>
                             <label className="block text-sm font-medium mb-1">Дата</label>
-                            <input 
-                                type="date" 
-                                name="date" 
+                            <input
+                                type="date"
+                                name="date"
                                 value={form.date}
-                                onChange={onChange} 
-                                required 
-                                className="border px-3 py-2 rounded-md w-full" 
+                                onChange={onChange}
+                                required
+                                className="border px-3 py-2 rounded-md w-full"
                             />
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium mb-1">Доставчик</label>
-                            <select 
-                                name="supplier_id" 
+                            <select
+                                name="supplier_id"
                                 value={form.supplier_id}
-                                onChange={onChange} 
-                                required 
+                                onChange={onChange}
+                                required
                                 className="border px-3 py-2 rounded-md w-full"
                             >
                                 <option value="">-- Избери доставчик --</option>
@@ -185,89 +158,88 @@ export default function FoodsDiary() {
 
                         <div>
                             <label className="block text-sm font-medium mb-1">Вид храна</label>
-                            <select 
-                                name="food_group_id" 
-                                value={form.food_group_id}
-                                onChange={onFoodGroupChange} 
-                                required 
+                            <input
+                                type="text"
+                                name="product_type"
+                                value={form.product_type}
+                                onChange={onChange}
+                                placeholder="напр. Пиле, Свинско, Домати"
+                                required
                                 className="border px-3 py-2 rounded-md w-full"
-                            >
-                                <option value="">-- Избери вид храна --</option>
-                                {foodGroups.map(f => (
-                                    <option key={f._id} value={f._id}>{f.food_name}</option>
-                                ))}
-                            </select>
+                            />
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium mb-1">Партиден номер</label>
-                            <input 
-                                name="batch_number" 
+                            <input
+                                type="text"
+                                name="batch_number"
                                 value={form.batch_number}
-                                placeholder="Партиден номер" 
+                                placeholder="Партиден номер"
                                 onChange={onChange}
                                 required
-                                className="border px-3 py-2 rounded-md w-full" 
+                                className="border px-3 py-2 rounded-md w-full"
                             />
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium mb-1">Срок на годност</label>
-                            <input 
-                                type="text"
-                                name="shelf_life" 
+                            <input
+                                type="date"
+                                name="shelf_life"
                                 value={form.shelf_life}
                                 onChange={onChange}
-                                placeholder="напр. 3 часа, 2 дни"
                                 required
-                                className="border px-3 py-2 rounded-md w-full" 
+                                title="Срок на годност"
+                                className="border px-3 py-2 rounded-md w-full"
                             />
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium mb-1">Количество</label>
-                            <input 
-                                type="number" 
-                                name="quantity" 
+                            <input
+                                type="number"
+                                step="0.01"
+                                name="quantity"
                                 value={form.quantity}
-                                placeholder="Количество" 
+                                placeholder="Количество"
                                 onChange={onChange}
                                 required
-                                className="border px-3 py-2 rounded-md w-full" 
+                                className="border px-3 py-2 rounded-md w-full"
                             />
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium mb-1">Вид на използвания транспорт</label>
-                            <input 
+                            <input
                                 type="text"
-                                name="transport_type" 
+                                name="transport_type"
                                 value={form.transport_type}
                                 onChange={onChange}
                                 placeholder="напр. хладилен камион"
-                                className="border px-3 py-2 rounded-md w-full" 
+                                className="border px-3 py-2 rounded-md w-full"
                             />
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium mb-1">Придружителен документ/сертификат</label>
-                            <input 
+                            <input
                                 type="text"
-                                name="document" 
+                                name="document"
                                 value={form.document}
                                 onChange={onChange}
                                 placeholder="Документ"
-                                className="border px-3 py-2 rounded-md w-full" 
+                                className="border px-3 py-2 rounded-md w-full"
                             />
                         </div>
 
-                        <div className="md:col-span-2">
+                        <div>
                             <label className="block text-sm font-medium mb-1">Служител</label>
-                            <select 
-                                name="employee_id" 
+                            <select
+                                name="employee_id"
                                 value={form.employee_id}
-                                onChange={onChange} 
-                                required 
+                                onChange={onChange}
+                                required
                                 className="border px-3 py-2 rounded-md w-full"
                             >
                                 <option value="">-- Избери служител --</option>
@@ -280,7 +252,7 @@ export default function FoodsDiary() {
                         </div>
 
                         <div className="md:col-span-3 flex justify-end">
-                            <button 
+                            <button
                                 type="submit"
                                 className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
                             >
@@ -318,7 +290,6 @@ export default function FoodsDiary() {
                         >
                             <div>
                                 <strong>{l.product_type}</strong>
-
                                 <div className="text-sm text-slate-600 space-y-1">
                                     <div>
                                         Партиден номер: {l.batch_number} • Количество: {l.quantity} • Срок на годност: {l.shelf_life}
@@ -334,7 +305,6 @@ export default function FoodsDiary() {
                                         </div>
                                     )}
                                 </div>
-
                                 {l.created_at && (
                                     <div className="text-xs text-slate-400 mt-1">
                                         Създаден:{" "}
@@ -342,7 +312,6 @@ export default function FoodsDiary() {
                                     </div>
                                 )}
                             </div>
-
                             <div className="flex gap-3 text-sm">
                                 <button
                                     onClick={() => setEditingLog(l)}
@@ -352,7 +321,7 @@ export default function FoodsDiary() {
                                 </button>
                                 <button
                                     onClick={() => onDelete(l._id)}
-                                    className="text-red-600 hover:text-red-800"
+                                    className="text-red-600 hover:text-blue-800"
                                 >
                                     Изтрий
                                 </button>
@@ -375,7 +344,6 @@ export default function FoodsDiary() {
             {editingLog && (
                 <EditFoodLogModal
                     log={editingLog}
-                    foodGroups={foodGroups}
                     suppliers={suppliers}
                     employees={employees}
                     onClose={() => setEditingLog(null)}
