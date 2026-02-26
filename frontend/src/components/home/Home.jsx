@@ -1,13 +1,14 @@
 import { Link } from "react-router";
 import logo from "../../assets/logo.png";
+import useUser from "../../hooks/useUser";
 
 export default function Home() {
+    const { user } = useUser();
+
     return (
         <section className="h-[calc(100vh-75px)] overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-black flex items-center">
             <div className="max-w-6xl mx-auto px-6 w-full">
-
                 <div className="grid md:grid-cols-2 gap-12 items-center">
-
                     <div>
                         <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight mb-6">
                             Професионално управление на
@@ -22,10 +23,10 @@ export default function Home() {
 
                         <div className="flex gap-4">
                             <Link
-                                to="/sign-up"
+                                to={user ? "/profile" : "/sign-up"}
                                 className="px-6 py-3 rounded-md bg-white text-black font-medium hover:bg-slate-200 transition"
                             >
-                                Регистрация
+                                {user ? "Профил" : "Регистрация"}
                             </Link>
 
                             <Link
@@ -39,14 +40,9 @@ export default function Home() {
 
                     <div className="flex justify-center md:justify-end">
                         <div className="bg-white rounded-2xl p-10 shadow-2xl">
-                            <img
-                                src={logo}
-                                alt="EasyHACCP"
-                                className="h-48 md:h-56 w-auto"
-                            />
+                            <img src={logo} alt="EasyHACCP" className="h-48 md:h-56 w-auto" />
                         </div>
                     </div>
-
                 </div>
             </div>
         </section>
