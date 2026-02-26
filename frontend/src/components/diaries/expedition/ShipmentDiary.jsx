@@ -32,6 +32,9 @@ export default function ShipmentDiary() {
         employee_id: ""
     });
 
+    // ✅ FIX: format ISO date strings like 2026-03-05T22:00:00.000Z -> 2026-03-05
+    const fmtDate = (v) => (v ? String(v).split("T")[0] : "");
+
     useEffect(() => {
         api.get("/objects").then(res => {
             const filtered = res.data.filter(obj =>
@@ -171,14 +174,14 @@ export default function ShipmentDiary() {
                                         <option value="">-- Избери храна --</option>
                                         {foodLogs.map(f => (
                                             <option key={f._id} value={f._id}>
-                                                {f.product_type} | Партида: {f.batch_number} | {f.shelf_life}
+                                                {f.product_type} | Партида: {f.batch_number} | {fmtDate(f.shelf_life)}
                                             </option>
                                         ))}
                                     </select>
                                     {selectedFoodLog && (
                                         <div className="mt-2 bg-green-50 border border-green-200 rounded-md p-3 text-sm space-y-1">
                                             <div><span className="text-gray-500">Партида:</span> <span className="font-medium">{selectedFoodLog.batch_number}</span></div>
-                                            <div><span className="text-gray-500">Срок на годност:</span> <span className="font-medium">{selectedFoodLog.shelf_life}</span></div>
+                                            <div><span className="text-gray-500">Срок на годност:</span> <span className="font-medium">{fmtDate(selectedFoodLog.shelf_life)}</span></div>
                                             {selectedFoodLog.quantity && <div><span className="text-gray-500">Количество:</span> <span className="font-medium">{selectedFoodLog.quantity}</span></div>}
                                         </div>
                                     )}
@@ -202,7 +205,7 @@ export default function ShipmentDiary() {
                                     {selectedProducedFood && (
                                         <div className="mt-2 bg-green-50 border border-green-200 rounded-md p-3 text-sm space-y-1">
                                             {selectedProducedFood.product_batch_number && <div><span className="text-gray-500">Партида:</span> <span className="font-medium">{selectedProducedFood.product_batch_number}</span></div>}
-                                            {selectedProducedFood.product_shelf_life && <div><span className="text-gray-500">Срок на годност:</span> <span className="font-medium">{selectedProducedFood.product_shelf_life}</span></div>}
+                                            {selectedProducedFood.product_shelf_life && <div><span className="text-gray-500">Срок на годност:</span> <span className="font-medium">{fmtDate(selectedProducedFood.product_shelf_life)}</span></div>}
                                             {selectedProducedFood.portions && <div><span className="text-gray-500">Брой порции:</span> <span className="font-medium">{selectedProducedFood.portions}</span></div>}
                                         </div>
                                     )}
@@ -273,21 +276,35 @@ export default function ShipmentDiary() {
                                             {l.food_log_id ? "Търговия на едро" : "Кетъринг"}
                                         </span>
                                     </div>
+
                                     <div className="text-sm text-slate-600">Количество: <span className="font-medium">{l.quantity}</span></div>
+
                                     {l.food_log_id && <>
                                         <div className="text-sm text-slate-600">Партида: <span className="font-medium">{l.food_log_id.batch_number}</span></div>
-                                        {l.food_log_id.shelf_life && <div className="text-sm text-slate-600">Срок: <span className="font-medium">{l.food_log_id.shelf_life}</span></div>}
+                                        {l.food_log_id.shelf_life && (
+                                            <div className="text-sm text-slate-600">
+                                                Срок: <span className="font-medium">{fmtDate(l.food_log_id.shelf_life)}</span>
+                                            </div>
+                                        )}
                                     </>}
+
                                     {l.produced_food_id && <>
                                         {l.produced_food_id.product_batch_number && <div className="text-sm text-slate-600">Партида: <span className="font-medium">{l.produced_food_id.product_batch_number}</span></div>}
-                                        {l.produced_food_id.product_shelf_life && <div className="text-sm text-slate-600">Срок: <span className="font-medium">{l.produced_food_id.product_shelf_life}</span></div>}
+                                        {l.produced_food_id.product_shelf_life && (
+                                            <div className="text-sm text-slate-600">
+                                                Срок: <span className="font-medium">{fmtDate(l.produced_food_id.product_shelf_life)}</span>
+                                            </div>
+                                        )}
                                         {l.produced_food_id.portions && <div className="text-sm text-slate-600">Порции: <span className="font-medium">{l.produced_food_id.portions}</span></div>}
                                     </>}
+
                                     {l.client_id && <div className="text-sm text-slate-600">Получател: <span className="font-medium">{l.client_id.name}</span></div>}
                                     {l.document && <div className="text-sm text-slate-600">Документ: <span className="font-medium">{l.document}</span></div>}
                                     {l.employee_id && <div className="text-sm text-slate-600">Служител: <span className="font-medium">{l.employee_id.first_name} {l.employee_id.last_name}</span></div>}
+
                                     <div className="text-xs text-slate-400 pt-1">{new Date(l.date).toLocaleString("bg-BG")}</div>
                                 </div>
+
                                 <div className="flex gap-3 text-sm ml-4">
                                     <button onClick={() => setEditingLog(l)} className="text-blue-600 hover:text-blue-800">Редактирай</button>
                                     <button onClick={() => onDelete(l._id)} className="text-red-600 hover:text-red-800">Изтрий</button>

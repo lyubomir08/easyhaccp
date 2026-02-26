@@ -292,7 +292,7 @@ export default function FoodsDiary() {
                                 <strong>{l.product_type}</strong>
                                 <div className="text-sm text-slate-600 space-y-1">
                                     <div>
-                                        Партиден номер: {l.batch_number} • Количество: {l.quantity} • Срок на годност: {l.shelf_life}
+                                       Партиден номер: {l.batch_number} • Количество: {l.quantity} • Срок на годност: {new Date(l.shelf_life).toLocaleDateString("bg-BG")}
                                     </div>
                                     {l.transport_type && (
                                         <div>

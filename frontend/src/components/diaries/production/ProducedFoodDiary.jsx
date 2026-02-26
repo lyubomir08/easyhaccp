@@ -22,6 +22,9 @@ export default function ProducedFoodDiary() {
         recipe_production_date: ""
     });
 
+    // ✅ FIX: показвай датите без "T...Z" (ISO). Връща YYYY-MM-DD, ако има ISO.
+    const fmtDate = (v) => (v ? String(v).split("T")[0] : "");
+
     useEffect(() => {
         api.get("/objects").then(res => {
             const cateringObjects = res.data.filter(obj => obj.object_type === "catering");
@@ -245,30 +248,32 @@ export default function ProducedFoodDiary() {
                                                     <div className="space-y-1">
                                                         {l.recipe_id.ingredients.map((ing, idx) => {
                                                             const totalGrams = ing.quantity && l.portions ? ing.quantity * l.portions : null;
+
                                                             // Търси срока в дневник 3.3.1 по name
-                                                                const matchingLog = foodLogs.find(fl =>
-                                                                    fl.product_type?.toLowerCase() === ing.ingredient?.toLowerCase()
-                                                                );
-                                                                return (
-                                                                    <div key={idx} className="flex items-center justify-between border-b last:border-0 py-2 text-sm bg-white px-3 rounded">
-                                                                        <div>
-                                                                            <span className="font-medium text-gray-800">{ing.ingredient}</span>
-                                                                            {matchingLog && (
-                                                                                <div className="text-xs text-orange-600 mt-0.5">
-                                                                                    Срок: {matchingLog.shelf_life} · Партида: {matchingLog.batch_number}
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                        <span className="text-gray-500 text-right">
-                                                                            {ing.quantity ? (
-                                                                                <>
-                                                                                    {ing.quantity} гр./порция
-                                                                                    {totalGrams && <span className="ml-2 text-blue-600 font-semibold">= {formatAmount(totalGrams)}</span>}
-                                                                                </>
-                                                                            ) : "—"}
-                                                                        </span>
+                                                            const matchingLog = foodLogs.find(fl =>
+                                                                fl.product_type?.toLowerCase() === ing.ingredient?.toLowerCase()
+                                                            );
+
+                                                            return (
+                                                                <div key={idx} className="flex items-center justify-between border-b last:border-0 py-2 text-sm bg-white px-3 rounded">
+                                                                    <div>
+                                                                        <span className="font-medium text-gray-800">{ing.ingredient}</span>
+                                                                        {matchingLog && (
+                                                                            <div className="text-xs text-orange-600 mt-0.5">
+                                                                                Срок: {fmtDate(matchingLog.shelf_life)} · Партида: {matchingLog.batch_number}
+                                                                            </div>
+                                                                        )}
                                                                     </div>
-                                                                );
+                                                                    <span className="text-gray-500 text-right">
+                                                                        {ing.quantity ? (
+                                                                            <>
+                                                                                {ing.quantity} гр./порция
+                                                                                {totalGrams && <span className="ml-2 text-blue-600 font-semibold">= {formatAmount(totalGrams)}</span>}
+                                                                            </>
+                                                                        ) : "—"}
+                                                                    </span>
+                                                                </div>
+                                                            );
                                                         })}
                                                     </div>
                                                 </div>
