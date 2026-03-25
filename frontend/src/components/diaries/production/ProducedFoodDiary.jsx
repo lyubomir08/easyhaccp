@@ -2,6 +2,15 @@ import { useEffect, useState } from "react";
 import api from "../../../services/api";
 import ProducedFoodEditModal from "./ProducedFoodEditModal";
 
+const isExpired = (shelf_life) => {
+    if (!shelf_life) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const expiry = new Date(shelf_life);
+    expiry.setHours(0, 0, 0, 0);
+    return expiry < today;
+};
+
 export default function ProducedFoodDiary() {
     const [objects, setObjects] = useState([]);
     const [recipes, setRecipes] = useState([]);
@@ -11,6 +20,7 @@ export default function ProducedFoodDiary() {
     const [expandedLog, setExpandedLog] = useState(null);
     const [search, setSearch] = useState("");
     const [error, setError] = useState("");
+    const [expiredIngredients, setExpiredIngredients] = useState([]);
 
     const [form, setForm] = useState({
         object_id: "",
@@ -22,7 +32,6 @@ export default function ProducedFoodDiary() {
         recipe_production_date: ""
     });
 
-    // ✅ FIX: показвай датите без "T...Z" (ISO). Връща YYYY-MM-DD, ако има ISO.
     const fmtDate = (v) => (v ? String(v).split("T")[0] : "");
 
     useEffect(() => {
@@ -40,7 +49,6 @@ export default function ProducedFoodDiary() {
 
     const loadObjectSpecificData = async () => {
         try {
-            // Зареди дневник 3.3.1 за срокове на съставките
             try {
                 const foodLogsRes = await api.get(`/food-logs/${form.object_id}`);
                 setFoodLogs(foodLogsRes.data);
@@ -74,6 +82,19 @@ export default function ProducedFoodDiary() {
         }
     };
 
+    const checkExpiredIngredients = (recipe) => {
+        if (!recipe?.ingredients) return [];
+        return recipe.ingredients.reduce((acc, ing) => {
+            const match = foodLogs.find(fl =>
+                fl.product_type?.toLowerCase() === ing.ingredient?.toLowerCase()
+            );
+            if (match && isExpired(match.shelf_life)) {
+                acc.push({ name: ing.ingredient, shelf_life: match.shelf_life, batch: match.batch_number });
+            }
+            return acc;
+        }, []);
+    };
+
     const onRecipeChange = (e) => {
         const id = e.target.value;
         const recipe = recipes.find(r => r._id === id);
@@ -82,6 +103,7 @@ export default function ProducedFoodDiary() {
             const recipeNumber = recipe.recipe_number || (recipes.findIndex(r => r._id === id) + 1);
             const productBatchNumber = `Рецепта №${recipeNumber} - ${now.toLocaleDateString("bg-BG")}`;
             const shelfLife = recipe._group_shelf_life || "";
+            setExpiredIngredients(checkExpiredIngredients(recipe));
             setForm(s => ({
                 ...s,
                 recipe_id: id,
@@ -90,6 +112,7 @@ export default function ProducedFoodDiary() {
                 recipe_production_date: now.toISOString()
             }));
         } else {
+            setExpiredIngredients([]);
             setForm(s => ({ ...s, recipe_id: id, product_batch_number: "", product_shelf_life: "", recipe_production_date: "" }));
         }
     };
@@ -101,6 +124,10 @@ export default function ProducedFoodDiary() {
         setError("");
         if (!form.date) { setError("Моля, въведете дата"); return; }
         if (!form.recipe_id) { setError("Моля, изберете рецепта"); return; }
+        if (expiredIngredients.length > 0) {
+            setError(`Не може да се запази — следните съставки имат изтекъл срок: ${expiredIngredients.map(i => i.name).join(", ")}`);
+            return;
+        }
         try {
             const payload = {
                 object_id: form.object_id,
@@ -114,6 +141,7 @@ export default function ProducedFoodDiary() {
             Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
             await api.post("/produced-foods", payload);
             await loadLogs();
+            setExpiredIngredients([]);
             setForm(s => ({ ...s, date: "", recipe_id: "", portions: "", product_batch_number: "", product_shelf_life: "", recipe_production_date: "" }));
         } catch (err) {
             setError("Грешка при запис: " + (err.response?.data?.message || err.message || "Неизвестна грешка"));
@@ -146,7 +174,7 @@ export default function ProducedFoodDiary() {
 
     return (
         <div className="max-w-6xl mx-auto space-y-8 p-4">
-            <h1 className="text-2xl font-semibold"> ПРОИЗВЕДЕНИ ХРАНИ за кетъринг</h1>
+            <h1 className="text-2xl font-semibold">ПРОИЗВЕДЕНИ ХРАНИ за кетъринг</h1>
 
             <div>
                 <label className="block text-sm font-medium mb-2">Изберете обект</label>
@@ -188,9 +216,30 @@ export default function ProducedFoodDiary() {
                                 {form.recipe_id && form.product_shelf_life && <p className="text-xs text-blue-600 mt-1">✓ От вида храна</p>}
                             </div>
                         </div>
+
+                        {/* Предупреждение за изтекли съставки */}
+                        {expiredIngredients.length > 0 && (
+                            <div className="bg-red-50 border border-red-300 rounded-md p-4">
+                                <p className="text-red-700 font-semibold text-sm mb-2">⛔ Не може да се произведе — изтекли съставки:</p>
+                                <ul className="space-y-1">
+                                    {expiredIngredients.map((ing, i) => (
+                                        <li key={i} className="text-sm text-red-600">
+                                            • <strong>{ing.name}</strong> — срок: {new Date(ing.shelf_life).toLocaleDateString("bg-BG")} · Партида: {ing.batch}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
                         {error && <div className="bg-red-50 border border-red-200 rounded-md p-3"><p className="text-red-700 text-sm">{error}</p></div>}
                         <div className="flex justify-end">
-                            <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700">Запази</button>
+                            <button
+                                type="submit"
+                                disabled={expiredIngredients.length > 0}
+                                className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Запази
+                            </button>
                         </div>
                     </form>
 
@@ -204,31 +253,31 @@ export default function ProducedFoodDiary() {
                             const isExpanded = expandedLog === l._id;
                             return (
                                 <div key={l._id} className="bg-white border rounded-xl overflow-hidden">
-                                    {/* Заглавен ред */}
-                                    <div className="flex justify-between items-center px-5 py-4">
+                                    <div className="flex flex-col sm:flex-row sm:items-center px-4 py-3 gap-2">
                                         <button
                                             type="button"
                                             onClick={() => setExpandedLog(isExpanded ? null : l._id)}
-                                            className="flex items-center gap-3 text-left flex-1"
+                                            className="flex items-center gap-2 text-left flex-1 min-w-0"
                                         >
-                                            <span className="text-2xl text-slate-400 w-5 text-center leading-none">
+                                            <span className="text-xl text-slate-400 w-5 text-center leading-none shrink-0">
                                                 {isExpanded ? "−" : "+"}
                                             </span>
-                                            <span className="font-semibold text-slate-800">
-                                                {l.recipe_id?.name || "Без ime"}
-                                            </span>
-                                            <span className="text-sm text-gray-400">
-                                                {new Date(l.date).toLocaleDateString("bg-BG")}
-                                                {l.portions ? ` · ${l.portions} порции` : ""}
-                                            </span>
+                                            <div className="min-w-0">
+                                                <span className="font-semibold text-slate-800 block truncate">
+                                                    {l.recipe_id?.name || "Без ime"}
+                                                </span>
+                                                <span className="text-sm text-gray-400">
+                                                    {new Date(l.date).toLocaleDateString("bg-BG")}
+                                                    {l.portions ? ` · ${l.portions} порции` : ""}
+                                                </span>
+                                            </div>
                                         </button>
-                                        <div className="flex gap-3 ml-4 shrink-0">
+                                        <div className="flex gap-3 shrink-0 pl-7 sm:pl-0">
                                             <button onClick={() => setEditingLog(l)} className="text-blue-600 hover:text-blue-800 text-sm">Редактирай</button>
                                             <button onClick={() => onDelete(l._id)} className="text-red-600 hover:text-red-800 text-sm">Изтрий</button>
                                         </div>
                                     </div>
 
-                                    {/* Разгъната информация */}
                                     {isExpanded && (
                                         <div className="border-t px-5 py-4 space-y-4 bg-slate-50">
                                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
@@ -248,18 +297,17 @@ export default function ProducedFoodDiary() {
                                                     <div className="space-y-1">
                                                         {l.recipe_id.ingredients.map((ing, idx) => {
                                                             const totalGrams = ing.quantity && l.portions ? ing.quantity * l.portions : null;
-
-                                                            // Търси срока в дневник 3.3.1 по name
                                                             const matchingLog = foodLogs.find(fl =>
                                                                 fl.product_type?.toLowerCase() === ing.ingredient?.toLowerCase()
                                                             );
-
+                                                            const expired = matchingLog && isExpired(matchingLog.shelf_life);
                                                             return (
-                                                                <div key={idx} className="flex items-center justify-between border-b last:border-0 py-2 text-sm bg-white px-3 rounded">
+                                                                <div key={idx} className={`flex items-center justify-between border-b last:border-0 py-2 text-sm px-3 rounded ${expired ? "bg-red-50" : "bg-white"}`}>
                                                                     <div>
                                                                         <span className="font-medium text-gray-800">{ing.ingredient}</span>
+                                                                        {expired && <span className="ml-2 text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded">Изтекъл срок</span>}
                                                                         {matchingLog && (
-                                                                            <div className="text-xs text-orange-600 mt-0.5">
+                                                                            <div className={`text-xs mt-0.5 ${expired ? "text-red-600" : "text-orange-600"}`}>
                                                                                 Срок: {fmtDate(matchingLog.shelf_life)} · Партида: {matchingLog.batch_number}
                                                                             </div>
                                                                         )}
@@ -285,7 +333,7 @@ export default function ProducedFoodDiary() {
                         })}
 
                         {visibleLogs.length === 0 && <p className="text-slate-500 text-sm text-center py-8">Няма записи</p>}
-                        {!search && logs.length > 10 && <p className="text-slate-500 text-sm text-center">Показани са последните 10 записа. Използвайте търсенето за повече резултати.</p>}
+                        {!search && logs.length > 10 && <p className="text-slate-500 text-sm text-center">Показани са последните 10 записа.</p>}
                     </div>
                 </>
             )}

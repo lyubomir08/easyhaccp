@@ -2,6 +2,19 @@ import { useEffect, useState } from "react";
 import api from "../../../services/api";
 import EditFoodLogModal from "./EditFoodLogModal";
 
+const getExpiryStatus = (shelf_life) => {
+    if (!shelf_life) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const expiry = new Date(shelf_life);
+    expiry.setHours(0, 0, 0, 0);
+    const daysLeft = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+    if (daysLeft < 0) return { expired: true, label: `Изтекъл преди ${Math.abs(daysLeft)} дни` };
+    if (daysLeft === 0) return { expired: true, label: "Изтича днес" };
+    if (daysLeft <= 3) return { warning: true, label: `Изтича след ${daysLeft} дни` };
+    return null;
+};
+
 export default function FoodsDiary() {
     const [objects, setObjects] = useState([]);
     const [suppliers, setSuppliers] = useState([]);
@@ -95,6 +108,8 @@ export default function FoodsDiary() {
     });
 
     const visibleLogs = search ? filteredLogs : filteredLogs.slice(0, 10);
+
+    const alertLogs = allLogs.filter(l => getExpiryStatus(l.shelf_life));
 
     return (
         <div className="max-w-5xl mx-auto space-y-8 p-4">
@@ -283,51 +298,58 @@ export default function FoodsDiary() {
             {/* LIST */}
             {form.object_id && (
                 <div className="space-y-3">
-                    {visibleLogs.map(l => (
-                        <div
-                            key={l._id}
-                            className="bg-white border rounded-lg p-4 flex justify-between items-center"
-                        >
-                            <div>
-                                <strong>{l.product_type}</strong>
-                                <div className="text-sm text-slate-600 space-y-1">
-                                    <div>
-                                       Партиден номер: {l.batch_number} • Количество: {l.quantity} • Срок на годност: {new Date(l.shelf_life).toLocaleDateString("bg-BG")}
+                    {visibleLogs.map(l => {
+                        const status = getExpiryStatus(l.shelf_life);
+                        return (
+                            <div
+                                key={l._id}
+                                className={`border rounded-lg p-4 flex justify-between items-center ${status?.expired ? "bg-red-50 border-red-200" : status?.warning ? "bg-yellow-50 border-yellow-200" : "bg-white"}`}
+                            >
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <strong>{l.product_type}</strong>
+                                        {status?.expired && <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">Изтекъл срок</span>}
+                                        {status?.warning && <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">{status.label}</span>}
                                     </div>
-                                    {l.transport_type && (
+                                    <div className="text-sm text-slate-600 space-y-1">
                                         <div>
-                                            Транспорт: {l.transport_type}
+                                           Партиден номер: {l.batch_number} • Количество: {l.quantity} • Срок на годност: {new Date(l.shelf_life).toLocaleDateString("bg-BG")}
                                         </div>
-                                    )}
-                                    {l.document && (
-                                        <div>
-                                            Документ: {l.document}
+                                        {l.transport_type && (
+                                            <div>
+                                                Транспорт: {l.transport_type}
+                                            </div>
+                                        )}
+                                        {l.document && (
+                                            <div>
+                                                Документ: {l.document}
+                                            </div>
+                                        )}
+                                    </div>
+                                    {l.created_at && (
+                                        <div className="text-xs text-slate-400 mt-1">
+                                            Създаден:{" "}
+                                            {new Date(l.created_at).toLocaleString("bg-BG")}
                                         </div>
                                     )}
                                 </div>
-                                {l.created_at && (
-                                    <div className="text-xs text-slate-400 mt-1">
-                                        Създаден:{" "}
-                                        {new Date(l.created_at).toLocaleString("bg-BG")}
-                                    </div>
-                                )}
+                                <div className="flex gap-3 text-sm">
+                                    <button
+                                        onClick={() => setEditingLog(l)}
+                                        className="text-blue-600 hover:text-blue-800"
+                                    >
+                                        Редактирай
+                                    </button>
+                                    <button
+                                        onClick={() => onDelete(l._id)}
+                                        className="text-red-600 hover:text-blue-800"
+                                    >
+                                        Изтрий
+                                    </button>
+                                </div>
                             </div>
-                            <div className="flex gap-3 text-sm">
-                                <button
-                                    onClick={() => setEditingLog(l)}
-                                    className="text-blue-600 hover:text-blue-800"
-                                >
-                                    Редактирай
-                                </button>
-                                <button
-                                    onClick={() => onDelete(l._id)}
-                                    className="text-red-600 hover:text-blue-800"
-                                >
-                                    Изтрий
-                                </button>
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
 
                     {visibleLogs.length === 0 && (
                         <p className="text-slate-500 text-sm">Няма резултати</p>

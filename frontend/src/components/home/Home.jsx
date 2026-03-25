@@ -4,31 +4,32 @@ import useUser from "../../hooks/useUser";
 
 export default function Home() {
     const { user } = useUser();
-
     return (
         <section className="h-[calc(100vh-75px)] overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-black flex items-center">
             <div className="max-w-6xl mx-auto px-6 w-full">
-                <div className="grid md:grid-cols-2 gap-12 items-center">
+
+                {/* Mobile layout */}
+                <div className="flex flex-col items-center text-center gap-8 md:hidden">
+                    <div className="bg-white rounded-2xl p-6 shadow-2xl">
+                        <img src={logo} alt="EasyHACCP" className="h-32 w-auto" />
+                    </div>
                     <div>
-                        <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight mb-6">
+                        <h1 className="text-3xl font-bold text-white leading-tight mb-4">
                             Професионално управление на
                             <span className="block text-blue-500">HACCP системи</span>
                         </h1>
-
-                        <p className="text-slate-300 text-lg mb-10 max-w-xl">
+                        <p className="text-slate-300 text-base mb-8">
                             EasyHACCP е цялостна платформа за внедряване,
                             поддържане и контрол на HACCP изисквания
                             в хранителни обекти.
                         </p>
-
-                        <div className="flex gap-4">
+                        <div className="flex gap-4 justify-center">
                             <Link
                                 to={user ? "/profile" : "/sign-up"}
                                 className="px-6 py-3 rounded-md bg-white text-black font-medium hover:bg-slate-200 transition"
                             >
                                 {user ? "Профил" : "Регистрация"}
                             </Link>
-
                             <Link
                                 to="/about"
                                 className="px-6 py-3 rounded-md border border-slate-500 text-slate-200 hover:border-white hover:text-white transition"
@@ -37,13 +38,42 @@ export default function Home() {
                             </Link>
                         </div>
                     </div>
+                </div>
 
-                    <div className="flex justify-center md:justify-end">
+                {/* Desktop layout */}
+                <div className="hidden md:grid md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight mb-6">
+                            Професионално управление на
+                            <span className="block text-blue-500">HACCP системи</span>
+                        </h1>
+                        <p className="text-slate-300 text-lg mb-10 max-w-xl">
+                            EasyHACCP е цялостна платформа за внедряване,
+                            поддържане и контрол на HACCP изисквания
+                            в хранителни обекти.
+                        </p>
+                        <div className="flex gap-4">
+                            <Link
+                                to={user ? "/profile" : "/sign-up"}
+                                className="px-6 py-3 rounded-md bg-white text-black font-medium hover:bg-slate-200 transition"
+                            >
+                                {user ? "Профил" : "Регистрация"}
+                            </Link>
+                            <Link
+                                to="/about"
+                                className="px-6 py-3 rounded-md border border-slate-500 text-slate-200 hover:border-white hover:text-white transition"
+                            >
+                                За нас
+                            </Link>
+                        </div>
+                    </div>
+                    <div className="flex justify-end">
                         <div className="bg-white rounded-2xl p-10 shadow-2xl">
                             <img src={logo} alt="EasyHACCP" className="h-48 md:h-56 w-auto" />
                         </div>
                     </div>
                 </div>
+
             </div>
         </section>
     );

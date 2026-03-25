@@ -40,6 +40,7 @@ import FryerOilDiary from "./components/diaries/oil/FryerOilDiary.jsx";
 import CookingTemperatureDiary from "./components/diaries/cooking/CookingTemperatureDiary.jsx";
 import ProducedFoodDiary from "./components/diaries/production/ProducedFoodDiary.jsx";
 import ShipmentDiary from "./components/diaries/expedition/ShipmentDiary.jsx";
+import TrainingDiary from "./components/diaries/trainingdiary/Trainingdiary.jsx";   
 
 export default function App() {
     return (
@@ -79,10 +80,13 @@ export default function App() {
                         <Route path="/diaries/hygiene" element={<HygieneDiary />} />
                         <Route path="/diaries/personal" element={<PersonalHygieneDiary />} />
                         <Route path="/diaries/temperatures" element={<FridgeTemperatureDiary />} />
+                        <Route path="/diaries/trainingdiary" element={<TrainingDiary />} />
                         <Route path="/diaries/oil" element={<FryerOilDiary />} />
-                         <Route path="/diaries/cooking" element={<CookingTemperatureDiary />} />
+                        <Route path="/diaries/cooking" element={<CookingTemperatureDiary />} />
                         <Route path="/diaries/production" element={<ProducedFoodDiary />} />
                         <Route path="/diaries/expedition" element={<ShipmentDiary />} />
+                       
+
 
                         <Route element={<AdminGuard />}>
                             <Route path="/admin/approvals" element={<AdminApprovals />} />

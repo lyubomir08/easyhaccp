@@ -14,42 +14,28 @@ export default function ShipmentDiary() {
     const [clients, setClients] = useState([]);
     const [employees, setEmployees] = useState([]);
     const [logs, setLogs] = useState([]);
-
     const [editingLog, setEditingLog] = useState(null);
     const [search, setSearch] = useState("");
     const [error, setError] = useState("");
     const [shipmentType, setShipmentType] = useState("");
 
     const [form, setForm] = useState({
-        object_id: "",
-        date: "",
-        food_log_id: "",
-        produced_food_id: "",
-        quantity: "",
-        product_batch_number: "",
-        client_id: "",
-        document: "",
-        employee_id: ""
+        object_id: "", date: "", food_log_id: "", produced_food_id: "",
+        quantity: "", product_batch_number: "", client_id: "", document: "", employee_id: ""
     });
 
-    // ✅ FIX: format ISO date strings like 2026-03-05T22:00:00.000Z -> 2026-03-05
     const fmtDate = (v) => (v ? String(v).split("T")[0] : "");
 
     useEffect(() => {
         api.get("/objects").then(res => {
-            const filtered = res.data.filter(obj =>
-                obj.object_type === "wholesale" || obj.object_type === "catering"
-            );
-            setObjects(filtered);
+            setObjects(res.data.filter(o => o.object_type === "wholesale" || o.object_type === "catering"));
         });
     }, []);
 
     useEffect(() => {
         if (!form.object_id) return;
-        const selectedObject = objects.find(o => o._id === form.object_id);
-        if (selectedObject) {
-            setShipmentType(selectedObject.object_type === "catering" ? "catering" : "wholesale");
-        }
+        const obj = objects.find(o => o._id === form.object_id);
+        if (obj) setShipmentType(obj.object_type === "catering" ? "catering" : "wholesale");
         api.get(`/food-logs/${form.object_id}`).then(r => setFoodLogs(r.data)).catch(() => {});
         api.get(`/produced-foods/${form.object_id}`).then(r => setProducedFoods(r.data)).catch(() => {});
         api.get(`/clients/${form.object_id}`).then(r => setClients(r.data)).catch(() => {});
@@ -59,29 +45,22 @@ export default function ShipmentDiary() {
 
     const loadLogs = async () => {
         if (!form.object_id) return;
-        try {
-            const res = await api.get(`/shipments/${form.object_id}`);
-            setLogs(res.data);
-        } catch { setLogs([]); }
+        try { const res = await api.get(`/shipments/${form.object_id}`); setLogs(res.data); }
+        catch { setLogs([]); }
     };
 
     const onChange = (e) => setForm(s => ({ ...s, [e.target.name]: e.target.value }));
 
     const onFoodLogChange = (e) => {
         const id = e.target.value;
-        const foodLog = foodLogs.find(f => f._id === id);
-        setForm(s => ({ ...s, food_log_id: id, quantity: foodLog?.quantity || "" }));
+        const fl = foodLogs.find(f => f._id === id);
+        setForm(s => ({ ...s, food_log_id: id, quantity: fl?.quantity || "" }));
     };
 
     const onProducedFoodChange = (e) => {
         const id = e.target.value;
-        const produced = producedFoods.find(p => p._id === id);
-        setForm(s => ({
-            ...s,
-            produced_food_id: id,
-            quantity: produced?.portions || "",
-            product_batch_number: produced?.product_batch_number || ""
-        }));
+        const p = producedFoods.find(p => p._id === id);
+        setForm(s => ({ ...s, produced_food_id: id, quantity: p?.portions || "", product_batch_number: p?.product_batch_number || "" }));
     };
 
     const onSubmit = async (e) => {
@@ -96,12 +75,9 @@ export default function ShipmentDiary() {
                 document: form.document || undefined,
                 employee_id: form.employee_id || undefined
             };
-            if (shipmentType === "wholesale") {
-                payload.food_log_id = form.food_log_id;
-            } else {
-                payload.produced_food_id = form.produced_food_id;
-            }
-            Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
+            if (shipmentType === "wholesale") payload.food_log_id = form.food_log_id;
+            else payload.produced_food_id = form.produced_food_id;
+            Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
             await api.post("/shipments", payload);
             await loadLogs();
             setForm(s => ({ ...s, date: "", food_log_id: "", produced_food_id: "", quantity: "", product_batch_number: "", client_id: "", document: "", employee_id: "" }));
@@ -111,11 +87,9 @@ export default function ShipmentDiary() {
     };
 
     const onDelete = async (id) => {
-        if (!confirm("Сигурни ли сте, че искате да изтриете този запис?")) return;
-        try {
-            await api.delete(`/shipments/delete/${id}`);
-            await loadLogs();
-        } catch { alert("Грешка при изтриване"); }
+        if (!confirm("Сигурни ли сте?")) return;
+        try { await api.delete(`/shipments/delete/${id}`); await loadLogs(); }
+        catch { alert("Грешка при изтриване"); }
     };
 
     const filteredLogs = logs.filter(l => {
@@ -138,9 +112,7 @@ export default function ShipmentDiary() {
                 <label className="block text-sm font-medium mb-2">Изберете обект</label>
                 <select name="object_id" value={form.object_id} onChange={onChange} className="border px-3 py-2 rounded-md w-full">
                     <option value="">-- Избери обект --</option>
-                    {objects.map(o => (
-                        <option key={o._id} value={o._id}>{o.name} ({OBJECT_TYPE_LABELS[o.object_type]})</option>
-                    ))}
+                    {objects.map(o => <option key={o._id} value={o._id}>{o.name} ({OBJECT_TYPE_LABELS[o.object_type]})</option>)}
                 </select>
             </div>
 
@@ -166,29 +138,23 @@ export default function ShipmentDiary() {
                                 <input type="datetime-local" name="date" value={form.date} onChange={onChange} required className="border px-3 py-2 rounded-md w-full" />
                             </div>
 
-                            {/* WHOLESALE */}
                             {shipmentType === "wholesale" && (
                                 <div className="md:col-span-2">
                                     <label className="block text-sm font-medium mb-1">Храна (от дневник 3.3.1) <span className="text-red-500">*</span></label>
                                     <select name="food_log_id" value={form.food_log_id} onChange={onFoodLogChange} required className="border px-3 py-2 rounded-md w-full">
                                         <option value="">-- Избери храна --</option>
-                                        {foodLogs.map(f => (
-                                            <option key={f._id} value={f._id}>
-                                                {f.product_type} | Партида: {f.batch_number} | {fmtDate(f.shelf_life)}
-                                            </option>
-                                        ))}
+                                        {foodLogs.map(f => <option key={f._id} value={f._id}>{f.product_type} | Партида: {f.batch_number} | {fmtDate(f.shelf_life)}</option>)}
                                     </select>
                                     {selectedFoodLog && (
                                         <div className="mt-2 bg-green-50 border border-green-200 rounded-md p-3 text-sm space-y-1">
                                             <div><span className="text-gray-500">Партида:</span> <span className="font-medium">{selectedFoodLog.batch_number}</span></div>
-                                            <div><span className="text-gray-500">Срок на годност:</span> <span className="font-medium">{fmtDate(selectedFoodLog.shelf_life)}</span></div>
+                                            <div><span className="text-gray-500">Срок:</span> <span className="font-medium">{fmtDate(selectedFoodLog.shelf_life)}</span></div>
                                             {selectedFoodLog.quantity && <div><span className="text-gray-500">Количество:</span> <span className="font-medium">{selectedFoodLog.quantity}</span></div>}
                                         </div>
                                     )}
                                 </div>
                             )}
 
-                            {/* CATERING */}
                             {shipmentType === "catering" && (
                                 <div className="md:col-span-2">
                                     <label className="block text-sm font-medium mb-1">Готова храна (от дневник 3.3.7) <span className="text-red-500">*</span></label>
@@ -196,17 +162,15 @@ export default function ShipmentDiary() {
                                         <option value="">-- Избери готова храна --</option>
                                         {producedFoods.map(p => (
                                             <option key={p._id} value={p._id}>
-                                                {p.recipe_id?.name || "Без ime"}
-                                                {p.product_batch_number ? ` | ${p.product_batch_number}` : ""}
-                                                {` | ${new Date(p.date).toLocaleDateString("bg-BG")}`}
+                                                {p.recipe_id?.name || "Без ime"}{p.product_batch_number ? ` | ${p.product_batch_number}` : ""}{` | ${new Date(p.date).toLocaleDateString("bg-BG")}`}
                                             </option>
                                         ))}
                                     </select>
                                     {selectedProducedFood && (
                                         <div className="mt-2 bg-green-50 border border-green-200 rounded-md p-3 text-sm space-y-1">
                                             {selectedProducedFood.product_batch_number && <div><span className="text-gray-500">Партида:</span> <span className="font-medium">{selectedProducedFood.product_batch_number}</span></div>}
-                                            {selectedProducedFood.product_shelf_life && <div><span className="text-gray-500">Срок на годност:</span> <span className="font-medium">{fmtDate(selectedProducedFood.product_shelf_life)}</span></div>}
-                                            {selectedProducedFood.portions && <div><span className="text-gray-500">Брой порции:</span> <span className="font-medium">{selectedProducedFood.portions}</span></div>}
+                                            {selectedProducedFood.product_shelf_life && <div><span className="text-gray-500">Срок:</span> <span className="font-medium">{fmtDate(selectedProducedFood.product_shelf_life)}</span></div>}
+                                            {selectedProducedFood.portions && <div><span className="text-gray-500">Порции:</span> <span className="font-medium">{selectedProducedFood.portions}</span></div>}
                                         </div>
                                     )}
                                 </div>
@@ -217,14 +181,11 @@ export default function ShipmentDiary() {
                                 <input type="number" step="0.01" name="quantity" value={form.quantity} onChange={onChange} placeholder="Количество" required className="border px-3 py-2 rounded-md w-full" />
                             </div>
 
-                            {/* Фирма получател - и за двата типа */}
                             <div>
                                 <label className="block text-sm font-medium mb-1">Фирма получател</label>
                                 <select name="client_id" value={form.client_id} onChange={onChange} className="border px-3 py-2 rounded-md w-full">
                                     <option value="">-- Избери получател --</option>
-                                    {clients.map(c => (
-                                        <option key={c._id} value={c._id}>{c.name}</option>
-                                    ))}
+                                    {clients.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
                                 </select>
                             </div>
 
@@ -245,9 +206,7 @@ export default function ShipmentDiary() {
                                 <label className="block text-sm font-medium mb-1">Служител</label>
                                 <select name="employee_id" value={form.employee_id} onChange={onChange} className="border px-3 py-2 rounded-md w-full">
                                     <option value="">-- Избери служител --</option>
-                                    {employees.map(e => (
-                                        <option key={e._id} value={e._id}>{e.first_name} {e.last_name}</option>
-                                    ))}
+                                    {employees.map(e => <option key={e._id} value={e._id}>{e.first_name} {e.last_name}</option>)}
                                 </select>
                             </div>
                         </div>
@@ -266,48 +225,37 @@ export default function ShipmentDiary() {
 
                     <div className="space-y-4">
                         {visibleLogs.map(l => (
-                            <div key={l._id} className="bg-white border rounded-xl p-5 flex justify-between items-start">
-                                <div className="space-y-1 flex-1">
-                                    <div className="flex items-center gap-2">
-                                        <h3 className="text-lg font-semibold">
+                            <div key={l._id} className="bg-white border rounded-xl p-4">
+                                <div className="flex justify-between items-start mb-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <h3 className="text-base font-semibold">
                                             {l.food_log_id ? l.food_log_id.product_type : (l.produced_food_id?.recipe_id?.name || "Без ime")}
                                         </h3>
                                         <span className={`text-xs px-2 py-1 rounded ${l.food_log_id ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"}`}>
                                             {l.food_log_id ? "Търговия на едро" : "Кетъринг"}
                                         </span>
                                     </div>
-
-                                    <div className="text-sm text-slate-600">Количество: <span className="font-medium">{l.quantity}</span></div>
-
-                                    {l.food_log_id && <>
-                                        <div className="text-sm text-slate-600">Партида: <span className="font-medium">{l.food_log_id.batch_number}</span></div>
-                                        {l.food_log_id.shelf_life && (
-                                            <div className="text-sm text-slate-600">
-                                                Срок: <span className="font-medium">{fmtDate(l.food_log_id.shelf_life)}</span>
-                                            </div>
-                                        )}
-                                    </>}
-
-                                    {l.produced_food_id && <>
-                                        {l.produced_food_id.product_batch_number && <div className="text-sm text-slate-600">Партида: <span className="font-medium">{l.produced_food_id.product_batch_number}</span></div>}
-                                        {l.produced_food_id.product_shelf_life && (
-                                            <div className="text-sm text-slate-600">
-                                                Срок: <span className="font-medium">{fmtDate(l.produced_food_id.product_shelf_life)}</span>
-                                            </div>
-                                        )}
-                                        {l.produced_food_id.portions && <div className="text-sm text-slate-600">Порции: <span className="font-medium">{l.produced_food_id.portions}</span></div>}
-                                    </>}
-
-                                    {l.client_id && <div className="text-sm text-slate-600">Получател: <span className="font-medium">{l.client_id.name}</span></div>}
-                                    {l.document && <div className="text-sm text-slate-600">Документ: <span className="font-medium">{l.document}</span></div>}
-                                    {l.employee_id && <div className="text-sm text-slate-600">Служител: <span className="font-medium">{l.employee_id.first_name} {l.employee_id.last_name}</span></div>}
-
-                                    <div className="text-xs text-slate-400 pt-1">{new Date(l.date).toLocaleString("bg-BG")}</div>
+                                    <div className="flex gap-3 text-sm shrink-0 ml-2">
+                                        <button onClick={() => setEditingLog(l)} className="text-blue-600 hover:text-blue-800">Редактирай</button>
+                                        <button onClick={() => onDelete(l._id)} className="text-red-600 hover:text-red-800">Изтрий</button>
+                                    </div>
                                 </div>
 
-                                <div className="flex gap-3 text-sm ml-4">
-                                    <button onClick={() => setEditingLog(l)} className="text-blue-600 hover:text-blue-800">Редактирай</button>
-                                    <button onClick={() => onDelete(l._id)} className="text-red-600 hover:text-red-800">Изтрий</button>
+                                <div className="space-y-1 text-sm text-slate-600">
+                                    <div>Количество: <span className="font-medium">{l.quantity}</span></div>
+                                    {l.food_log_id && <>
+                                        <div>Партида: <span className="font-medium">{l.food_log_id.batch_number}</span></div>
+                                        {l.food_log_id.shelf_life && <div>Срок: <span className="font-medium">{fmtDate(l.food_log_id.shelf_life)}</span></div>}
+                                    </>}
+                                    {l.produced_food_id && <>
+                                        {l.produced_food_id.product_batch_number && <div>Партида: <span className="font-medium">{l.produced_food_id.product_batch_number}</span></div>}
+                                        {l.produced_food_id.product_shelf_life && <div>Срок: <span className="font-medium">{fmtDate(l.produced_food_id.product_shelf_life)}</span></div>}
+                                        {l.produced_food_id.portions && <div>Порции: <span className="font-medium">{l.produced_food_id.portions}</span></div>}
+                                    </>}
+                                    {l.client_id && <div>Получател: <span className="font-medium">{l.client_id.name}</span></div>}
+                                    {l.document && <div>Документ: <span className="font-medium">{l.document}</span></div>}
+                                    {l.employee_id && <div>Служител: <span className="font-medium">{l.employee_id.first_name} {l.employee_id.last_name}</span></div>}
+                                    <div className="text-xs text-slate-400 pt-1">{new Date(l.date).toLocaleString("bg-BG")}</div>
                                 </div>
                             </div>
                         ))}
