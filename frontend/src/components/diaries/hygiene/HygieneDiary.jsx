@@ -12,6 +12,8 @@ export default function HygieneDiary() {
     const [search, setSearch] = useState("");
     const [error, setError] = useState("");
     const [editingLog, setEditingLog] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
     const [form, setForm] = useState({
         object_id: "",
@@ -21,24 +23,24 @@ export default function HygieneDiary() {
         employee_id: ""
     });
 
-    /* LOAD OBJECTS */
     useEffect(() => {
         api.get("/objects").then(res => setObjects(res.data));
     }, []);
 
-    /* LOAD DEPENDENCIES */
     useEffect(() => {
         if (!form.object_id) return;
 
         api.get(`/rooms/${form.object_id}`).then(r => setRooms(r.data));
         api.get(`/disinfectants/${form.object_id}`).then(r => setDisinfectants(r.data));
         api.get(`/employees/${form.object_id}`).then(r => setEmployees(r.data));
-        loadLogs();
+        loadLogs(1);
     }, [form.object_id]);
 
-    const loadLogs = async () => {
-        const res = await api.get(`/hygiene-logs/${form.object_id}`);
-        setAllLogs(res.data);
+    const loadLogs = async (page = 1) => {
+        const res = await api.get(`/hygiene-logs/${form.object_id}?page=${page}&limit=10`);
+        setAllLogs(res.data.logs || []);
+        setCurrentPage(res.data.page || 1);
+        setTotalPages(res.data.totalPages || 1);
     };
 
     const onChange = (e) => {
@@ -79,12 +81,12 @@ export default function HygieneDiary() {
     const filteredLogs = allLogs.filter(l => {
         const text = search.toLowerCase();
         return (
-            l.room_id?.name?.toLowerCase().includes(text) ||
-            l.disinfectant_id?.name?.toLowerCase().includes(text)
+            (l.room_id?.name || "").toLowerCase().includes(text) ||
+            (l.disinfectant_id?.name || "").toLowerCase().includes(text)
         );
     });
 
-    const visibleLogs = search ? filteredLogs : filteredLogs.slice(0, 10);
+    const visibleLogs = filteredLogs;
 
     return (
         <div className="max-w-5xl mx-auto space-y-8">
@@ -153,14 +155,16 @@ export default function HygieneDiary() {
                 </section>
             )}
 
-            <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Търси по помещение или препарат..."
-                className="border px-3 py-2 rounded-md w-full"
-            />
+            {form.object_id && (
+                <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Търси по помещение или препарат..."
+                    className="border px-3 py-2 rounded-md w-full"
+                />
+            )}
 
-            <div className="space-y-3">
+            {form.object_id && (<div className="space-y-3">
                 {visibleLogs.map(l => (
                     <div key={l._id} className="bg-white border rounded-lg p-4 flex justify-between">
                         <div>
@@ -196,7 +200,31 @@ export default function HygieneDiary() {
                 {visibleLogs.length === 0 && (
                     <p className="text-slate-500 text-sm">Няма резултати</p>
                 )}
-            </div>
+            </div>)}
+
+            {form.object_id && allLogs.length > 0 && totalPages > 1 && (
+                <div className="flex justify-center gap-4 mt-4">
+                    <button
+                        onClick={() => loadLogs(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 border rounded disabled:opacity-50"
+                    >
+                        Назад
+                    </button>
+
+                    <span className="self-center text-sm">
+                        Страница {currentPage} от {totalPages}
+                    </span>
+
+                    <button
+                        onClick={() => loadLogs(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="px-4 py-2 border rounded disabled:opacity-50"
+                    >
+                        Напред
+                    </button>
+                </div>
+            )}
 
             {editingLog && (
                 <HygieneEditModal
