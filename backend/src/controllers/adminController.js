@@ -36,9 +36,29 @@ const activateFirm = async (req, res) => {
     }
 };
 
+const addObjectToFirm = async (req, res) => {
+    try {
+        const result = await userService.addObjectToFirm(req.params.firmId, req.body);
+        res.status(201).json(result);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+};
+
+const addUserToFirm = async (req, res) => {
+    try {
+        const result = await userService.addUserToFirmByAdmin(req.params.firmId, req.body);
+        res.status(201).json(result);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+};
+
 export default {
     getInactiveUsers,
     getInactiveFirms,
     activateUser,
     activateFirm,
+    addObjectToFirm,
+    addUserToFirm,
 };

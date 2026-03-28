@@ -19,4 +19,7 @@ router.put("/activate-user/:userId", adminController.activateUser);
 router.get("/inactive-firms", adminController.getInactiveFirms);
 router.put("/activate-firm/:firmId", adminController.activateFirm);
 
+router.post("/firms/:firmId/objects", adminController.addObjectToFirm);
+router.post("/firms/:firmId/users", adminController.addUserToFirm);
+
 export default router;

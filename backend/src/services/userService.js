@@ -194,7 +194,7 @@ const getUserById = async (userId) => {
 
 const updateUser = async (userId, updateData, actor) => {
     const allowedFieldsByRole = {
-        admin: ["username", "email", "role", "firm_id", "object_id", "active"],
+        admin: ["username", "name", "email", "role", "firm_id", "object_id", "active"],
         owner: ["name", "email", "active"],
     };
 
@@ -267,6 +267,107 @@ const getManagers = async ({ firmId, isAdmin }) => {
         .sort({ created_at: -1 });
 };
 
+const addObjectToFirm = async (firmId, data) => {
+    const firm = await Firm.findById(firmId);
+    if (!firm) {
+        throw new Error("Firm not found");
+    }
+
+    const { name, address, working_hours, object_type } = data;
+
+    if (!name || !address || !object_type) {
+        throw new Error("Name, address and object_type are required");
+    }
+
+    const object = await ObjectModel.create({
+        firm_id: firmId,
+        name,
+        address,
+        working_hours,
+        object_type,
+    });
+
+    return await ObjectModel.findById(object._id)
+        .populate("firm_id", "name bulstat");
+};
+
+const addUserToFirmByAdmin = async (firmId, data) => {
+    const firm = await Firm.findById(firmId);
+    if (!firm) {
+        throw new Error("Firm not found");
+    }
+
+    const {
+        username,
+        password,
+        name,
+        email,
+        role,
+        object_id,
+        active = true,
+    } = data;
+
+    if (!username || !password || !name || !role) {
+        throw new Error("username, password, name and role are required");
+    }
+
+    if (!["owner", "manager"].includes(role)) {
+        throw new Error("Admin can create only owner or manager");
+    }
+
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+        throw new Error("User with this username already exists");
+    }
+
+    let finalObjectId = undefined;
+
+    if (role === "manager") {
+        if (!object_id) {
+            throw new Error("Manager must be assigned to an object");
+        }
+
+        const object = await ObjectModel.findById(object_id);
+        if (!object) {
+            throw new Error("Object not found");
+        }
+
+        if (object.firm_id.toString() !== firmId.toString()) {
+            throw new Error("Selected object does not belong to this firm");
+        }
+
+        if (object.mol_user_id) {
+            throw new Error("This object already has a MOL manager");
+        }
+
+        finalObjectId = object._id;
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+        username,
+        password_hash: hashedPassword,
+        name,
+        email,
+        role,
+        firm_id: firmId,
+        object_id: finalObjectId,
+        active,
+    });
+
+    if (role === "manager") {
+        await ObjectModel.findByIdAndUpdate(finalObjectId, {
+            mol_user_id: user._id,
+        });
+    }
+
+    return await User.findById(user._id)
+        .populate("firm_id", "name bulstat")
+        .populate("object_id", "name address object_type")
+        .select("-password_hash");
+};
+
 export default {
     registerFirmRequest,
     loginUser,
@@ -281,5 +382,7 @@ export default {
     updateUser,
     deleteUser,
     updateProfile,
-    getManagers
+    getManagers,
+    addObjectToFirm,
+    addUserToFirmByAdmin
 };
