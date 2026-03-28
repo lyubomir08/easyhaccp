@@ -10,6 +10,8 @@ export default function PersonalHygieneDiary() {
     const [search, setSearch] = useState("");
     const [error, setError] = useState("");
     const [editingLog, setEditingLog] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
     const [form, setForm] = useState({
         object_id: "",
@@ -19,26 +21,27 @@ export default function PersonalHygieneDiary() {
         uniform_status: ""
     });
 
-    /* LOAD OBJECTS */
     useEffect(() => {
         api.get("/objects").then(res => setObjects(res.data));
     }, []);
 
-    /* LOAD EMPLOYEES + LOGS */
     useEffect(() => {
         if (!form.object_id) return;
 
         api.get(`/employees/${form.object_id}`)
             .then(res => setEmployees(res.data));
 
-        loadLogs();
+        loadLogs(1);
     }, [form.object_id]);
 
-    const loadLogs = async () => {
+    const loadLogs = async (page = 1) => {
         const res = await api.get(
-            `/personal-hygiene/${form.object_id}`
+            `/personal-hygiene/${form.object_id}?page=${page}&limit=10`
         );
-        setLogs(res.data);
+
+        setLogs(res.data.logs || []);
+        setCurrentPage(res.data.page || 1);
+        setTotalPages(res.data.totalPages || 1);
     };
 
     const onChange = (e) => {
@@ -48,7 +51,6 @@ export default function PersonalHygieneDiary() {
         }));
     };
 
-    /* CREATE */
     const onSubmit = async (e) => {
         e.preventDefault();
         setError("");
@@ -77,7 +79,6 @@ export default function PersonalHygieneDiary() {
         }
     };
 
-    /* DELETE – ⚠️ БЕЗ /delete */
     const onDelete = async (id) => {
         if (!confirm("Сигурни ли сте?")) return;
 
@@ -90,16 +91,13 @@ export default function PersonalHygieneDiary() {
         }
     };
 
-    /* SEARCH */
-    const filteredLogs = logs.filter(l =>
-        `${l.employee_id?.first_name} ${l.employee_id?.last_name}`
+    const filteredLogs = (logs || []).filter(l =>
+        `${l.employee_id?.first_name || ""} ${l.employee_id?.last_name || ""}`
             .toLowerCase()
             .includes(search.toLowerCase())
     );
 
-    const visibleLogs = search
-        ? filteredLogs
-        : filteredLogs.slice(0, 10);
+    const visibleLogs = filteredLogs;
 
     return (
         <div className="max-w-5xl mx-auto space-y-8">
@@ -191,15 +189,17 @@ export default function PersonalHygieneDiary() {
             )}
 
             {/* SEARCH */}
-            <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Търси по служител..."
-                className="border px-3 py-2 rounded-md w-full"
-            />
+            {form.object_id && (
+                <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Търси по служител..."
+                    className="border px-3 py-2 rounded-md w-full"
+                />
+            )}
 
             {/* LIST */}
-            <div className="space-y-4">
+            {form.object_id && (<div className="space-y-4">
                 {visibleLogs.map(l => (
                     <div
                         key={l._id}
@@ -252,7 +252,31 @@ export default function PersonalHygieneDiary() {
                         Няма резултати
                     </p>
                 )}
-            </div>
+            </div>)}
+
+            {form.object_id && logs.length > 0 && totalPages > 1 && (
+                <div className="flex justify-center gap-4 mt-4">
+                    <button
+                        onClick={() => loadLogs(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 border rounded disabled:opacity-50"
+                    >
+                        Назад
+                    </button>
+
+                    <span className="self-center text-sm">
+                        Страница {currentPage} от {totalPages}
+                    </span>
+
+                    <button
+                        onClick={() => loadLogs(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="px-4 py-2 border rounded disabled:opacity-50"
+                    >
+                        Напред
+                    </button>
+                </div>
+            )}
 
             {/* EDIT MODAL */}
             {editingLog && (
@@ -260,7 +284,7 @@ export default function PersonalHygieneDiary() {
                     log={editingLog}
                     employees={employees}
                     onClose={() => setEditingLog(null)}
-                    onSaved={loadLogs}
+                    onSaved={() => loadLogs(currentPage)}
                 />
             )}
         </div>

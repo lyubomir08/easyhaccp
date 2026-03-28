@@ -8,14 +8,30 @@ const createPersonalHygieneLog = async (data) => {
 };
 
 const getPersonalHygieneLogsByObject = async (objectId, queryParams) => {
+    const page = Number(queryParams.page) || 1;
+    const limit = Number(queryParams.limit) || 10;
+    const skip = (page - 1) * limit;
+
     const query = {
         object_id: objectId,
         ...buildDateFilter(queryParams, "date")
     };
 
-    return await PersonalHygieneLog.find(query)
-        .populate("employee_id")
-        .sort({ date: -1 });
+    const [logs, total] = await Promise.all([
+        PersonalHygieneLog.find(query)
+            .populate("employee_id")
+            .sort({ date: -1 })
+            .skip(skip)
+            .limit(limit),
+        PersonalHygieneLog.countDocuments(query)
+    ]);
+
+    return {
+        logs,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit)
+    };
 };
 
 const updatePersonalHygieneLog = async (logId, data) => {
