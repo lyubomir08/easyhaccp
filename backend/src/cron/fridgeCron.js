@@ -9,7 +9,6 @@ const randomTemp = (min, max) => {
     return Math.round(val * 10) / 10;
 };
 
-// Парсира "09:00-18:00" → { openH: 9, openM: 0, closeH: 18, closeM: 0 }
 const parseWorkingHours = (working_hours) => {
     if (!working_hours) return { openH: 8, openM: 0, closeH: 20, closeM: 0 };
     const match = working_hours.match(/(\d{1,2}):(\d{2})\s*[-–]\s*(\d{1,2}):(\d{2})/);
@@ -35,18 +34,15 @@ const generateFridgeLogs = async () => {
         for (const obj of objects) {
             const { openH, openM, closeH, closeM } = parseWorkingHours(obj.working_hours);
 
-            // Сутрешен запис: 1 час след отваряне
             const morningTime = new Date(now);
             morningTime.setHours(openH + 1, openM, 0, 0);
 
-            // Вечерен запис: 1 час преди затваряне
             const eveningTime = new Date(now);
             eveningTime.setHours(closeH - 1, closeM, 0, 0);
 
             const fridges = await Fridge.find({ object_id: obj._id });
             if (fridges.length === 0) continue;
 
-            // Вземи случаен служител за обекта
             const employees = await Employee.find({ object_id: obj._id });
             const randomEmployee = employees.length > 0
                 ? employees[Math.floor(Math.random() * employees.length)]
@@ -56,7 +52,6 @@ const generateFridgeLogs = async () => {
                 const min = fridge.norm_min ?? -2;
                 const max = fridge.norm_max ?? 4;
 
-                // Провери дали вече има сутрешен запис за днес
                 const morningExists = await FridgeTemperatureLog.findOne({
                     fridge_id: fridge._id,
                     date: { $gte: todayStart, $lt: morningTime }
@@ -74,7 +69,6 @@ const generateFridgeLogs = async () => {
                     console.log(`[FridgeCron] Сутрешен запис: ${obj.name} - ${fridge.name}`);
                 }
 
-                // Провери дали вече има вечерен запис за днес
                 const eveningExists = await FridgeTemperatureLog.findOne({
                     fridge_id: fridge._id,
                     date: { $gte: eveningTime, $lte: todayEnd }
@@ -99,13 +93,11 @@ const generateFridgeLogs = async () => {
 };
 
 export const startFridgeCron = () => {
-    // Изпълнява се всеки час
     cron.schedule("0 * * * *", async () => {
         console.log("[FridgeCron] Проверка за автоматични записи...");
         await generateFridgeLogs();
     });
 
-    // При стартиране на сървъра — веднага провери
     generateFridgeLogs();
 
     console.log("[FridgeCron] Стартиран успешно");
