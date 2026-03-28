@@ -19,3 +19,13 @@ export const activateFirm = async (firmId) => {
     const { data } = await api.put(`/admin/activate-firm/${firmId}`);
     return data;
 };
+
+export const addObjectToFirm = async (firmId, formData) => {
+    const { data } = await api.post(`/admin/firms/${firmId}/objects`, formData);
+    return data;
+};
+
+export const addUserToFirm = async (firmId, formData) => {
+    const { data } = await api.post(`/admin/firms/${firmId}/users`, formData);
+    return data;
+};
