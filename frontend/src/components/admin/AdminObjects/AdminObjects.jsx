@@ -56,12 +56,24 @@ export default function AdminObjects() {
                             <p className="font-semibold text-black">
                                 {object.name}
                             </p>
+
                             <p className="text-sm text-slate-500">
                                 Адрес: {object.address}
                             </p>
+
                             {object.firm_id?.name && (
                                 <p className="text-sm text-slate-500">
                                     Фирма: {object.firm_id.name}
+                                </p>
+                            )}
+
+                            {object.mol_user_id ? (
+                                <p className="text-sm text-slate-500">
+                                    МОЛ: {object.mol_user_id.name || object.mol_user_id.username}
+                                </p>
+                            ) : (
+                                <p className="text-sm text-amber-600">
+                                    Няма назначен МОЛ
                                 </p>
                             )}
                         </div>

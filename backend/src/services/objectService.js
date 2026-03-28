@@ -4,6 +4,7 @@ const getAllObjects = async () => {
     return await ObjectModel
         .find()
         .populate("firm_id", "name bulstat")
+        .populate("mol_user_id", "username name")
         .sort({ created_at: -1 });
 };
 

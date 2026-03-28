@@ -4,6 +4,7 @@ import { getObjects } from "../../services/objectService";
 
 export default function CreateUserForFirmModal({ firm, onClose, onCreated }) {
     const [objects, setObjects] = useState([]);
+    const availableManagerObjects = objects.filter((obj) => !obj.mol_user_id);
     const [loadingObjects, setLoadingObjects] = useState(true);
     const [loading, setLoading] = useState(false);
 
@@ -25,9 +26,11 @@ export default function CreateUserForFirmModal({ firm, onClose, onCreated }) {
         setLoadingObjects(true);
         try {
             const allObjects = await getObjects();
+
             const firmObjects = allObjects.filter(
                 (obj) => obj.firm_id?._id === firm._id
             );
+
             setObjects(firmObjects);
         } catch (err) {
             alert("Грешка при зареждане на обектите");
@@ -45,32 +48,38 @@ export default function CreateUserForFirmModal({ firm, onClose, onCreated }) {
     };
 
     const onSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
+    e.preventDefault();
+    setLoading(true);
 
-        try {
-            const payload = {
-                username: form.username,
-                password: form.password,
-                name: form.name,
-                email: form.email,
-                role: form.role,
-                active: form.active,
-            };
-
-            if (form.role === "manager") {
-                payload.object_id = form.object_id;
-            }
-
-            await addUserToFirm(firm._id, payload);
-            onCreated();
-            onClose();
-        } catch (err) {
-            alert(err.response?.data?.message || "Грешка при създаване на потребител");
-        } finally {
+    try {
+        if (form.role === "manager" && !form.object_id) {
+            alert("Избери свободен обект за manager");
             setLoading(false);
+            return;
         }
-    };
+
+        const payload = {
+            username: form.username,
+            password: form.password,
+            name: form.name,
+            email: form.email,
+            role: form.role,
+            active: form.active,
+        };
+
+        if (form.role === "manager") {
+            payload.object_id = form.object_id;
+        }
+
+        await addUserToFirm(firm._id, payload);
+        onCreated();
+        onClose();
+    } catch (err) {
+        alert(err.response?.data?.message || "Грешка при създаване на потребител");
+    } finally {
+        setLoading(false);
+    }
+};
 
     return (
         <div className="fixed inset-0 z-[9999]">
@@ -176,18 +185,25 @@ export default function CreateUserForFirmModal({ firm, onClose, onCreated }) {
                                     onChange={onChange}
                                     className="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
                                     required
+                                    disabled={loadingObjects || availableManagerObjects.length === 0}
                                 >
                                     <option value="">
-                                        {loadingObjects ? "Зареждане..." : "Избери обект"}
+                                        {loadingObjects
+                                            ? "Зареждане..."
+                                            : availableManagerObjects.length === 0
+                                                ? "Няма свободни обекти"
+                                                : "Избери обект"}
                                     </option>
-                                    {objects.map((object) => (
+
+                                    {availableManagerObjects.map((object) => (
                                         <option key={object._id} value={object._id}>
                                             {object.name}
                                         </option>
                                     ))}
                                 </select>
+
                                 <p className="text-xs text-slate-500 mt-1">
-                                    Manager ще бъде записан като МОЛ на избрания обект.
+                                    Показват се само обекти без назначен МОЛ.
                                 </p>
                             </div>
                         )}
