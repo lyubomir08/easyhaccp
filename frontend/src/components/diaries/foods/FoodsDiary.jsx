@@ -23,6 +23,11 @@ export default function FoodsDiary() {
     const [editingLog, setEditingLog] = useState(null);
     const [search, setSearch] = useState("");
     const [error, setError] = useState("");
+    const [image, setImage] = useState(null);
+    const [selectedObject, setSelectedObject] = useState(null);
+    const [previewImage, setPreviewImage] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
     const [form, setForm] = useState({
         object_id: "",
@@ -45,12 +50,14 @@ export default function FoodsDiary() {
         if (!form.object_id) return;
         api.get(`/suppliers/object/${form.object_id}`).then(r => setSuppliers(r.data));
         api.get(`/employees/${form.object_id}`).then(r => setEmployees(r.data));
-        loadLogs();
+        loadLogs(1);
     }, [form.object_id]);
 
-    const loadLogs = async () => {
-        const res = await api.get(`/food-logs/${form.object_id}`);
-        setAllLogs(res.data);
+    const loadLogs = async (page = 1) => {
+        const res = await api.get(`/food-logs/${form.object_id}?page=${page}&limit=10`);
+        setAllLogs(res.data.logs);
+        setCurrentPage(res.data.page);
+        setTotalPages(res.data.totalPages);
     };
 
     const onChange = (e) => {
@@ -93,6 +100,30 @@ export default function FoodsDiary() {
         }
     };
 
+    const onSubmitImageOnly = async (e) => {
+        e.preventDefault();
+        setError("");
+
+        try {
+            const formData = new FormData();
+            formData.append("object_id", form.object_id);
+
+            if (image) {
+                formData.append("image", image);
+            }
+
+            await api.post("/food-logs", formData, {
+                headers: { "Content-Type": "multipart/form-data" }
+            });
+
+            loadLogs();
+            setImage(null);
+        } catch (err) {
+            console.error("Error details:", err.response?.data);
+            setError(err.response?.data?.message || "Грешка при запазване");
+        }
+    };
+
     const onDelete = async (id) => {
         if (!confirm("Сигурен ли си?")) return;
         await api.delete(`/food-logs/delete/${id}`);
@@ -102,14 +133,20 @@ export default function FoodsDiary() {
     const filteredLogs = allLogs.filter(l => {
         const t = search.toLowerCase();
         return (
-            l.product_type.toLowerCase().includes(t) ||
-            l.batch_number.toLowerCase().includes(t)
+            (l.product_type || "").toLowerCase().includes(t) ||
+            (l.batch_number || "").toLowerCase().includes(t)
         );
     });
 
     const visibleLogs = search ? filteredLogs : filteredLogs.slice(0, 10);
 
     const alertLogs = allLogs.filter(l => getExpiryStatus(l.shelf_life));
+
+    const isRetailOrWholesale = selectedObject &&
+        ["retail", "wholesale"].includes(selectedObject.object_type);
+
+    const isRestaurantOrCatering = selectedObject &&
+        ["restaurant", "catering"].includes(selectedObject.object_type);
 
     return (
         <div className="max-w-5xl mx-auto space-y-8 p-4">
@@ -123,7 +160,15 @@ export default function FoodsDiary() {
                 <select
                     name="object_id"
                     value={form.object_id}
-                    onChange={onChange}
+                    onChange={(e) => {
+                        const id = e.target.value;
+                        setForm(s => ({ ...s, object_id: id }));
+
+                        const obj = objects.find(o => o._id === id);
+                        setSelectedObject(obj);
+
+                        setImage(null);
+                    }}
                     className="border px-3 py-2 rounded-md w-full"
                 >
                     <option value="">-- Избери обект --</option>
@@ -136,7 +181,7 @@ export default function FoodsDiary() {
             </section>
 
             {/* FORM */}
-            {form.object_id && (
+            {form.object_id && isRestaurantOrCatering && (
                 <section className="bg-white border rounded-xl p-6">
                     <h2 className="text-lg font-semibold mb-4">Добави нов запис</h2>
                     <form
@@ -282,8 +327,50 @@ export default function FoodsDiary() {
                 </section>
             )}
 
+            {form.object_id && isRetailOrWholesale && (
+                <section className="bg-white border rounded-xl p-6">
+                    <h2 className="text-lg font-semibold mb-4">Качи снимка</h2>
+
+                    <form onSubmit={onSubmitImageOnly} className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Снимка</label>
+                            <label className="flex items-center justify-center w-full border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:border-blue-500 transition">
+                                <span className="text-gray-600">
+                                    📷 Избери снимка
+                                </span>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => setImage(e.target.files[0])}
+                                    className="hidden"
+                                />
+                            </label>
+
+                            {image && (
+                                <p className="text-sm text-green-600 mt-2">
+                                    Избрана снимка: {image.name}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="flex justify-end">
+                            <button
+                                type="submit"
+                                className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
+                            >
+                                Запази снимката
+                            </button>
+                        </div>
+
+                        {error && (
+                            <p className="text-red-500 text-sm">{error}</p>
+                        )}
+                    </form>
+                </section>
+            )}
+
             {/* SEARCH */}
-            {form.object_id && (
+            {form.object_id && isRestaurantOrCatering && (
                 <div>
                     <label className="block text-sm font-medium mb-2">Търсене</label>
                     <input
@@ -296,7 +383,7 @@ export default function FoodsDiary() {
             )}
 
             {/* LIST */}
-            {form.object_id && (
+            {form.object_id && isRestaurantOrCatering && (
                 <div className="space-y-3">
                     {visibleLogs.map(l => {
                         const status = getExpiryStatus(l.shelf_life);
@@ -313,7 +400,7 @@ export default function FoodsDiary() {
                                     </div>
                                     <div className="text-sm text-slate-600 space-y-1">
                                         <div>
-                                           Партиден номер: {l.batch_number} • Количество: {l.quantity} • Срок на годност: {new Date(l.shelf_life).toLocaleDateString("bg-BG")}
+                                            Партиден номер: {l.batch_number} • Количество: {l.quantity} • Срок на годност: {new Date(l.shelf_life).toLocaleDateString("bg-BG")}
                                         </div>
                                         {l.transport_type && (
                                             <div>
@@ -360,6 +447,89 @@ export default function FoodsDiary() {
                             Показани са последните 10 записа. Използвайте търсенето за повече резултати.
                         </p>
                     )}
+                </div>
+            )}
+
+            {form.object_id && isRetailOrWholesale && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {allLogs.filter(l => l.image_url).map(l => (
+                        <div key={l._id} className="bg-white border rounded-xl p-4 space-y-3">
+                            <img
+                                src={l.image_url}
+                                alt="Снимка към записа"
+                                onClick={() => setPreviewImage(l.image_url)}
+                                className="w-full h-56 object-cover rounded-lg border cursor-pointer hover:opacity-90 transition"
+                            />
+
+                            {l.created_at && (
+                                <div className="text-xs text-slate-500">
+                                    Качена на: {new Date(l.created_at).toLocaleString("bg-BG")}
+                                </div>
+                            )}
+
+                            <div className="flex gap-3 text-sm">
+                                <button
+                                    onClick={() => onDelete(l._id)}
+                                    className="text-red-600 hover:text-red-800"
+                                >
+                                    Изтрий
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+
+                    {allLogs.filter(l => l.image_url).length === 0 && (
+                        <p className="text-slate-500 text-sm">Няма качени снимки</p>
+                    )}
+                </div>
+            )}
+
+            {form.object_id && allLogs.length > 0 && (
+                <div className="flex justify-center gap-4 mt-4">
+                    <button
+                        onClick={() => loadLogs(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 border rounded disabled:opacity-50"
+                    >
+                        Назад
+                    </button>
+
+                    <span className="self-center text-sm">
+                        Страница {currentPage} от {totalPages}
+                    </span>
+
+                    <button
+                        onClick={() => loadLogs(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="px-4 py-2 border rounded disabled:opacity-50"
+                    >
+                        Напред
+                    </button>
+                </div>
+            )}
+
+            {previewImage && (
+                <div
+                    className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+                    onClick={() => setPreviewImage(null)}
+                >
+                    <div
+                        className="relative max-w-5xl max-h-[90vh] w-full flex justify-center"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            onClick={() => setPreviewImage(null)}
+                            className="absolute top-2 right-2 bg-white text-black rounded-full w-10 h-10 text-xl shadow"
+                        >
+                            ×
+                        </button>
+
+                        <img
+                            src={previewImage}
+                            alt="Преглед на снимка"
+                            className="max-w-full max-h-[90vh] object-contain rounded-lg"
+                        />
+                    </div>
                 </div>
             )}
 

@@ -2,15 +2,16 @@ import mongoose from "mongoose";
 
 const foodLogSchema = new mongoose.Schema({
     object_id: { type: mongoose.Schema.Types.ObjectId, ref: "ObjectModel", required: true },
-    date: { type: Date, required: true },
-    supplier_id: { type: mongoose.Schema.Types.ObjectId, ref: "Supplier", required: true },
-    product_type: { type: String, required: true, trim: true },
-    batch_number: { type: String, required: true, trim: true },
-    shelf_life: {type: Date, required: true },  
-    quantity: { type: Number, required: true },
+    date: { type: Date },
+    supplier_id: { type: mongoose.Schema.Types.ObjectId, ref: "Supplier" },
+    product_type: { type: String, trim: true },
+    batch_number: { type: String, trim: true },
+    shelf_life: {type: Date },  
+    quantity: { type: Number },
     transport_type: { type: String, trim: true },
     document: { type: String, trim: true },
-    employee_id: { type: mongoose.Schema.Types.ObjectId, ref: "Employee", required: true },
+    image_url: { type: String, trim: true },
+    employee_id: { type: mongoose.Schema.Types.ObjectId, ref: "Employee" },
     created_at: { type: Date, default: Date.now }
 }, { versionKey: false });
 

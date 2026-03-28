@@ -1,3 +1,5 @@
+import fs from "fs";
+import cloudinary from "../config/cloudinary.js";
 import foodLogService from "../services/foodLogService.js";
 import ObjectModel from "../models/Object.js";
 
@@ -16,9 +18,30 @@ const createFoodLog = async (req, res) => {
             return res.status(403).json({ message: "Owners can only add logs to their firm" });
         }
 
-        const log = await foodLogService.createFoodLog(req.body);
+        let image_url = "";
+
+        if (req.file) {
+            const result = await cloudinary.uploader.upload(req.file.path, {
+                folder: "easyhaccp/food-logs"
+            });
+
+            image_url = result.secure_url;
+
+            if (req.file.path) {
+                fs.unlink(req.file.path, () => { });
+            }
+        }
+
+        const log = await foodLogService.createFoodLog({
+            ...req.body,
+            image_url
+        });
+
         res.status(201).json(log);
     } catch (err) {
+        if (req.file?.path) {
+            fs.unlink(req.file.path, () => { });
+        }
         res.status(400).json({ message: err.message });
     }
 };
