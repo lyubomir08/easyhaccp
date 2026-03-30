@@ -23,7 +23,6 @@ export default function ProducedFoodDiary() {
     const [expiredIngredients, setExpiredIngredients] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-
     const [form, setForm] = useState({
         object_id: "",
         date: "",
@@ -53,7 +52,8 @@ export default function ProducedFoodDiary() {
         try {
             try {
                 const foodLogsRes = await api.get(`/food-logs/${form.object_id}`);
-                setFoodLogs(foodLogsRes.data);
+                const logsData = foodLogsRes.data;
+                setFoodLogs(Array.isArray(logsData) ? logsData : logsData?.logs || logsData?.data || []);
             } catch { setFoodLogs([]); }
 
             const foodGroupsRes = await api.get(`/food-groups/${form.object_id}`);
@@ -76,14 +76,9 @@ export default function ProducedFoodDiary() {
 
     const loadLogs = async (page = 1) => {
         if (!form.object_id) return;
-
         try {
             const res = await api.get(`/produced-foods/${form.object_id}?page=${page}&limit=10`);
-
-            if (page !== currentPage) {
-                setExpandedLog(null);
-            }
-
+            if (page !== currentPage) setExpandedLog(null);
             setLogs(res.data.logs || []);
             setCurrentPage(res.data.page || 1);
             setTotalPages(res.data.totalPages || 1);
@@ -98,9 +93,9 @@ export default function ProducedFoodDiary() {
     const checkExpiredIngredients = (recipe) => {
         if (!recipe?.ingredients) return [];
         return recipe.ingredients.reduce((acc, ing) => {
-            const match = foodLogs.find(fl =>
+            const match = Array.isArray(foodLogs) ? foodLogs.find(fl =>
                 fl.product_type?.toLowerCase() === ing.ingredient?.toLowerCase()
-            );
+            ) : null;
             if (match && isExpired(match.shelf_life)) {
                 acc.push({ name: ing.ingredient, shelf_life: match.shelf_life, batch: match.batch_number });
             }
@@ -183,7 +178,6 @@ export default function ProducedFoodDiary() {
         (l.recipe_id?.name || "").toLowerCase().includes(search.toLowerCase()) ||
         (l.product_batch_number || "").toLowerCase().includes(search.toLowerCase())
     );
-    const visibleLogs = filteredLogs;
 
     return (
         <div className="max-w-6xl mx-auto space-y-8 p-4">
@@ -230,7 +224,6 @@ export default function ProducedFoodDiary() {
                             </div>
                         </div>
 
-                        {/* Предупреждение за изтекли съставки */}
                         {expiredIngredients.length > 0 && (
                             <div className="bg-red-50 border border-red-300 rounded-md p-4">
                                 <p className="text-red-700 font-semibold text-sm mb-2">⛔ Не може да се произведе — изтекли съставки:</p>
@@ -245,6 +238,7 @@ export default function ProducedFoodDiary() {
                         )}
 
                         {error && <div className="bg-red-50 border border-red-200 rounded-md p-3"><p className="text-red-700 text-sm">{error}</p></div>}
+
                         <div className="flex justify-end">
                             <button
                                 type="submit"
@@ -262,7 +256,7 @@ export default function ProducedFoodDiary() {
                     </div>
 
                     <div className="space-y-3">
-                        {visibleLogs.map(l => {
+                        {filteredLogs.map(l => {
                             const isExpanded = expandedLog === l._id;
                             return (
                                 <div key={l._id} className="bg-white border rounded-xl overflow-hidden">
@@ -310,9 +304,9 @@ export default function ProducedFoodDiary() {
                                                     <div className="space-y-1">
                                                         {l.recipe_id.ingredients.map((ing, idx) => {
                                                             const totalGrams = ing.quantity && l.portions ? ing.quantity * l.portions : null;
-                                                            const matchingLog = foodLogs.find(fl =>
+                                                            const matchingLog = Array.isArray(foodLogs) ? foodLogs.find(fl =>
                                                                 fl.product_type?.toLowerCase() === ing.ingredient?.toLowerCase()
-                                                            );
+                                                            ) : null;
                                                             const expired = matchingLog && isExpired(matchingLog.shelf_life);
                                                             return (
                                                                 <div key={idx} className={`flex items-center justify-between border-b last:border-0 py-2 text-sm px-3 rounded ${expired ? "bg-red-50" : "bg-white"}`}>
@@ -344,8 +338,7 @@ export default function ProducedFoodDiary() {
                                 </div>
                             );
                         })}
-
-                        {visibleLogs.length === 0 && <p className="text-slate-500 text-sm text-center py-8">Няма записи</p>}
+                        {filteredLogs.length === 0 && <p className="text-slate-500 text-sm text-center py-8">Няма записи</p>}
                     </div>
                 </>
             )}
@@ -359,11 +352,7 @@ export default function ProducedFoodDiary() {
                     >
                         Назад
                     </button>
-
-                    <span className="text-sm font-medium">
-                        {currentPage} / {totalPages}
-                    </span>
-
+                    <span className="text-sm font-medium">{currentPage} / {totalPages}</span>
                     <button
                         onClick={() => loadLogs(currentPage + 1)}
                         disabled={currentPage === totalPages}
@@ -378,7 +367,7 @@ export default function ProducedFoodDiary() {
                 <ProducedFoodEditModal
                     log={editingLog}
                     recipes={recipes}
-                    foodLogs={[]}
+                    foodLogs={Array.isArray(foodLogs) ? foodLogs : []}
                     onClose={() => setEditingLog(null)}
                     onSaved={() => loadLogs(currentPage)}
                 />
