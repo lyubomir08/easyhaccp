@@ -57,21 +57,37 @@ const createShipment = async (data) => {
     return await ShipmentLog.create(data);
 };
 
-const getShipmentsByObject = async (object_id, queryParams) => {
+const getShipmentsByObject = async (object_id, queryParams = {}) => {
+    const page = Number(queryParams.page) || 1;
+    const limit = Number(queryParams.limit) || 10;
+    const skip = (page - 1) * limit;
+
     const query = {
         object_id,
         ...buildDateFilter(queryParams, "date")
     };
 
-    return await ShipmentLog.find(query)
-        .populate("food_log_id")
-        .populate({
-            path: "produced_food_id",
-            populate: { path: "recipe_id", select: "name recipe_number" }
-        })
-        .populate("client_id")
-        .populate("employee_id")
-        .sort({ date: -1 });
+    const [logs, total] = await Promise.all([
+        ShipmentLog.find(query)
+            .populate("food_log_id")
+            .populate({
+                path: "produced_food_id",
+                populate: { path: "recipe_id", select: "name recipe_number" }
+            })
+            .populate("client_id")
+            .populate("employee_id")
+            .sort({ date: -1 })
+            .skip(skip)
+            .limit(limit),
+        ShipmentLog.countDocuments(query)
+    ]);
+
+    return {
+        logs,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit)
+    };
 };
 
 const updateShipment = async (id, updateData) => {

@@ -11,6 +11,8 @@ export default function CookingTemperatureDiary() {
     const [editingLog, setEditingLog] = useState(null);
     const [search, setSearch] = useState("");
     const [error, setError] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
     const [form, setForm] = useState({
         object_id: "",
@@ -21,35 +23,35 @@ export default function CookingTemperatureDiary() {
         employee_id: ""
     });
 
-    /* LOAD OBJECTS */
     useEffect(() => {
         api.get("/objects").then(res => {
-            // Filter only catering objects
             const cateringObjects = res.data.filter(obj => obj.object_type === "catering");
             setObjects(cateringObjects);
         });
     }, []);
 
-    /* LOAD DEPENDENCIES */
     useEffect(() => {
         if (!form.object_id) return;
 
         api.get(`/food-groups/${form.object_id}`).then(r => setFoodGroups(r.data));
         api.get(`/employees/${form.object_id}`).then(r => setEmployees(r.data));
-        loadLogs();
+        loadLogs(1);
     }, [form.object_id]);
 
-    /* LOAD LOGS */
-    const loadLogs = async () => {
+    const loadLogs = async (page = 1) => {
         if (!form.object_id) return;
+
         try {
-            console.log("Loading logs for object:", form.object_id);
-            const res = await api.get(`/cooking-temp/${form.object_id}`);
-            console.log("Logs response:", res.data);
-            setLogs(res.data);
+            const res = await api.get(`/cooking-temp/${form.object_id}?page=${page}&limit=10`);
+
+            setLogs(res.data.logs || []);
+            setCurrentPage(res.data.page || 1);
+            setTotalPages(res.data.totalPages || 1);
         } catch (err) {
             console.error("Load logs error:", err.response?.data);
             setLogs([]);
+            setCurrentPage(1);
+            setTotalPages(1);
         }
     };
 
@@ -69,7 +71,6 @@ export default function CookingTemperatureDiary() {
         }));
     };
 
-    /* CREATE */
     const onSubmit = async (e) => {
         e.preventDefault();
         setError("");
@@ -84,16 +85,14 @@ export default function CookingTemperatureDiary() {
                 employee_id: form.employee_id || undefined
             };
 
-            // Remove undefined values
             Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
 
             console.log("Submitting payload:", payload);
             const res = await api.post("/cooking-temp", payload);
             console.log("Post response:", res.data);
-            
-            await loadLogs();
 
-            // Reset form
+            await loadLogs(1);
+
             setForm(s => ({
                 ...s,
                 date: "",
@@ -108,25 +107,23 @@ export default function CookingTemperatureDiary() {
         }
     };
 
-    /* DELETE */
     const onDelete = async (id) => {
         if (!confirm("Сигурни ли сте, че искате да изтриете този запис?")) return;
 
         try {
             await api.delete(`/cooking-temp/delete/${id}`);
-            await loadLogs();
+            await loadLogs(currentPage);
         } catch (err) {
             console.error("Delete error:", err);
             alert("Грешка при изтриване");
         }
     };
 
-    /* SEARCH */
-    const filteredLogs = logs.filter(l =>
-        l.food_group_id?.food_name?.toLowerCase().includes(search.toLowerCase())
-    );
+    const filteredLogs = (logs || []).filter(l =>
+        (l.food_group_id?.food_name || "").toLowerCase().includes(search.toLowerCase())
+    );;
 
-    const visibleLogs = search ? filteredLogs : filteredLogs.slice(0, 10);
+    const visibleLogs = filteredLogs;
 
     return (
         <div className="max-w-6xl mx-auto space-y-8 p-4">
@@ -341,24 +338,41 @@ export default function CookingTemperatureDiary() {
                                 Няма записи
                             </p>
                         )}
-
-                        {!search && logs.length > 10 && (
-                            <p className="text-slate-500 text-sm text-center">
-                                Показани са последните 10 записа. Използвайте търсенето за повече резултати.
-                            </p>
-                        )}
                     </div>
                 </>
             )}
 
-            {/* EDIT MODAL */}
+            {form.object_id && logs.length > 0 && totalPages > 1 && (
+                <div className="flex justify-center gap-4 mt-4 items-center">
+                    <button
+                        onClick={() => loadLogs(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 border rounded-md disabled:opacity-50"
+                    >
+                        Назад
+                    </button>
+
+                    <span className="text-sm font-medium">
+                        {currentPage} / {totalPages}
+                    </span>
+
+                    <button
+                        onClick={() => loadLogs(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="px-4 py-2 border rounded-md disabled:opacity-50"
+                    >
+                        Напред
+                    </button>
+                </div>
+            )}
+
             {editingLog && (
                 <CookingTemperatureEditModal
                     log={editingLog}
                     foodGroups={foodGroups}
                     employees={employees}
                     onClose={() => setEditingLog(null)}
-                    onSaved={loadLogs}
+                    onSaved={() => loadLogs(currentPage)}
                 />
             )}
         </div>

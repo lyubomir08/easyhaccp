@@ -6,9 +6,6 @@ import buildDateFilter from "../utils/buildDateFilter.js";
 
 const norm = (s) => String(s || "").trim().toLowerCase().replace(/\s+/g, " ");
 
-/**
- * Взима FIFO списък с наличности за дадена съставка + сумата на наличното
- */
 async function getAvailabilityFIFO({ objectId, ingredientName }) {
     const target = norm(ingredientName);
 
@@ -23,10 +20,6 @@ async function getAvailabilityFIFO({ objectId, ingredientName }) {
     return { total, matching };
 }
 
-/**
- * Реално FIFO вадене от подадените matching логове
- * (Тук НЕ проверява достатъчност – това вече е проверено предварително)
- */
 async function deductFromLogsFIFO({ matchingLogs, gramsNeeded }) {
     let remaining = gramsNeeded;
 
@@ -43,7 +36,6 @@ async function deductFromLogsFIFO({ matchingLogs, gramsNeeded }) {
         remaining -= take;
     }
 
-    // ако стигне дотук с remaining > 0 значи някой е изконсумирал между check и deduct
     if (remaining > 0) {
         throw new Error(`Количеството се промени. Липсват: ${remaining} гр. Опитай пак.`);
     }
@@ -66,8 +58,6 @@ const createProducedFood = async (data) => {
 
     const ingredients = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
 
-    // ====== 1) ПЪРВО: проверка дали стига за ВСИЧКИ съставки ======
-    // preparePlan: за всяка съставка пазим gramsNeeded + matching logs (FIFO)
     const plan = [];
     const shortages = [];
 
@@ -99,7 +89,6 @@ const createProducedFood = async (data) => {
         });
     }
 
-    // Ако има липси -> НЕ вадим нищо, директно грешка
     if (shortages.length > 0) {
         const msg = shortages
             .map(s => `${s.ingredientName}: нужни ${s.needed} гр, налични ${s.available} гр (липсват ${s.missing} гр)`)
@@ -107,7 +96,6 @@ const createProducedFood = async (data) => {
         throw new Error(`Недостатъчни наличности: ${msg}`);
     }
 
-    // ====== 2) ВТОРО: реалното намаляване (FIFO) ======
     for (const item of plan) {
         await deductFromLogsFIFO({
             matchingLogs: item.matchingLogs,
@@ -115,20 +103,35 @@ const createProducedFood = async (data) => {
         });
     }
 
-    // ====== 3) Накрая: запис на produced food ======
     return await ProducedFood.create(data);
 };
 
-const getProducedFoodsByObject = async (object_id, queryParams) => {
+const getProducedFoodsByObject = async (object_id, queryParams = {}) => {
+    const page = Number(queryParams.page) || 1;
+    const limit = Number(queryParams.limit) || 10;
+    const skip = (page - 1) * limit;
+
     const query = {
         object_id,
         ...buildDateFilter(queryParams, "date")
     };
 
-    return await ProducedFood.find(query)
-        .populate("recipe_id")
-        .populate("ingredient_id")
-        .sort({ date: -1 });
+    const [logs, total] = await Promise.all([
+        ProducedFood.find(query)
+            .populate("recipe_id")
+            .populate("ingredient_id")
+            .sort({ date: -1 })
+            .skip(skip)
+            .limit(limit),
+        ProducedFood.countDocuments(query)
+    ]);
+
+    return {
+        logs,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit)
+    };
 };
 
 const updateProducedFood = async (id, updateData) => {

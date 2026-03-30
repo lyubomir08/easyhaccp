@@ -12,15 +12,31 @@ const createCookingTempLog = async (data) => {
 };
 
 const getCookingTempLogsByObject = async (object_id, queryParams = {}) => {
+    const page = Number(queryParams.page) || 1;
+    const limit = Number(queryParams.limit) || 10;
+    const skip = (page - 1) * limit;
+
     const query = {
         object_id,
         ...buildDateFilter(queryParams, "date"),
     };
 
-    return await CookingTempLog.find(query)
-        .populate("food_group_id")
-        .populate("employee_id")
-        .sort({ date: -1 });
+    const [logs, total] = await Promise.all([
+        CookingTempLog.find(query)
+            .populate("food_group_id")
+            .populate("employee_id")
+            .sort({ date: -1 })
+            .skip(skip)
+            .limit(limit),
+        CookingTempLog.countDocuments(query)
+    ]);
+
+    return {
+        logs,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit)
+    };
 };
 
 const updateCookingTempLog = async (logId, updateData) => {

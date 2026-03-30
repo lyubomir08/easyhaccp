@@ -21,6 +21,8 @@ export default function ProducedFoodDiary() {
     const [search, setSearch] = useState("");
     const [error, setError] = useState("");
     const [expiredIngredients, setExpiredIngredients] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
     const [form, setForm] = useState({
         object_id: "",
@@ -44,7 +46,7 @@ export default function ProducedFoodDiary() {
     useEffect(() => {
         if (!form.object_id) return;
         loadObjectSpecificData();
-        loadLogs();
+        loadLogs(1);
     }, [form.object_id]);
 
     const loadObjectSpecificData = async () => {
@@ -64,7 +66,7 @@ export default function ProducedFoodDiary() {
                         _group_shelf_life: group.shelf_life
                     }));
                     allRecipes.push(...recipesWithShelfLife);
-                } catch {}
+                } catch { }
             }
             setRecipes(allRecipes);
         } catch {
@@ -72,13 +74,24 @@ export default function ProducedFoodDiary() {
         }
     };
 
-    const loadLogs = async () => {
+    const loadLogs = async (page = 1) => {
         if (!form.object_id) return;
+
         try {
-            const res = await api.get(`/produced-foods/${form.object_id}`);
-            setLogs(res.data);
-        } catch {
+            const res = await api.get(`/produced-foods/${form.object_id}?page=${page}&limit=10`);
+
+            if (page !== currentPage) {
+                setExpandedLog(null);
+            }
+
+            setLogs(res.data.logs || []);
+            setCurrentPage(res.data.page || 1);
+            setTotalPages(res.data.totalPages || 1);
+        } catch (err) {
+            console.error("Load logs error:", err.response?.data);
             setLogs([]);
+            setCurrentPage(1);
+            setTotalPages(1);
         }
     };
 
@@ -140,7 +153,7 @@ export default function ProducedFoodDiary() {
             };
             Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
             await api.post("/produced-foods", payload);
-            await loadLogs();
+            await loadLogs(1);
             setExpiredIngredients([]);
             setForm(s => ({ ...s, date: "", recipe_id: "", portions: "", product_batch_number: "", product_shelf_life: "", recipe_production_date: "" }));
         } catch (err) {
@@ -152,7 +165,7 @@ export default function ProducedFoodDiary() {
         if (!confirm("Сигурни ли сте, че искате да изтриете този запис?")) return;
         try {
             await api.delete(`/produced-foods/delete/${id}`);
-            await loadLogs();
+            await loadLogs(currentPage);
         } catch {
             alert("Грешка при изтриване");
         }
@@ -166,11 +179,11 @@ export default function ProducedFoodDiary() {
         return `${g} гр`;
     };
 
-    const filteredLogs = logs.filter(l =>
-        l.recipe_id?.name?.toLowerCase().includes(search.toLowerCase()) ||
-        l.product_batch_number?.toLowerCase().includes(search.toLowerCase())
+    const filteredLogs = (logs || []).filter(l =>
+        (l.recipe_id?.name || "").toLowerCase().includes(search.toLowerCase()) ||
+        (l.product_batch_number || "").toLowerCase().includes(search.toLowerCase())
     );
-    const visibleLogs = search ? filteredLogs : filteredLogs.slice(0, 10);
+    const visibleLogs = filteredLogs;
 
     return (
         <div className="max-w-6xl mx-auto space-y-8 p-4">
@@ -333,9 +346,32 @@ export default function ProducedFoodDiary() {
                         })}
 
                         {visibleLogs.length === 0 && <p className="text-slate-500 text-sm text-center py-8">Няма записи</p>}
-                        {!search && logs.length > 10 && <p className="text-slate-500 text-sm text-center">Показани са последните 10 записа.</p>}
                     </div>
                 </>
+            )}
+
+            {form.object_id && logs.length > 0 && totalPages > 1 && (
+                <div className="flex justify-center gap-4 mt-4 items-center">
+                    <button
+                        onClick={() => loadLogs(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 border rounded-md disabled:opacity-50"
+                    >
+                        Назад
+                    </button>
+
+                    <span className="text-sm font-medium">
+                        {currentPage} / {totalPages}
+                    </span>
+
+                    <button
+                        onClick={() => loadLogs(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="px-4 py-2 border rounded-md disabled:opacity-50"
+                    >
+                        Напред
+                    </button>
+                </div>
             )}
 
             {editingLog && (
@@ -344,7 +380,7 @@ export default function ProducedFoodDiary() {
                     recipes={recipes}
                     foodLogs={[]}
                     onClose={() => setEditingLog(null)}
-                    onSaved={loadLogs}
+                    onSaved={() => loadLogs(currentPage)}
                 />
             )}
         </div>

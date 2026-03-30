@@ -18,6 +18,8 @@ export default function ShipmentDiary() {
     const [search, setSearch] = useState("");
     const [error, setError] = useState("");
     const [shipmentType, setShipmentType] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
     const [form, setForm] = useState({
         object_id: "", date: "", food_log_id: "", produced_food_id: "",
@@ -34,19 +36,43 @@ export default function ShipmentDiary() {
 
     useEffect(() => {
         if (!form.object_id) return;
+
         const obj = objects.find(o => o._id === form.object_id);
         if (obj) setShipmentType(obj.object_type === "catering" ? "catering" : "wholesale");
-        api.get(`/food-logs/${form.object_id}`).then(r => setFoodLogs(r.data)).catch(() => {});
-        api.get(`/produced-foods/${form.object_id}`).then(r => setProducedFoods(r.data)).catch(() => {});
-        api.get(`/clients/${form.object_id}`).then(r => setClients(r.data)).catch(() => {});
-        api.get(`/employees/${form.object_id}`).then(r => setEmployees(r.data)).catch(() => {});
-        loadLogs();
+
+        api.get(`/food-logs/${form.object_id}?page=1&limit=1000`)
+            .then(r => setFoodLogs(r.data.logs || []))
+            .catch(() => setFoodLogs([]));
+
+        api.get(`/produced-foods/${form.object_id}?page=1&limit=1000`)
+            .then(r => setProducedFoods(r.data.logs || []))
+            .catch(() => setProducedFoods([]));
+
+        api.get(`/clients/${form.object_id}`)
+            .then(r => setClients(r.data))
+            .catch(() => setClients([]));
+
+        api.get(`/employees/${form.object_id}`)
+            .then(r => setEmployees(r.data))
+            .catch(() => setEmployees([]));
+
+        loadLogs(1);
     }, [form.object_id, objects]);
 
-    const loadLogs = async () => {
+    const loadLogs = async (page = 1) => {
         if (!form.object_id) return;
-        try { const res = await api.get(`/shipments/${form.object_id}`); setLogs(res.data); }
-        catch { setLogs([]); }
+
+        try {
+            const res = await api.get(`/shipments/${form.object_id}?page=${page}&limit=10`);
+            setLogs(res.data.logs || []);
+            setCurrentPage(res.data.page || 1);
+            setTotalPages(res.data.totalPages || 1);
+        } catch (err) {
+            console.error("Load logs error:", err.response?.data);
+            setLogs([]);
+            setCurrentPage(1);
+            setTotalPages(1);
+        }
     };
 
     const onChange = (e) => setForm(s => ({ ...s, [e.target.name]: e.target.value }));
@@ -79,7 +105,7 @@ export default function ShipmentDiary() {
             else payload.produced_food_id = form.produced_food_id;
             Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
             await api.post("/shipments", payload);
-            await loadLogs();
+            await loadLogs(1);
             setForm(s => ({ ...s, date: "", food_log_id: "", produced_food_id: "", quantity: "", product_batch_number: "", client_id: "", document: "", employee_id: "" }));
         } catch (err) {
             setError(err.response?.data?.message || "Грешка при запис");
@@ -88,19 +114,19 @@ export default function ShipmentDiary() {
 
     const onDelete = async (id) => {
         if (!confirm("Сигурни ли сте?")) return;
-        try { await api.delete(`/shipments/delete/${id}`); await loadLogs(); }
+        try { await api.delete(`/shipments/delete/${id}`); await loadLogs(currentPage); }
         catch { alert("Грешка при изтриване"); }
     };
 
-    const filteredLogs = logs.filter(l => {
+    const filteredLogs = (logs || []).filter(l => {
         const s = search.toLowerCase();
         return (
-            l.food_log_id?.product_type?.toLowerCase().includes(s) ||
-            l.produced_food_id?.recipe_id?.name?.toLowerCase().includes(s) ||
-            l.client_id?.name?.toLowerCase().includes(s)
+            (l.food_log_id?.product_type || "").toLowerCase().includes(s) ||
+            (l.produced_food_id?.recipe_id?.name || "").toLowerCase().includes(s) ||
+            (l.client_id?.name || "").toLowerCase().includes(s)
         );
     });
-    const visibleLogs = search ? filteredLogs : filteredLogs.slice(0, 10);
+    const visibleLogs = filteredLogs;
     const selectedProducedFood = producedFoods.find(p => p._id === form.produced_food_id);
     const selectedFoodLog = foodLogs.find(f => f._id === form.food_log_id);
 
@@ -260,9 +286,32 @@ export default function ShipmentDiary() {
                             </div>
                         ))}
                         {visibleLogs.length === 0 && <p className="text-slate-500 text-sm text-center py-8">Няма записи</p>}
-                        {!search && logs.length > 10 && <p className="text-slate-500 text-sm text-center">Показани са последните 10 записа.</p>}
                     </div>
                 </>
+            )}
+
+            {form.object_id && logs.length > 0 && totalPages > 1 && (
+                <div className="flex justify-center gap-4 mt-4 items-center">
+                    <button
+                        onClick={() => loadLogs(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 border rounded-md disabled:opacity-50"
+                    >
+                        Назад
+                    </button>
+
+                    <span className="text-sm font-medium">
+                        {currentPage} / {totalPages}
+                    </span>
+
+                    <button
+                        onClick={() => loadLogs(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="px-4 py-2 border rounded-md disabled:opacity-50"
+                    >
+                        Напред
+                    </button>
+                </div>
             )}
 
             {editingLog && (
@@ -273,7 +322,7 @@ export default function ShipmentDiary() {
                     clients={clients}
                     employees={employees}
                     onClose={() => setEditingLog(null)}
-                    onSaved={loadLogs}
+                    onSaved={() => loadLogs(currentPage)}
                 />
             )}
         </div>

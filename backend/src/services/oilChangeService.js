@@ -11,20 +11,39 @@ const createFryerOilLog = async (data) => {
     return await FryerOilLog.create(data);
 };
 
-const getLogsByObject = async (object_id, queryParams) => {
+const getLogsByObject = async (object_id, queryParams = {}) => {
+    const page = Number(queryParams.page) || 1;
+    const limit = Number(queryParams.limit) || 10;
+    const skip = (page - 1) * limit;
+
     const query = {
         object_id,
         ...buildDateFilter(queryParams, "change_datetime")
     };
 
-    return await FryerOilLog.find(query)
-        .populate("fryer_id")
-        .populate("employee_id")
-        .sort({ change_datetime: -1, load_datetime: -1 });
+    const [logs, total] = await Promise.all([
+        FryerOilLog.find(query)
+            .populate("fryer_id")
+            .populate("employee_id")
+            .sort({ change_datetime: -1, load_datetime: -1 })
+            .skip(skip)
+            .limit(limit),
+        FryerOilLog.countDocuments(query)
+    ]);
+
+    return {
+        logs,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit)
+    };
 };
 
 const updateFryerOilLog = async (logId, updateData) => {
-    const log = await FryerOilLog.findByIdAndUpdate(logId, updateData, { new: true });
+    const log = await FryerOilLog.findByIdAndUpdate(logId, updateData, { new: true })
+        .populate("fryer_id")
+        .populate("employee_id");
+
     if (!log) throw new Error("Oil log not found");
     return log;
 };

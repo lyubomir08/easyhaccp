@@ -13,10 +13,12 @@ export default function FridgeTemperatureDiary() {
     const [fridges, setFridges] = useState([]);
     const [employees, setEmployees] = useState([]);
     const [logs, setLogs] = useState([]);
-    
+
     const [editingLog, setEditingLog] = useState(null);
     const [search, setSearch] = useState("");
     const [error, setError] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
     const [form, setForm] = useState({
         object_id: "",
@@ -37,12 +39,24 @@ export default function FridgeTemperatureDiary() {
         if (!form.object_id) return;
         api.get(`/fridges/${form.object_id}`).then(r => setFridges(r.data));
         api.get(`/employees/${form.object_id}`).then(r => setEmployees(r.data));
-        loadLogs();
+        loadLogs(1);
     }, [form.object_id]);
 
-    const loadLogs = async () => {
-        const res = await api.get(`/fridge-logs/${form.object_id}`);
-        setLogs(res.data);
+    const loadLogs = async (page = 1) => {
+        if (!form.object_id) return;
+
+        try {
+            const res = await api.get(`/fridge-logs/${form.object_id}?page=${page}&limit=10`);
+
+            setLogs(res.data.logs || []);
+            setCurrentPage(res.data.page || 1);
+            setTotalPages(res.data.totalPages || 1);
+        } catch (err) {
+            console.error("LOAD LOGS ERROR:", err.response?.data);
+            setLogs([]);
+            setCurrentPage(1);
+            setTotalPages(1);
+        }
     };
 
     const onChange = (e) => {
@@ -54,7 +68,7 @@ export default function FridgeTemperatureDiary() {
         setError("");
         try {
             await api.post("/fridge-logs", { ...form, measured_temp: Number(form.measured_temp) });
-            await loadLogs();
+            await loadLogs(1);
             setForm(s => ({ ...s, date: "", fridge_id: "", measured_temp: "", corrective_action: "", employee_id: "" }));
         } catch (err) {
             console.error(err.response?.data);
@@ -66,16 +80,16 @@ export default function FridgeTemperatureDiary() {
         if (!confirm("Сигурни ли сте?")) return;
         try {
             await api.delete(`/fridge-logs/delete/${id}`);
-            await loadLogs();
+            await loadLogs(currentPage);
         } catch {
             alert("Грешка при изтриване");
         }
     };
 
-    const filteredLogs = logs.filter(l =>
-        l.fridge_id?.name?.toLowerCase().includes(search.toLowerCase())
+    const filteredLogs = (logs || []).filter(l =>
+        (l.fridge_id?.name || "").toLowerCase().includes(search.toLowerCase())
     );
-    const visibleLogs = search ? filteredLogs : filteredLogs.slice(0, 10);
+    const visibleLogs = filteredLogs;
 
     return (
         <div className="max-w-6xl mx-auto space-y-8 p-4">
@@ -175,7 +189,30 @@ export default function FridgeTemperatureDiary() {
                         );
                     })}
                     {visibleLogs.length === 0 && <p className="text-slate-500 text-sm text-center py-8">Няма записи</p>}
-                    {!search && logs.length > 10 && <p className="text-slate-500 text-sm text-center">Показани са последните 10 записа. Използвайте търсенето за повече резултати.</p>}
+                </div>
+            )}
+
+            {form.object_id && logs.length > 0 && totalPages > 1 && (
+                <div className="flex justify-center gap-4 mt-4 items-center">
+                    <button
+                        onClick={() => loadLogs(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 border rounded-md disabled:opacity-50"
+                    >
+                        Назад
+                    </button>
+
+                    <span className="text-sm font-medium">
+                        {currentPage} / {totalPages}
+                    </span>
+
+                    <button
+                        onClick={() => loadLogs(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="px-4 py-2 border rounded-md disabled:opacity-50"
+                    >
+                        Напред
+                    </button>
                 </div>
             )}
 
@@ -185,7 +222,7 @@ export default function FridgeTemperatureDiary() {
                     fridges={fridges}
                     employees={employees}
                     onClose={() => setEditingLog(null)}
-                    onSaved={loadLogs}
+                    onSaved={() => loadLogs(currentPage)}
                 />
             )}
         </div>
