@@ -120,13 +120,18 @@ const changePassword = async (userId, oldPass, newPass) => {
 
     if (!user.active) throw new Error("Account not active.");
 
+    if (!oldPass || !newPass) {
+        throw new Error("Old and new password are required.");
+    }
+
     const validOld = await bcrypt.compare(oldPass, user.password_hash);
     if (!validOld) throw new Error("Old password is incorrect.");
 
     const hashed = await bcrypt.hash(newPass, 10);
 
-    user.password_hash = hashed;
-    await user.save();
+    await User.findByIdAndUpdate(userId, {
+        password_hash: hashed,
+    });
 
     return { message: "Password changed successfully." };
 };
