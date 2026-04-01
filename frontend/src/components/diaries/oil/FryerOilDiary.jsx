@@ -25,6 +25,11 @@ export default function FryerOilDiary() {
         employee_id: ""
     });
 
+    // ✅ ДОБАВЕНО: зарежда обектите при mount
+    useEffect(() => {
+        api.get("/objects").then(res => setObjects(res.data));
+    }, []);
+
     useEffect(() => {
         if (!form.object_id) return;
 

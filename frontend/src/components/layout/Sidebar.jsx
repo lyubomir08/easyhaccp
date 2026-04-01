@@ -103,10 +103,10 @@ export default function Sidebar({ onClose }) {
                 {(isCatering || isRestaurant) && <NL to="/diaries/oil">Смяна на мазнина</NL>}
 
                 {/* 3.3.6 Температура при готвене — кетъринг и заведение */}
-                {(isCatering || isRestaurant) && <NL to="/diaries/cooking">Температура на храните при готвене</NL>}
+                {(isCatering ) && <NL to="/diaries/cooking">Температура на храните при готвене</NL>}
 
                 {/* 3.3.7 Произведени храни — кетъринг и заведение */}
-                {(isCatering || isRestaurant) && <NL to="/diaries/production">Произведени храни</NL>}
+                {(isCatering ) && <NL to="/diaries/production">Произведени храни</NL>}
 
                 {/* 3.3.8 Експедиция — едро и кетъринг */}
                 {(isWholesale || isCatering) && <NL to="/diaries/expedition">Експедиция на храни</NL>}
