@@ -15,7 +15,6 @@ const getExpiryStatus = (shelf_life) => {
     return null;
 };
 
-// Форматира грамове за показване
 const formatQuantity = (grams) => {
     if (!grams && grams !== 0) return "—";
     if (grams >= 1000) {
@@ -38,7 +37,8 @@ export default function FoodsDiary() {
     const [previewImage, setPreviewImage] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const [quantityUnit, setQuantityUnit] = useState("kg"); // "kg" или "gr"
+    const [quantityUnit, setQuantityUnit] = useState("kg");
+    const [expandedIds, setExpandedIds] = useState(new Set());
 
     const [form, setForm] = useState({
         object_id: "",
@@ -75,7 +75,6 @@ export default function FoodsDiary() {
         setForm(s => ({ ...s, [e.target.name]: e.target.value }));
     };
 
-    // Конвертира въведеното количество в грамове преди запис
     const toGrams = (value, unit) => {
         const num = parseFloat(value);
         if (isNaN(num)) return 0;
@@ -85,10 +84,8 @@ export default function FoodsDiary() {
     const onSubmit = async (e) => {
         e.preventDefault();
         setError("");
-
         try {
             const quantityInGrams = toGrams(form.quantity, quantityUnit);
-
             await api.post("/food-logs", {
                 object_id: form.object_id,
                 date: form.date,
@@ -101,7 +98,6 @@ export default function FoodsDiary() {
                 document: form.document,
                 employee_id: form.employee_id
             });
-
             loadLogs();
             setForm(s => ({
                 ...s,
@@ -142,6 +138,14 @@ export default function FoodsDiary() {
         if (!confirm("Сигурен ли си?")) return;
         await api.delete(`/food-logs/delete/${id}`);
         loadLogs();
+    };
+
+    const toggleExpand = (id) => {
+        setExpandedIds(prev => {
+            const next = new Set(prev);
+            next.has(id) ? next.delete(id) : next.add(id);
+            return next;
+        });
     };
 
     const filteredLogs = allLogs.filter(l => {
@@ -220,7 +224,6 @@ export default function FoodsDiary() {
                             <input type="date" name="shelf_life" value={form.shelf_life} onChange={onChange} required className="border px-3 py-2 rounded-md w-full" />
                         </div>
 
-                        {/* КОЛИЧЕСТВО С ИЗБОР КГ/ГР */}
                         <div>
                             <label className="block text-sm font-medium mb-1">Количество</label>
                             <div className="flex gap-2">
@@ -321,39 +324,60 @@ export default function FoodsDiary() {
                 </div>
             )}
 
-            {/* LIST */}
+            {/* LIST — collapsed cards with expand */}
             {form.object_id && isRestaurantOrCatering && (
                 <div className="space-y-3">
                     {visibleLogs.map(l => {
                         const status = getExpiryStatus(l.shelf_life);
+                        const isExpanded = expandedIds.has(l._id);
                         return (
                             <div
                                 key={l._id}
-                                className={`border rounded-lg p-4 flex justify-between items-center ${status?.expired ? "bg-red-50 border-red-200" : status?.warning ? "bg-yellow-50 border-yellow-200" : "bg-white"}`}
+                                className={`border rounded-xl overflow-hidden ${status?.expired ? "border-red-200" : status?.warning ? "border-yellow-200" : "border-slate-200"}`}
                             >
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <strong>{l.product_type}</strong>
-                                        {status?.expired && <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">Изтекъл срок</span>}
-                                        {status?.warning && <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">{status.label}</span>}
-                                    </div>
-                                    <div className="text-sm text-slate-600 space-y-1">
+                                {/* COLLAPSED ROW — always visible */}
+                                <div
+                                    className={`flex items-center justify-between px-4 py-3 cursor-pointer select-none ${status?.expired ? "bg-red-50" : status?.warning ? "bg-yellow-50" : "bg-white"}`}
+                                    onClick={() => toggleExpand(l._id)}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span className={`text-lg font-bold leading-none transition-transform ${isExpanded ? "rotate-45" : ""}`}>+</span>
                                         <div>
-                                            Партиден номер: {l.batch_number} • Количество: {formatQuantity(l.quantity)} • Срок на годност: {new Date(l.shelf_life).toLocaleDateString("bg-BG")}
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-semibold">{l.product_type}</span>
+                                                {status?.expired && (
+                                                    <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">Изтекъл срок</span>
+                                                )}
+                                                {status?.warning && (
+                                                    <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">{status.label}</span>
+                                                )}
+                                            </div>
+                                            <div className="text-sm text-slate-500">
+                                                Срок на годност: {l.shelf_life ? new Date(l.shelf_life).toLocaleDateString("bg-BG") : "—"}
+                                            </div>
                                         </div>
-                                        {l.transport_type && <div>Транспорт: {l.transport_type}</div>}
-                                        {l.document && <div>Документ: {l.document}</div>}
                                     </div>
-                                    {l.created_at && (
-                                        <div className="text-xs text-slate-400 mt-1">
-                                            Създаден: {new Date(l.created_at).toLocaleString("bg-BG")}
-                                        </div>
-                                    )}
+
+                                    <div className="flex gap-3 text-sm shrink-0 ml-4" onClick={e => e.stopPropagation()}>
+                                        <button onClick={() => setEditingLog(l)} className="text-blue-600 hover:text-blue-800">Редактирай</button>
+                                        <button onClick={() => onDelete(l._id)} className="text-red-600 hover:text-red-800">Изтрий</button>
+                                    </div>
                                 </div>
-                                <div className="flex gap-3 text-sm shrink-0 ml-4">
-                                    <button onClick={() => setEditingLog(l)} className="text-blue-600 hover:text-blue-800">Редактирай</button>
-                                    <button onClick={() => onDelete(l._id)} className="text-red-600 hover:text-red-800">Изтрий</button>
-                                </div>
+
+                                {/* EXPANDED DETAILS */}
+                                {isExpanded && (
+                                    <div className={`px-5 pb-4 pt-2 border-t text-sm text-slate-600 space-y-1 ${status?.expired ? "bg-red-50 border-red-100" : status?.warning ? "bg-yellow-50 border-yellow-100" : "bg-white border-slate-100"}`}>
+                                        <div>Партиден номер: <span className="font-medium text-slate-800">{l.batch_number || "—"}</span></div>
+                                        <div>Количество: <span className="font-medium text-slate-800">{formatQuantity(l.quantity)}</span></div>
+                                        {l.transport_type && <div>Транспорт: <span className="font-medium text-slate-800">{l.transport_type}</span></div>}
+                                        {l.document && <div>Документ: <span className="font-medium text-slate-800">{l.document}</span></div>}
+                                        {l.created_at && (
+                                            <div className="text-xs text-slate-400 pt-1">
+                                                Създаден: {new Date(l.created_at).toLocaleString("bg-BG")}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         );
                     })}
