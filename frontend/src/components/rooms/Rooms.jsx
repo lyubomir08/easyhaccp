@@ -3,25 +3,19 @@ import api from "../../services/api";
 import EditRoomModal from "./EditRoomModal";
 
 export default function Rooms() {
-    /* ========= OBJECTS ========= */
     const [objects, setObjects] = useState([]);
     const [selectedObjectId, setSelectedObjectId] = useState("");
 
-    /* ========= ROOMS ========= */
     const [rooms, setRooms] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
-    /* ========= SEARCH ========= */
     const [search, setSearch] = useState("");
 
-    /* ========= CREATE ========= */
     const [name, setName] = useState("");
 
-    /* ========= EDIT ========= */
     const [editingRoom, setEditingRoom] = useState(null);
 
-    /* ========= LOAD OBJECTS ========= */
     useEffect(() => {
         loadObjects();
     }, []);
@@ -39,7 +33,6 @@ export default function Rooms() {
         }
     };
 
-    /* ========= LOAD ROOMS ========= */
     useEffect(() => {
         if (!selectedObjectId) {
             setRooms([]);
@@ -61,7 +54,6 @@ export default function Rooms() {
         }
     };
 
-    /* ========= CREATE ========= */
     const onSubmit = async (e) => {
         e.preventDefault();
         setError("");
@@ -84,7 +76,6 @@ export default function Rooms() {
         }
     };
 
-    /* ========= DELETE ========= */
     const onDelete = async (id) => {
         if (!confirm("Сигурен ли си?")) return;
 
@@ -96,19 +87,16 @@ export default function Rooms() {
         }
     };
 
-    /* ========= SEARCH FILTER ========= */
     const filtered = rooms.filter((r) =>
         r.name?.toLowerCase().includes(search.toLowerCase())
     );
 
-    /* ========= RENDER ========= */
     return (
         <div className="max-w-4xl mx-auto space-y-8">
             <h1 className="text-2xl font-semibold">
                 Помещения
             </h1>
 
-            {/* OBJECT SELECT */}
             <section className="bg-white border rounded-xl p-4">
                 <select
                     value={selectedObjectId}
@@ -124,7 +112,6 @@ export default function Rooms() {
                 </select>
             </section>
 
-            {/* CREATE */}
             {selectedObjectId && (
                 <section className="bg-white border rounded-xl p-6">
                     <form onSubmit={onSubmit} className="flex gap-3">
@@ -145,7 +132,6 @@ export default function Rooms() {
                 </section>
             )}
 
-            {/* SEARCH */}
             {rooms.length > 0 && (
                 <input
                     value={search}
@@ -155,7 +141,6 @@ export default function Rooms() {
                 />
             )}
 
-            {/* LIST */}
             {selectedObjectId && (
                 <section className="bg-white border rounded-xl p-6 space-y-2">
                     {loading ? (
@@ -190,7 +175,6 @@ export default function Rooms() {
                 </section>
             )}
 
-            {/* EDIT MODAL */}
             {editingRoom && (
                 <EditRoomModal
                     room={editingRoom}

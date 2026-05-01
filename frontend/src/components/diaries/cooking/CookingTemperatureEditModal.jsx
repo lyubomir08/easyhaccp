@@ -34,7 +34,6 @@ export default function CookingTemperatureEditModal({
                 employee_id: form.employee_id || undefined
             };
 
-            // Remove undefined values
             Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
 
             await api.put(`/cooking-temp/edit/${log._id}`, payload);

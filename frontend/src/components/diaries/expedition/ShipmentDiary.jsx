@@ -183,7 +183,7 @@ export default function ShipmentDiary() {
 
                             {shipmentType === "catering" && (
                                 <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium mb-1">Готова храна (от дневник 3.3.7) <span className="text-red-500">*</span></label>
+                                    <label className="block text-sm font-medium mb-1">Готова храна (от дневник „Произведени храни“) <span className="text-red-500">*</span></label>
                                     <select name="produced_food_id" value={form.produced_food_id} onChange={onProducedFoodChange} required className="border px-3 py-2 rounded-md w-full">
                                         <option value="">-- Избери готова храна --</option>
                                         {producedFoods.map(p => (

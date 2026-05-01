@@ -105,7 +105,6 @@ export default function PersonalHygieneDiary() {
                 Дневник за лична хигиена на персонала
             </h1>
 
-            {/* OBJECT */}
             <select
                 name="object_id"
                 value={form.object_id}
@@ -120,7 +119,6 @@ export default function PersonalHygieneDiary() {
                 ))}
             </select>
 
-            {/* FORM */}
             {form.object_id && (
                 <form
                     onSubmit={onSubmit}
@@ -188,7 +186,6 @@ export default function PersonalHygieneDiary() {
                 </form>
             )}
 
-            {/* SEARCH */}
             {form.object_id && (
                 <input
                     value={search}
@@ -198,7 +195,6 @@ export default function PersonalHygieneDiary() {
                 />
             )}
 
-            {/* LIST */}
             {form.object_id && (<div className="space-y-4">
                 {visibleLogs.map(l => (
                     <div
@@ -278,7 +274,6 @@ export default function PersonalHygieneDiary() {
                 </div>
             )}
 
-            {/* EDIT MODAL */}
             {editingLog && (
                 <PersonalHygieneEditModal
                     log={editingLog}

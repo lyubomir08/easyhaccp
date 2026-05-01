@@ -28,7 +28,6 @@ export default function FryerOilEditModal({
         }));
     };
 
-    /* EDIT */
     const onSubmit = async (e) => {
         e.preventDefault();
         setError("");

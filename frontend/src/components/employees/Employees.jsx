@@ -84,7 +84,6 @@ export default function Employees() {
         <div className="max-w-5xl mx-auto space-y-6 px-4">
             <h1 className="text-2xl font-semibold">Служители</h1>
 
-            {/* OBJECT SELECT */}
             <section className="bg-white border rounded-xl p-4">
                 <label className="block text-sm font-medium mb-2">Изберете обект</label>
                 <select
@@ -99,7 +98,6 @@ export default function Employees() {
                 </select>
             </section>
 
-            {/* ADD FORM */}
             {selectedObjectId && (
                 <section className="bg-white border rounded-xl p-4 md:p-6">
                     <h2 className="text-lg font-semibold mb-4">Добави служител</h2>
@@ -147,7 +145,6 @@ export default function Employees() {
                 </section>
             )}
 
-            {/* SEARCH */}
             {employees.length > 0 && (
                 <div>
                     <label className="block text-sm font-medium mb-2">Търсене</label>
@@ -160,7 +157,6 @@ export default function Employees() {
                 </div>
             )}
 
-            {/* LIST */}
             {selectedObjectId && (
                 <section className="bg-white border rounded-xl p-4 md:p-6 space-y-3">
                     {loading ? (

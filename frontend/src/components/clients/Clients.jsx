@@ -71,7 +71,6 @@ export default function Clients() {
         <div className="max-w-4xl mx-auto space-y-6 px-4">
             <h1 className="text-2xl font-semibold">Клиенти (контрагенти)</h1>
 
-            {/* OBJECT SELECT */}
             <section className="bg-white border rounded-xl p-4">
                 <select
                     value={selectedObjectId}
@@ -85,7 +84,6 @@ export default function Clients() {
                 </select>
             </section>
 
-            {/* CREATE */}
             {selectedObjectId && (
                 <section className="bg-white border rounded-xl p-4 md:p-6">
                     <h2 className="text-lg font-medium mb-4">Добавяне на клиент</h2>
@@ -120,7 +118,6 @@ export default function Clients() {
                 </section>
             )}
 
-            {/* LIST */}
             {selectedObjectId && (
                 <section className="bg-white border rounded-xl p-4 md:p-6">
                     {loading ? (

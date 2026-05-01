@@ -18,7 +18,7 @@ export default function Dashboard() {
 
     const objectCount = data?.objects?.length ?? "—";
     const employeeCount = data?.objects
-        ? null  // ще го покажем само ако го имаме
+        ? null
         : null;
 
     return (

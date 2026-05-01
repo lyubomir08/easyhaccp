@@ -9,7 +9,7 @@ export const UserProvider = ({ children }) => {
     const [user, setUser] = useState(() => getUserData());
     const [selectedFirmId, setSelectedFirmId] = useState(null);
     const [selectedObjectId, setSelectedObjectId] = useState(null);
-    const [objectTypes, setObjectTypes] = useState([]); // ["catering", "wholesale", ...]
+    const [objectTypes, setObjectTypes] = useState([]);
 
     useEffect(() => {
         if (!user) {
@@ -31,14 +31,12 @@ export const UserProvider = ({ children }) => {
             setSelectedFirmId(user.firm_id);
         }
 
-        // Зареди типовете обекти
         if (user.role !== "admin") {
             api.get("/objects").then(res => {
                 const types = res.data.map(o => o.object_type).filter(Boolean);
                 setObjectTypes([...new Set(types)]);
             }).catch(() => setObjectTypes([]));
         } else {
-            // Админът вижда всичко
             setObjectTypes(["catering", "wholesale"]);
         }
     }, [user]);

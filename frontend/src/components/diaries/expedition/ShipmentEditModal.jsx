@@ -28,7 +28,6 @@ export default function ShipmentEditModal({
     const onChange = e =>
         setForm(s => ({ ...s, [e.target.name]: e.target.value }));
 
-    // Auto-fill при смяна на храна (wholesale)
     const onFoodLogChange = (e) => {
         const id = e.target.value;
         const foodLog = foodLogs.find(f => f._id === id);
@@ -40,7 +39,6 @@ export default function ShipmentEditModal({
         }));
     };
 
-    // Auto-fill при смяна на готова храна (catering)
     const onProducedFoodChange = (e) => {
         const id = e.target.value;
         const produced = producedFoods.find(p => p._id === id);
@@ -83,7 +81,6 @@ export default function ShipmentEditModal({
         }
     };
 
-    // Selected produced food for details panel
     const selectedProducedFood = producedFoods.find(p => p._id === form.produced_food_id);
 
     return (
@@ -95,7 +92,6 @@ export default function ShipmentEditModal({
 
                 <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                    {/* TYPE BADGE */}
                     <div className="md:col-span-2">
                         <span className={`text-xs px-3 py-1 rounded ${
                             shipmentType === "wholesale"
@@ -106,7 +102,6 @@ export default function ShipmentEditModal({
                         </span>
                     </div>
 
-                    {/* ДАТА */}
                     <div className="md:col-span-2">
                         <label className="block text-sm font-medium mb-1">
                             Дата и час <span className="text-red-500">*</span>
@@ -121,7 +116,6 @@ export default function ShipmentEditModal({
                         />
                     </div>
 
-                    {/* WHOLESALE FIELDS */}
                     {shipmentType === "wholesale" && (
                         <>
                             <div>
@@ -166,7 +160,6 @@ export default function ShipmentEditModal({
                         </>
                     )}
 
-                    {/* CATERING FIELDS */}
                     {shipmentType === "catering" && (
                         <div className="md:col-span-2">
                             <label className="block text-sm font-medium mb-1">
@@ -189,7 +182,6 @@ export default function ShipmentEditModal({
                                 ))}
                             </select>
 
-                            {/* Детайли на избраната храна */}
                             {selectedProducedFood && (
                                 <div className="mt-2 bg-green-50 border border-green-200 rounded-md p-3 text-sm space-y-1">
                                     {selectedProducedFood.product_batch_number && (
@@ -215,7 +207,6 @@ export default function ShipmentEditModal({
                         </div>
                     )}
 
-                    {/* КОЛИЧЕСТВО */}
                     <div>
                         <label className="block text-sm font-medium mb-1">
                             Количество <span className="text-red-500">*</span>
@@ -232,7 +223,6 @@ export default function ShipmentEditModal({
                         />
                     </div>
 
-                    {/* ПАРТИДЕН НОМЕР - само за кетъринг, автоматично */}
                     {shipmentType === "catering" && (
                         <div>
                             <label className="block text-sm font-medium mb-1">Партиден номер</label>
@@ -248,7 +238,6 @@ export default function ShipmentEditModal({
                         </div>
                     )}
 
-                    {/* ДОКУМЕНТ */}
                     <div>
                         <label className="block text-sm font-medium mb-1">Документ</label>
                         <input
@@ -260,7 +249,6 @@ export default function ShipmentEditModal({
                         />
                     </div>
 
-                    {/* СЛУЖИТЕЛ */}
                     <div className="md:col-span-2">
                         <label className="block text-sm font-medium mb-1">Служител</label>
                         <select

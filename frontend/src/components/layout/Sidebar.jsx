@@ -66,49 +66,37 @@ export default function Sidebar({ onClose }) {
                 <div className={section}>Добавяне</div>
                 <NL to="/employees">Служители</NL>
 
-                {/* Групи храни — само за кетъринг и заведение */}
                 {(isCatering || isRestaurant) && <NL to="/foods">Групи храни</NL>}
 
-                {/* Рецепти — само за кетъринг и заведение */}
                 {(isCatering || isRestaurant) && <NL to="/recipes">Рецепти</NL>}
 
                 <NL to="/suppliers">Доставчици</NL>
                 <NL to="/fridges">Хладилници</NL>
 
-                {/* Фритюрници — само за кетъринг, заведение, дребно */}
                 {(isCatering || isRestaurant) && <NL to="/fryers">Фритюрници</NL>}
 
                 <NL to="/rooms">Помещения</NL>
                 <NL to="/disinfectants">Дезинфекция</NL>
 
-                {/* Фирми получатели — само за едро и кетъринг */}
                 {(isWholesale || isCatering) && <NL to="/partners">Фирми получатели</NL>}
 
                 <div className={section}>Дневници</div>
 
-                {/* 3.3.1 — всички */}
                 <NL to="/diaries/foods">Храни и опаковки</NL>
 
-                {/* 3.3.2 — всички */}
                 <NL to="/diaries/hygiene">Хигиена на обекта</NL>
 
-                {/* 3.3.3 — всички */}
                 <NL to="/diaries/personal">Лична хигиена на персонала</NL>
 
-                {/* 3.3.4 — всички */}
                 <NL to="/diaries/temperatures">Температури</NL>
-                
-                 <NL to="/diaries/trainingdiary">Обучения на служители</NL>
-                {/* 3.3.5 Смяна на мазнина — кетъринг, заведение, дребно */}
+
+                <NL to="/diaries/trainingdiary">Обучения на служители</NL>
                 {(isCatering || isRestaurant) && <NL to="/diaries/oil">Смяна на мазнина</NL>}
 
-                {/* 3.3.6 Температура при готвене — кетъринг и заведение */}
-                {(isCatering ) && <NL to="/diaries/cooking">Температура на храните при готвене</NL>}
+                {(isCatering) && <NL to="/diaries/cooking">Температура на храните при готвене</NL>}
 
-                {/* 3.3.7 Произведени храни — кетъринг и заведение */}
-                {(isCatering ) && <NL to="/diaries/production">Произведени храни</NL>}
+                {(isCatering) && <NL to="/diaries/production">Произведени храни</NL>}
 
-                {/* 3.3.8 Експедиция — едро и кетъринг */}
                 {(isWholesale || isCatering) && <NL to="/diaries/expedition">Експедиция на храни</NL>}
             </nav>
         </aside>

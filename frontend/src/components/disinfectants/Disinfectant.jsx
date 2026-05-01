@@ -3,25 +3,19 @@ import api from "../../services/api";
 import EditDisinfectantModal from "./EditDisinfectantModal";
 
 export default function Disinfectants() {
-    /* ========= OBJECTS ========= */
     const [objects, setObjects] = useState([]);
     const [selectedObjectId, setSelectedObjectId] = useState("");
 
-    /* ========= DISINFECTANTS ========= */
     const [disinfectants, setDisinfectants] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
-    /* ========= SEARCH ========= */
     const [search, setSearch] = useState("");
 
-    /* ========= CREATE ========= */
     const [name, setName] = useState("");
 
-    /* ========= EDIT MODAL ========= */
     const [editingDisinfectant, setEditingDisinfectant] = useState(null);
 
-    /* ========= LOAD OBJECTS ========= */
     useEffect(() => {
         loadObjects();
     }, []);
@@ -39,7 +33,6 @@ export default function Disinfectants() {
         }
     };
 
-    /* ========= LOAD DISINFECTANTS ========= */
     useEffect(() => {
         if (!selectedObjectId) {
             setDisinfectants([]);
@@ -61,7 +54,6 @@ export default function Disinfectants() {
         }
     };
 
-    /* ========= CREATE ========= */
     const onSubmit = async (e) => {
         e.preventDefault();
         setError("");
@@ -84,7 +76,6 @@ export default function Disinfectants() {
         }
     };
 
-    /* ========= DELETE ========= */
     const onDelete = async (id) => {
         if (!confirm("Сигурен ли си?")) return;
 
@@ -96,19 +87,16 @@ export default function Disinfectants() {
         }
     };
 
-    /* ========= SEARCH FILTER ========= */
     const filtered = disinfectants.filter((d) =>
         d.name.toLowerCase().includes(search.toLowerCase())
     );
 
-    /* ========= RENDER ========= */
     return (
         <div className="max-w-4xl mx-auto space-y-8">
             <h1 className="text-2xl font-semibold">
                 Препарати за дезинфекция
             </h1>
 
-            {/* OBJECT SELECT */}
             <section className="bg-white border rounded-xl p-4">
                 <select
                     value={selectedObjectId}
@@ -124,7 +112,6 @@ export default function Disinfectants() {
                 </select>
             </section>
 
-            {/* CREATE */}
             {selectedObjectId && (
                 <section className="bg-white border rounded-xl p-6">
                     <form onSubmit={onSubmit} className="flex gap-3">
@@ -145,7 +132,6 @@ export default function Disinfectants() {
                 </section>
             )}
 
-            {/* SEARCH */}
             {disinfectants.length > 0 && (
                 <input
                     value={search}
@@ -155,7 +141,6 @@ export default function Disinfectants() {
                 />
             )}
 
-            {/* LIST */}
             {selectedObjectId && (
                 <section className="bg-white border rounded-xl p-6 space-y-2">
                     {loading ? (
@@ -190,7 +175,6 @@ export default function Disinfectants() {
                 </section>
             )}
 
-            {/* EDIT MODAL */}
             {editingDisinfectant && (
                 <EditDisinfectantModal
                     disinfectant={editingDisinfectant}

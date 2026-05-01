@@ -14,7 +14,6 @@ export default function ObjectDropdown({ value, onChange }) {
             const res = await api.get("/objects");
             setObjects(res.data);
 
-            // ако има само 1 обект → auto select
             if (res.data.length === 1) {
                 onChange(res.data[0]._id);
             }

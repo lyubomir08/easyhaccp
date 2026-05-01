@@ -25,7 +25,6 @@ export default function FryerOilDiary() {
         employee_id: ""
     });
 
-    // ✅ ДОБАВЕНО: зарежда обектите при mount
     useEffect(() => {
         api.get("/objects").then(res => setObjects(res.data));
     }, []);
@@ -120,7 +119,6 @@ export default function FryerOilDiary() {
                 Дневник – Смяна на мазнина
             </h1>
 
-            {/* OBJECT */}
             <div className="bg-white border rounded-xl p-4">
                 <label className="block text-sm font-medium mb-2">Изберете обект</label>
                 <select
@@ -138,7 +136,6 @@ export default function FryerOilDiary() {
                 </select>
             </div>
 
-            {/* FORM */}
             {form.object_id && (
                 <form
                     onSubmit={onSubmit}
@@ -277,7 +274,6 @@ export default function FryerOilDiary() {
                 </form>
             )}
 
-            {/* SEARCH */}
             {form.object_id && (
                 <div>
                     <label className="block text-sm font-medium mb-2">Търсене</label>
@@ -290,7 +286,6 @@ export default function FryerOilDiary() {
                 </div>
             )}
 
-            {/* LIST */}
             {form.object_id && (
                 <div className="space-y-4">
                     {visibleLogs.map(l => (
@@ -298,7 +293,6 @@ export default function FryerOilDiary() {
                             key={l._id}
                             className="bg-white border rounded-xl p-5 flex justify-between items-start"
                         >
-                            {/* LEFT */}
                             <div className="space-y-1 flex-1">
                                 <h3 className="text-lg font-semibold">
                                     {l.fryer_id?.name || "Неизвестен фритюрник"}
@@ -343,7 +337,6 @@ export default function FryerOilDiary() {
                                 </div>
                             </div>
 
-                            {/* RIGHT */}
                             <div className="flex gap-3 text-sm ml-4">
                                 <button
                                     onClick={() => setEditingLog(l)}

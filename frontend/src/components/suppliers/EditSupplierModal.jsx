@@ -25,7 +25,7 @@ export default function EditSupplierModal({ supplier, objectId, onClose, onUpdat
         try {
             await api.put(`/suppliers/edit/${supplier._id}`, {
                 ...form,
-                object_id: objectId, // 🔥 важно за бекенда
+                object_id: objectId,
             });
 
             onUpdated();

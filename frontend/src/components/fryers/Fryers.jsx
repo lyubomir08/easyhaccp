@@ -3,25 +3,19 @@ import api from "../../services/api";
 import EditFryerModal from "./EditFryerModal";
 
 export default function Fryers() {
-    /* ========= OBJECTS ========= */
     const [objects, setObjects] = useState([]);
     const [selectedObjectId, setSelectedObjectId] = useState("");
 
-    /* ========= FRYERS ========= */
     const [fryers, setFryers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
-    /* ========= SEARCH ========= */
     const [search, setSearch] = useState("");
 
-    /* ========= CREATE ========= */
     const [name, setName] = useState("");
 
-    /* ========= EDIT ========= */
     const [editingFryer, setEditingFryer] = useState(null);
 
-    /* ========= LOAD OBJECTS ========= */
     useEffect(() => {
         loadObjects();
     }, []);
@@ -39,7 +33,6 @@ export default function Fryers() {
         }
     };
 
-    /* ========= LOAD FRYERS ========= */
     useEffect(() => {
         if (!selectedObjectId) {
             setFryers([]);
@@ -61,7 +54,6 @@ export default function Fryers() {
         }
     };
 
-    /* ========= CREATE ========= */
     const onSubmit = async (e) => {
         e.preventDefault();
         setError("");
@@ -84,7 +76,6 @@ export default function Fryers() {
         }
     };
 
-    /* ========= DELETE ========= */
     const onDelete = async (id) => {
         if (!confirm("Сигурен ли си?")) return;
 
@@ -96,19 +87,16 @@ export default function Fryers() {
         }
     };
 
-    /* ========= SEARCH FILTER ========= */
     const filtered = fryers.filter((f) =>
         f.name?.toLowerCase().includes(search.toLowerCase())
     );
 
-    /* ========= RENDER ========= */
     return (
         <div className="max-w-4xl mx-auto space-y-8">
             <h1 className="text-2xl font-semibold">
                 Фритюрници
             </h1>
 
-            {/* OBJECT SELECT */}
             <section className="bg-white border rounded-xl p-4">
                 <select
                     value={selectedObjectId}
@@ -124,7 +112,6 @@ export default function Fryers() {
                 </select>
             </section>
 
-            {/* CREATE */}
             {selectedObjectId && (
                 <section className="bg-white border rounded-xl p-6">
                     <form onSubmit={onSubmit} className="flex gap-3">
@@ -145,7 +132,6 @@ export default function Fryers() {
                 </section>
             )}
 
-            {/* SEARCH */}
             {fryers.length > 0 && (
                 <input
                     value={search}
@@ -155,7 +141,6 @@ export default function Fryers() {
                 />
             )}
 
-            {/* LIST */}
             {selectedObjectId && (
                 <section className="bg-white border rounded-xl p-6 space-y-2">
                     {loading ? (
@@ -190,7 +175,6 @@ export default function Fryers() {
                 </section>
             )}
 
-            {/* EDIT MODAL */}
             {editingFryer && (
                 <EditFryerModal
                     fryer={editingFryer}

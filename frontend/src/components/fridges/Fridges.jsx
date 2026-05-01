@@ -18,7 +18,6 @@ export default function Fridges() {
 
     const [editingFridge, setEditingFridge] = useState(null);
 
-    /* LOAD OBJECTS */
     useEffect(() => {
         api.get("/objects").then(res => {
             setObjects(res.data);
@@ -28,7 +27,6 @@ export default function Fridges() {
         });
     }, []);
 
-    /* LOAD FRIDGES */
     useEffect(() => {
         if (!selectedObjectId) {
             setFridges([]);
@@ -47,7 +45,6 @@ export default function Fridges() {
         setForm(s => ({ ...s, [name]: value }));
     };
 
-    /* CREATE */
     const onSubmit = async (e) => {
         e.preventDefault();
         setError("");
@@ -69,7 +66,6 @@ export default function Fridges() {
         }
     };
 
-    /* DELETE */
     const onDelete = async (id) => {
         if (!confirm("Сигурен ли си?")) return;
 
@@ -82,7 +78,6 @@ export default function Fridges() {
         <div className="max-w-4xl mx-auto space-y-8">
             <h1 className="text-2xl font-semibold">Хладилни съоръжения</h1>
 
-            {/* OBJECT */}
             <section className="bg-white border rounded-xl p-4">
                 <select
                     value={selectedObjectId}
@@ -98,7 +93,6 @@ export default function Fridges() {
                 </select>
             </section>
 
-            {/* CREATE */}
             {selectedObjectId && (
                 <section className="bg-white border rounded-xl p-6">
                     <h2 className="text-lg font-medium mb-4">
@@ -150,7 +144,6 @@ export default function Fridges() {
                 </section>
             )}
 
-            {/* LIST */}
             {selectedObjectId && (
                 <section className="bg-white border rounded-xl p-6 space-y-2">
                     {loading ? (

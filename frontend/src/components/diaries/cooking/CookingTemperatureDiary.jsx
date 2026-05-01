@@ -131,7 +131,6 @@ export default function CookingTemperatureDiary() {
                 Температура на храните при кетъринг
             </h1>
 
-            {/* OBJECT SELECTOR */}
             <div className="bg-white border rounded-xl p-4">
                 <label className="block text-sm font-medium mb-2">Изберете обект</label>
                 <select
@@ -147,7 +146,6 @@ export default function CookingTemperatureDiary() {
                 </select>
             </div>
 
-            {/* FORM */}
             {form.object_id && (
                 <>
                     <form
@@ -254,7 +252,6 @@ export default function CookingTemperatureDiary() {
                         </div>
                     </form>
 
-                    {/* SEARCH */}
                     <div>
                         <label className="block text-sm font-medium mb-2">Търсене</label>
                         <input
@@ -265,7 +262,6 @@ export default function CookingTemperatureDiary() {
                         />
                     </div>
 
-                    {/* LIST */}
                     <div className="space-y-4">
                         {visibleLogs.map(l => (
                             <div

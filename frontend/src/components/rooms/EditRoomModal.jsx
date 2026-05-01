@@ -27,13 +27,11 @@ export default function EditRoomModal({ room, onClose, onUpdated }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* BACKDROP */}
             <div
                 className="absolute inset-0 bg-black/50"
                 onClick={onClose}
             />
 
-            {/* MODAL */}
             <div className="relative bg-white rounded-xl p-6 w-full max-w-md">
                 <h2 className="text-xl font-semibold mb-4">
                     Редакция на помещение

@@ -1,6 +1,6 @@
 export default function About() {
     return (
-        <section className="h-[calc(100vh-75px)] overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-black flex items-center">
+        <section className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-black flex items-center">
             <div className="max-w-4xl mx-auto px-6 text-center text-white">
 
                 <h1 className="text-4xl font-bold mb-6">

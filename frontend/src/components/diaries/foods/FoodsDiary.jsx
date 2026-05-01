@@ -168,7 +168,6 @@ export default function FoodsDiary() {
         <div className="max-w-5xl mx-auto space-y-8 p-4">
             <h1 className="text-2xl font-semibold">Дневник за храни и опаковки</h1>
 
-            {/* OBJECT */}
             <section className="bg-white border rounded-xl p-4">
                 <label className="block text-sm font-medium mb-2">Изберете обект</label>
                 <select
@@ -189,7 +188,6 @@ export default function FoodsDiary() {
                 </select>
             </section>
 
-            {/* FORM */}
             {form.object_id && isRestaurantOrCatering && (
                 <section className="bg-white border rounded-xl p-6">
                     <h2 className="text-lg font-semibold mb-4">Добави нов запис</h2>
@@ -293,7 +291,6 @@ export default function FoodsDiary() {
                 </section>
             )}
 
-            {/* IMAGE UPLOAD */}
             {form.object_id && isRetailOrWholesale && (
                 <section className="bg-white border rounded-xl p-6">
                     <h2 className="text-lg font-semibold mb-4">Качи снимка</h2>
@@ -316,7 +313,6 @@ export default function FoodsDiary() {
                 </section>
             )}
 
-            {/* SEARCH */}
             {form.object_id && isRestaurantOrCatering && (
                 <div>
                     <label className="block text-sm font-medium mb-2">Търсене</label>
@@ -324,7 +320,6 @@ export default function FoodsDiary() {
                 </div>
             )}
 
-            {/* LIST — collapsed cards with expand */}
             {form.object_id && isRestaurantOrCatering && (
                 <div className="space-y-3">
                     {visibleLogs.map(l => {
@@ -335,7 +330,6 @@ export default function FoodsDiary() {
                                 key={l._id}
                                 className={`border rounded-xl overflow-hidden ${status?.expired ? "border-red-200" : status?.warning ? "border-yellow-200" : "border-slate-200"}`}
                             >
-                                {/* COLLAPSED ROW — always visible */}
                                 <div
                                     className={`flex items-center justify-between px-4 py-3 cursor-pointer select-none ${status?.expired ? "bg-red-50" : status?.warning ? "bg-yellow-50" : "bg-white"}`}
                                     onClick={() => toggleExpand(l._id)}
@@ -364,7 +358,6 @@ export default function FoodsDiary() {
                                     </div>
                                 </div>
 
-                                {/* EXPANDED DETAILS */}
                                 {isExpanded && (
                                     <div className={`px-5 pb-4 pt-2 border-t text-sm text-slate-600 space-y-1 ${status?.expired ? "bg-red-50 border-red-100" : status?.warning ? "bg-yellow-50 border-yellow-100" : "bg-white border-slate-100"}`}>
                                         <div>Партиден номер: <span className="font-medium text-slate-800">{l.batch_number || "—"}</span></div>
@@ -391,7 +384,6 @@ export default function FoodsDiary() {
                 </div>
             )}
 
-            {/* IMAGE GRID */}
             {form.object_id && isRetailOrWholesale && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {allLogs.filter(l => l.image_url).map(l => (
@@ -407,7 +399,6 @@ export default function FoodsDiary() {
                 </div>
             )}
 
-            {/* PAGINATION */}
             {form.object_id && allLogs.length > 0 && (
                 <div className="flex justify-center gap-4 mt-4">
                     <button onClick={() => loadLogs(currentPage - 1)} disabled={currentPage === 1} className="px-4 py-2 border rounded disabled:opacity-50">Назад</button>
@@ -416,7 +407,6 @@ export default function FoodsDiary() {
                 </div>
             )}
 
-            {/* IMAGE PREVIEW */}
             {previewImage && (
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setPreviewImage(null)}>
                     <div className="relative max-w-5xl max-h-[90vh] w-full flex justify-center" onClick={(e) => e.stopPropagation()}>
@@ -426,7 +416,6 @@ export default function FoodsDiary() {
                 </div>
             )}
 
-            {/* EDIT MODAL */}
             {editingLog && (
                 <EditFoodLogModal
                     log={editingLog}

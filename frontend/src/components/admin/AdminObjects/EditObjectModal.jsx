@@ -33,13 +33,11 @@ export default function EditObjectModal({ object, onClose, onUpdated }) {
 
     return (
         <div className="fixed inset-0 z-[9999]">
-            {/* BACKDROP */}
             <div
                 className="absolute inset-0 bg-black/40 backdrop-blur-md"
                 onClick={onClose}
             />
 
-            {/* MODAL */}
             <div className="relative z-10 flex min-h-screen items-center justify-center px-4">
                 <div className="w-full max-w-lg bg-white rounded-xl shadow-2xl">
                     <div className="border-b px-6 py-4">

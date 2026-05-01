@@ -7,7 +7,6 @@ export default function MainLayout() {
 
     return (
         <div className="flex h-[calc(100vh-72px)] bg-slate-100 relative">
-            {/* Overlay за мобилен */}
             {sidebarOpen && (
                 <div
                     className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
@@ -15,7 +14,6 @@ export default function MainLayout() {
                 />
             )}
 
-            {/* Sidebar */}
             <div className={`
                 fixed md:static inset-y-0 left-0 z-30
                 transform transition-transform duration-300 ease-in-out
@@ -26,9 +24,7 @@ export default function MainLayout() {
                 <Sidebar onClose={() => setSidebarOpen(false)} />
             </div>
 
-            {/* Main content */}
             <main className="flex-1 overflow-auto p-4 md:p-6 w-full">
-                {/* Хамбургер бутон — само мобилен */}
                 <button
                     className="md:hidden mb-4 p-2 rounded-md bg-white border border-slate-200 shadow-sm text-slate-700"
                     onClick={() => setSidebarOpen(true)}

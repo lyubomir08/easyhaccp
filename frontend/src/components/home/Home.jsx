@@ -5,10 +5,9 @@ import useUser from "../../hooks/useUser";
 export default function Home() {
     const { user } = useUser();
     return (
-        <section className="h-[calc(100vh-75px)] overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-black flex items-center">
+        <section className="min-h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-black flex items-center">
             <div className="max-w-6xl mx-auto px-6 w-full">
 
-                {/* Mobile layout */}
                 <div className="flex flex-col items-center text-center gap-8 md:hidden">
                     <div className="bg-white rounded-2xl p-6 shadow-2xl">
                         <img src={logo} alt="EasyHACCP" className="h-32 w-auto" />
@@ -40,7 +39,6 @@ export default function Home() {
                     </div>
                 </div>
 
-                {/* Desktop layout */}
                 <div className="hidden md:grid md:grid-cols-2 gap-12 items-center">
                     <div>
                         <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight mb-6">

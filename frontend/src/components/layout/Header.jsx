@@ -15,7 +15,6 @@ export default function Header() {
                     Easy<span className="text-blue-500">HACCP</span>
                 </Link>
 
-                {/* Desktop nav */}
                 <nav className="hidden md:flex items-center gap-7">
                     <NavLink to="/" className={baseLink}>Начало</NavLink>
                     <NavLink to="/about" className={baseLink}>За нас</NavLink>
@@ -40,7 +39,6 @@ export default function Header() {
                     )}
                 </nav>
 
-                {/* Мобилен хамбургер */}
                 <button
                     className="md:hidden text-slate-200 hover:text-white"
                     onClick={() => setMenuOpen(!menuOpen)}
@@ -57,7 +55,6 @@ export default function Header() {
                 </button>
             </div>
 
-            {/* Мобилно меню */}
             {menuOpen && (
                 <div className="md:hidden bg-slate-900 border-t border-slate-800 px-4 py-4 flex flex-col gap-3">
                     <NavLink to="/" onClick={() => setMenuOpen(false)} className={baseLink}>Начало</NavLink>
