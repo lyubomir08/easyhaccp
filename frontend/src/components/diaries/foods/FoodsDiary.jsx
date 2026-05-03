@@ -188,7 +188,7 @@ export default function FoodsDiary() {
                 </select>
             </section>
 
-            {form.object_id && isRestaurantOrCatering && (
+            {form.object_id && (
                 <section className="bg-white border rounded-xl p-6">
                     <h2 className="text-lg font-semibold mb-4">Добави нов запис</h2>
                     <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -313,14 +313,14 @@ export default function FoodsDiary() {
                 </section>
             )}
 
-            {form.object_id && isRestaurantOrCatering && (
+            {form.object_id && (
                 <div>
                     <label className="block text-sm font-medium mb-2">Търсене</label>
                     <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Търси по вид храна или партиден номер..." className="border px-3 py-2 rounded-md w-full" />
                 </div>
             )}
 
-            {form.object_id && isRestaurantOrCatering && (
+            {form.object_id && (
                 <div className="space-y-3">
                     {visibleLogs.map(l => {
                         const status = getExpiryStatus(l.shelf_life);
