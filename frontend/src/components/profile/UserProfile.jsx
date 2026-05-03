@@ -1,36 +1,13 @@
-import { useEffect, useState } from "react";
-import { updateProfile, changePassword } from "../../services/userService";
+import { useState } from "react";
+import { changePassword } from "../../services/userService";
 import useUser from "../../hooks/useUser";
 
 export default function UserProfile() {
-    const { user, setUser } = useUser();
+    const { user } = useUser();
 
-    const [email, setEmail] = useState("");
     const [oldPassword, setOldPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
-    const [loadingProfile, setLoadingProfile] = useState(false);
     const [loadingPass, setLoadingPass] = useState(false);
-
-    useEffect(() => {
-        if (user?.email) {
-            setEmail(user.email);
-        }
-    }, [user]);
-
-    const onProfileSubmit = async (e) => {
-        e.preventDefault();
-        setLoadingProfile(true);
-
-        try {
-            const updatedUser = await updateProfile({ email });
-            setUser((prev) => ({ ...prev, ...updatedUser }));
-            alert("Профилът е обновен успешно");
-        } catch (err) {
-            alert(err.response?.data?.message || "Грешка при запис");
-        } finally {
-            setLoadingProfile(false);
-        }
-    };
 
     const onPasswordSubmit = async (e) => {
         e.preventDefault();
@@ -52,72 +29,45 @@ export default function UserProfile() {
         <div className="flex justify-center items-center min-h-[calc(100vh-72px)]">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-6xl w-full">
 
+                {/* PROFILE INFO */}
                 <section className="bg-white rounded-2xl border border-slate-200 shadow-md p-8">
-                    <h2 className="text-lg font-semibold mb-6">
-                        Профил
-                    </h2>
+                    <h2 className="text-lg font-semibold mb-6">Профил</h2>
 
-                    <form onSubmit={onProfileSubmit} className="space-y-5">
+                    <div className="space-y-5">
+
                         <div>
-                            <label className="block text-sm font-medium mb-1">
-                                Име
-                            </label>
+                            <label className="block text-sm font-medium mb-1">Име</label>
                             <input
                                 value={user.name || "—"}
                                 disabled
-                                className="w-full rounded-md border border-slate-300 px-4 py-2.5 text-sm bg-slate-100"
+                                className="w-full rounded-md border px-4 py-2.5 bg-slate-100"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium mb-1">
-                                Потребител
-                            </label>
+                            <label className="block text-sm font-medium mb-1">Потребител</label>
                             <input
                                 value={user.username}
                                 disabled
-                                className="
-                                w-full rounded-md border border-slate-300
-                                px-4 py-2.5 text-sm bg-slate-100
-                            "
+                                className="w-full rounded-md border px-4 py-2.5 bg-slate-100"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium mb-1">
-                                Имейл
-                            </label>
+                            <label className="block text-sm font-medium mb-1">Имейл</label>
                             <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="
-                                w-full rounded-md border border-slate-300
-                                px-4 py-2.5 text-sm
-                                focus:outline-none focus:ring-2 focus:ring-blue-500
-                            "
-                                required
+                                value={user.email || "—"}
+                                disabled
+                                className="w-full rounded-md border px-4 py-2.5 bg-slate-100"
                             />
                         </div>
 
-                        <button
-                            disabled={loadingProfile}
-                            className="
-                            inline-flex items-center justify-center
-                            rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white
-                            hover:bg-blue-700 transition
-                            disabled:opacity-50
-                        "
-                        >
-                            {loadingProfile ? "Запис..." : "Запази профил"}
-                        </button>
-                    </form>
+                    </div>
                 </section>
 
+                {/* CHANGE PASSWORD */}
                 <section className="bg-white rounded-2xl border border-slate-200 shadow-md p-8">
-                    <h2 className="text-lg font-semibold mb-6">
-                        Смяна на парола
-                    </h2>
+                    <h2 className="text-lg font-semibold mb-6">Смяна на парола</h2>
 
                     <form onSubmit={onPasswordSubmit} className="space-y-5">
                         <input
@@ -125,10 +75,7 @@ export default function UserProfile() {
                             placeholder="Стара парола"
                             value={oldPassword}
                             onChange={(e) => setOldPassword(e.target.value)}
-                            className="
-                            w-full rounded-md border border-slate-300
-                            px-4 py-2.5 text-sm
-                        "
+                            className="w-full border px-4 py-2.5 rounded-md"
                             required
                         />
 
@@ -137,21 +84,13 @@ export default function UserProfile() {
                             placeholder="Нова парола"
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
-                            className="
-                            w-full rounded-md border border-slate-300
-                            px-4 py-2.5 text-sm
-                        "
+                            className="w-full border px-4 py-2.5 rounded-md"
                             required
                         />
 
                         <button
                             disabled={loadingPass}
-                            className="
-                            inline-flex items-center justify-center
-                            rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white
-                            hover:bg-blue-700 transition
-                            disabled:opacity-50
-                        "
+                            className="w-full bg-blue-600 text-white py-2.5 rounded-md hover:bg-blue-700"
                         >
                             {loadingPass ? "Запис..." : "Смени парола"}
                         </button>
