@@ -331,14 +331,14 @@ export default function FoodsDiary() {
                 </section>
             )}
 
-            {form.object_id && (
+            {form.object_id && (isRestaurantOrCatering || inputMode !== null) && (
                 <div>
                     <label className="block text-sm font-medium mb-2">Търсене</label>
                     <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Търси по вид храна или партиден номер..." className="border px-3 py-2 rounded-md w-full" />
                 </div>
             )}
 
-            {form.object_id && (
+            {form.object_id && (isRestaurantOrCatering || inputMode !== null) && (
                 <div className="space-y-3">
                     {visibleLogs.map(l => {
                         const status = getExpiryStatus(l.shelf_life);
