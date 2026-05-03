@@ -39,7 +39,7 @@ export default function FoodsDiary() {
     const [totalPages, setTotalPages] = useState(1);
     const [quantityUnit, setQuantityUnit] = useState("kg");
     const [expandedIds, setExpandedIds] = useState(new Set());
-    const [inputMode, setInputMode] = useState("null");
+    const [inputMode, setInputMode] = useState(null);
 
     const [form, setForm] = useState({
         object_id: "",
@@ -189,7 +189,7 @@ export default function FoodsDiary() {
                 </select>
             </section>
 
-            {form.object_id && (isRestaurantOrCatering || inputMode === "table") && (
+            {form.object_id && isRetailOrWholesale && (
                 <div className="flex gap-3">
                     <button
                         onClick={() => setInputMode("table")}
