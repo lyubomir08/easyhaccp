@@ -39,6 +39,7 @@ export default function FoodsDiary() {
     const [totalPages, setTotalPages] = useState(1);
     const [quantityUnit, setQuantityUnit] = useState("kg");
     const [expandedIds, setExpandedIds] = useState(new Set());
+    const [inputMode, setInputMode] = useState("table");
 
     const [form, setForm] = useState({
         object_id: "",
@@ -188,7 +189,24 @@ export default function FoodsDiary() {
                 </select>
             </section>
 
-            {form.object_id && (
+            {form.object_id && isRetailOrWholesale && (
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => setInputMode("table")}
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition ${inputMode === "table" ? "bg-blue-600 text-white" : "border border-slate-300 text-slate-600 hover:bg-slate-50"}`}
+                    >
+                        Таблица
+                    </button>
+                    <button
+                        onClick={() => setInputMode("image")}
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition ${inputMode === "image" ? "bg-blue-600 text-white" : "border border-slate-300 text-slate-600 hover:bg-slate-50"}`}
+                    >
+                        Снимка
+                    </button>
+                </div>
+            )}
+
+            {form.object_id && (isRestaurantOrCatering || inputMode === "table") && (
                 <section className="bg-white border rounded-xl p-6">
                     <h2 className="text-lg font-semibold mb-4">Добави нов запис</h2>
                     <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -291,7 +309,7 @@ export default function FoodsDiary() {
                 </section>
             )}
 
-            {form.object_id && isRetailOrWholesale && (
+            {form.object_id && isRetailOrWholesale && inputMode === "image" && (
                 <section className="bg-white border rounded-xl p-6">
                     <h2 className="text-lg font-semibold mb-4">Качи снимка</h2>
                     <form onSubmit={onSubmitImageOnly} className="space-y-4">
