@@ -48,38 +48,38 @@ export default function CreateUserForFirmModal({ firm, onClose, onCreated }) {
     };
 
     const onSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+        e.preventDefault();
+        setLoading(true);
 
-    try {
-        if (form.role === "manager" && !form.object_id) {
-            alert("Избери свободен обект за manager");
+        try {
+            if (form.role === "manager" && !form.object_id) {
+                alert("Избери свободен обект за manager");
+                setLoading(false);
+                return;
+            }
+
+            const payload = {
+                username: form.username,
+                password: form.password,
+                name: form.name,
+                email: form.email,
+                role: form.role,
+                active: form.active,
+            };
+
+            if (form.role === "manager") {
+                payload.object_id = form.object_id;
+            }
+
+            await addUserToFirm(firm._id, payload);
+            onCreated();
+            onClose();
+        } catch (err) {
+            alert(err.response?.data?.message || "Грешка при създаване на потребител");
+        } finally {
             setLoading(false);
-            return;
         }
-
-        const payload = {
-            username: form.username,
-            password: form.password,
-            name: form.name,
-            email: form.email,
-            role: form.role,
-            active: form.active,
-        };
-
-        if (form.role === "manager") {
-            payload.object_id = form.object_id;
-        }
-
-        await addUserToFirm(firm._id, payload);
-        onCreated();
-        onClose();
-    } catch (err) {
-        alert(err.response?.data?.message || "Грешка при създаване на потребител");
-    } finally {
-        setLoading(false);
-    }
-};
+    };
 
     return (
         <div className="fixed inset-0 z-[9999]">
@@ -169,8 +169,8 @@ export default function CreateUserForFirmModal({ firm, onClose, onCreated }) {
                                 }
                                 className="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
                             >
-                                <option value="owner">Owner</option>
-                                <option value="manager">Manager</option>
+                                <option value="owner">Собственик</option>
+                                <option value="manager">Мениджър</option>
                             </select>
                         </div>
 

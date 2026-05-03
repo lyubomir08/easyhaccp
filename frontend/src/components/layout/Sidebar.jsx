@@ -26,7 +26,9 @@ export default function Sidebar({ onClose }) {
             <div className="px-6 py-5 border-b border-slate-200 flex justify-between items-center">
                 <div>
                     <div className="text-lg font-bold text-slate-900">Easy<span className="text-blue-600">HACCP</span></div>
-                    <div className="text-xs text-slate-500 mt-1 capitalize">{role} panel</div>
+                    <div className="text-xs text-slate-500 mt-1">
+                        {role === "admin" ? "Администратор" : role === "owner" ? "Собственик" : "Мениджър"} панел
+                    </div>
                 </div>
                 {onClose && (
                     <button onClick={onClose} className="md:hidden p-1 rounded text-slate-400 hover:text-slate-700">

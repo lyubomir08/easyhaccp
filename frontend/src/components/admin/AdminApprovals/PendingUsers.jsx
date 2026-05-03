@@ -58,7 +58,7 @@ export default function PendingUsers() {
                                 {user.username}
                             </p>
                             <p className="text-sm text-slate-600">
-                                Роля: {user.role}
+                                Роля: {user.role === "owner" ? "Собственик" : user.role === "manager" ? "Мениджър" : "Администратор"}
                             </p>
                             {user.firm_id?.name && (
                                 <p className="text-sm text-slate-500">
