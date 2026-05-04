@@ -79,7 +79,12 @@ export default function EditUserModal({ userId, onClose, onUpdated }) {
 
     const onSubmit = async () => {
         try {
-            await updateUser(userId, form);
+            const payload = {
+                ...form,
+                object_id: form.object_id || null,
+                firm_id: form.firm_id || null,
+            };
+            await updateUser(userId, payload);
             onUpdated();
             onClose();
         } catch (err) {
