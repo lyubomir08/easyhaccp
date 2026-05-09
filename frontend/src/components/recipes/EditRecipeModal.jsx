@@ -4,30 +4,19 @@ import api from "../../services/api";
 export default function EditRecipeModal({
     recipe,
     foodGroups,
-    foodLogs = [],
     onClose,
     onUpdated,
 }) {
     const emptyItem = {
         food_group_id: recipe.food_group_id,
-        food_log_id: "",
         product: "",
         quantity: "",
     };
-
-    const uniqueProducts = Object.values(
-        foodLogs.reduce((acc, fl) => {
-            const key = fl.product_type?.toLowerCase().trim();
-            if (key && !acc[key]) acc[key] = { id: fl._id, name: fl.product_type };
-            return acc;
-        }, {})
-    );
 
     const [form, setForm] = useState({
         name: recipe.name,
         items: recipe.ingredients.map(i => ({
             food_group_id: recipe.food_group_id,
-            food_log_id: i.food_log_id || "",
             product: i.ingredient,
             quantity: i.quantity || "",
         })),
@@ -53,19 +42,10 @@ export default function EditRecipeModal({
         setForm(s => ({ ...s, items }));
     };
 
-    const onSelectProduct = (index, foodLogId) => {
-        const product = uniqueProducts.find(p => String(p.id) === String(foodLogId));
-        const items = [...form.items];
-        items[index].food_log_id = foodLogId;
-        items[index].product = product?.name || "";
-        setForm(s => ({ ...s, items }));
-    };
-
     const onSave = async () => {
         const payload = {
             name: form.name,
             ingredients: form.items.map(i => ({
-                food_log_id: i.food_log_id || undefined,
                 ingredient: i.product,
                 quantity: i.quantity ? Number(i.quantity) : undefined,
             })),
@@ -115,20 +95,15 @@ export default function EditRecipeModal({
                             </div>
 
                             <div className="col-span-4">
-                                <select
-                                    value={item.food_log_id}
-                                    onChange={(e) => onSelectProduct(idx, e.target.value)}
+                                <input
+                                    value={item.product}
+                                    onChange={(e) =>
+                                        onChangeItem(idx, "product", e.target.value)
+                                    }
                                     className="border px-3 py-2 rounded-md w-full"
+                                    placeholder="Продукт"
                                     required
-                                >
-                                    <option value="">-- Избери продукт --</option>
-                                    {uniqueProducts.map(p => (
-                                        <option key={p.id} value={p.id}>{p.name}</option>
-                                    ))}
-                                    {item.food_log_id === "" && item.product && (
-                                        <option value="" disabled>{item.product} (стар запис)</option>
-                                    )}
-                                </select>
+                                />
                             </div>
 
                             <div className="col-span-3">

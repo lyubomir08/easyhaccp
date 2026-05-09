@@ -11,12 +11,10 @@ export default function Recipes() {
     const [search, setSearch] = useState("");
     const [editingRecipe, setEditingRecipe] = useState(null);
 
-    const [foodLogs, setFoodLogs] = useState([]);
-
     const [form, setForm] = useState({
         name: "",
         food_group_id: "",
-        items: [{ food_log_id: "", product: "", quantity: "" }],
+        items: [{ product: "", quantity: "" }],
     });
 
     useEffect(() => {
@@ -37,22 +35,11 @@ export default function Recipes() {
         const object = objects.find(o => o._id === selectedObjectId);
         setSelectedObject(object);
         loadFoodGroups();
-        loadFoodLogs();
     }, [selectedObjectId]);
 
     const loadFoodGroups = async () => {
         const res = await api.get(`/food-groups/${selectedObjectId}`);
         setFoodGroups(res.data);
-    };
-
-    const loadFoodLogs = async () => {
-        try {
-            const res = await api.get(`/food-logs/${selectedObjectId}?limit=1000`);
-            const data = res.data;
-            setFoodLogs(Array.isArray(data) ? data : data?.logs || []);
-        } catch {
-            setFoodLogs([]);
-        }
     };
 
     useEffect(() => {
@@ -70,18 +57,10 @@ export default function Recipes() {
         setRecipes(allRecipes);
     };
 
-    const uniqueProducts = Object.values(
-        foodLogs.reduce((acc, fl) => {
-            const key = fl.product_type?.toLowerCase().trim();
-            if (key && !acc[key]) acc[key] = { id: fl._id, name: fl.product_type };
-            return acc;
-        }, {})
-    );
-
     const addItem = () => {
         setForm(s => ({
             ...s,
-            items: [...s.items, { food_log_id: "", product: "", quantity: "" }],
+            items: [...s.items, { product: "", quantity: "" }],
         }));
     };
 
@@ -98,14 +77,6 @@ export default function Recipes() {
         setForm(s => ({ ...s, items }));
     };
 
-    const onSelectProduct = (index, foodLogId) => {
-        const product = uniqueProducts.find(p => String(p.id) === String(foodLogId));
-        const items = [...form.items];
-        items[index].food_log_id = foodLogId;
-        items[index].product = product?.name || "";
-        setForm(s => ({ ...s, items }));
-    };
-
     const onSubmit = async (e) => {
         e.preventDefault();
 
@@ -113,7 +84,6 @@ export default function Recipes() {
             name: form.name,
             food_group_id: form.food_group_id,
             ingredients: form.items.map(i => ({
-                food_log_id: i.food_log_id || undefined,
                 ingredient: i.product,
                 quantity: i.quantity ? Number(i.quantity) : undefined,
             })),
@@ -124,7 +94,7 @@ export default function Recipes() {
         setForm({
             name: "",
             food_group_id: "",
-            items: [{ food_log_id: "", product: "", quantity: "" }],
+            items: [{ product: "", quantity: "" }],
         });
 
         loadRecipes();
@@ -200,17 +170,13 @@ export default function Recipes() {
                             {form.items.map((item, idx) => (
                                 <div key={idx} className="grid grid-cols-12 gap-3 mb-3">
                                     <div className="col-span-7">
-                                        <select
-                                            value={item.food_log_id}
-                                            onChange={(e) => onSelectProduct(idx, e.target.value)}
+                                        <input
+                                            value={item.product}
+                                            onChange={(e) => onChangeItem(idx, "product", e.target.value)}
+                                            placeholder="Продукт"
                                             className="border px-3 py-2 rounded-md w-full"
                                             required
-                                        >
-                                            <option value="">-- Избери продукт --</option>
-                                            {uniqueProducts.map(p => (
-                                                <option key={p.id} value={p.id}>{p.name}</option>
-                                            ))}
-                                        </select>
+                                        />
                                     </div>
 
                                     <div className="col-span-4">
@@ -313,7 +279,6 @@ export default function Recipes() {
                 <EditRecipeModal
                     recipe={editingRecipe}
                     foodGroups={foodGroups}
-                    foodLogs={foodLogs}
                     needsQuantity={true}
                     onClose={() => setEditingRecipe(null)}
                     onUpdated={loadRecipes}

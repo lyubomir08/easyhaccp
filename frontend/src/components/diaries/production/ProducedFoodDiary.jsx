@@ -90,24 +90,14 @@ export default function ProducedFoodDiary() {
         }
     };
 
-    const resolveProductType = (ing) => {
-        if (!Array.isArray(foodLogs)) return ing.ingredient;
-        if (ing.food_log_id) {
-            const refLog = foodLogs.find(fl => String(fl._id) === String(ing.food_log_id));
-            if (refLog?.product_type) return refLog.product_type;
-        }
-        return ing.ingredient;
-    };
-
     const checkExpiredIngredients = (recipe) => {
         if (!recipe?.ingredients) return [];
         return recipe.ingredients.reduce((acc, ing) => {
-            const productType = resolveProductType(ing);
             const match = Array.isArray(foodLogs) ? foodLogs.find(fl =>
-                fl.product_type?.toLowerCase() === productType?.toLowerCase()
+                fl.product_type?.toLowerCase() === ing.ingredient?.toLowerCase()
             ) : null;
             if (match && isExpired(match.shelf_life)) {
-                acc.push({ name: productType, shelf_life: match.shelf_life, batch: match.batch_number });
+                acc.push({ name: ing.ingredient, shelf_life: match.shelf_life, batch: match.batch_number });
             }
             return acc;
         }, []);
@@ -314,15 +304,14 @@ export default function ProducedFoodDiary() {
                                                     <div className="space-y-1">
                                                         {l.recipe_id.ingredients.map((ing, idx) => {
                                                             const totalGrams = ing.quantity && l.portions ? ing.quantity * l.portions : null;
-                                                            const productType = resolveProductType(ing);
                                                             const matchingLog = Array.isArray(foodLogs) ? foodLogs.find(fl =>
-                                                                fl.product_type?.toLowerCase() === productType?.toLowerCase()
+                                                                fl.product_type?.toLowerCase() === ing.ingredient?.toLowerCase()
                                                             ) : null;
                                                             const expired = matchingLog && isExpired(matchingLog.shelf_life);
                                                             return (
                                                                 <div key={idx} className={`flex items-center justify-between border-b last:border-0 py-2 text-sm px-3 rounded ${expired ? "bg-red-50" : "bg-white"}`}>
                                                                     <div>
-                                                                        <span className="font-medium text-gray-800">{productType}</span>
+                                                                        <span className="font-medium text-gray-800">{ing.ingredient}</span>
                                                                         {expired && <span className="ml-2 text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded">Изтекъл срок</span>}
                                                                         {matchingLog && (
                                                                             <div className={`text-xs mt-0.5 ${expired ? "text-red-600" : "text-orange-600"}`}>

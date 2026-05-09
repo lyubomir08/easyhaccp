@@ -6,17 +6,8 @@ import buildDateFilter from "../utils/buildDateFilter.js";
 
 const norm = (s) => String(s || "").trim().toLowerCase().replace(/\s+/g, " ");
 
-async function getAvailabilityFIFO({ objectId, ingredientName, foodLogId }) {
-    let target = norm(ingredientName);
-    let resolvedName = ingredientName;
-
-    if (foodLogId) {
-        const refLog = await FoodLog.findById(foodLogId).select("product_type");
-        if (refLog?.product_type) {
-            target = norm(refLog.product_type);
-            resolvedName = refLog.product_type;
-        }
-    }
+async function getAvailabilityFIFO({ objectId, ingredientName }) {
+    const target = norm(ingredientName);
 
     const logs = await FoodLog.find({
         object_id: objectId,
@@ -24,8 +15,9 @@ async function getAvailabilityFIFO({ objectId, ingredientName, foodLogId }) {
     }).sort({ date: 1, created_at: 1 });
 
     const matching = logs.filter(l => norm(l.product_type) === target);
+
     const total = matching.reduce((sum, l) => sum + Number(l.quantity || 0), 0);
-    return { total, matching, resolvedName };
+    return { total, matching };
 }
 
 async function deductFromLogsFIFO({ matchingLogs, gramsNeeded }) {
@@ -76,15 +68,14 @@ const createProducedFood = async (data) => {
 
         const gramsNeeded = gramsPerPortion * portionsNum;
 
-        const { total, matching, resolvedName } = await getAvailabilityFIFO({
+        const { total, matching } = await getAvailabilityFIFO({
             objectId: object_id,
-            ingredientName,
-            foodLogId: ing.food_log_id
+            ingredientName
         });
 
         if (total < gramsNeeded) {
             shortages.push({
-                ingredientName: resolvedName,
+                ingredientName,
                 needed: gramsNeeded,
                 available: total,
                 missing: gramsNeeded - total
@@ -92,7 +83,7 @@ const createProducedFood = async (data) => {
         }
 
         plan.push({
-            ingredientName: resolvedName,
+            ingredientName,
             gramsNeeded,
             matchingLogs: matching
         });
