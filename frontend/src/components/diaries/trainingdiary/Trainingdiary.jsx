@@ -21,7 +21,17 @@ export default function TrainingDiary() {
     useEffect(() => {
         api.get("/objects").then(res => {
             setObjects(res.data);
-            if (res.data.length === 1) setForm(s => ({ ...s, object_id: res.data[0]._id }));
+            if (res.data.length === 1) {
+                setForm(s => ({ ...s, object_id: res.data[0]._id }));
+            } else {
+                const saved = localStorage.getItem("easyhaccp_object_id");
+                if (saved) {
+                    const found = res.data.find(o => o._id === saved);
+                    if (found) {
+                        setForm(s => ({ ...s, object_id: saved }));
+                    }
+                }
+            }
         });
     }, []);
 
@@ -39,7 +49,14 @@ export default function TrainingDiary() {
         } catch { setTrainings([]); }
     };
 
-    const onChange = (e) => setForm(s => ({ ...s, [e.target.name]: e.target.value }));
+    const onChange = (e) => {
+        if (e.target.name === "object_id") {
+            const id = e.target.value;
+            if (id) localStorage.setItem("easyhaccp_object_id", id);
+            else localStorage.removeItem("easyhaccp_object_id");
+        }
+        setForm(s => ({ ...s, [e.target.name]: e.target.value }));
+    };
 
     const toggleEmployee = (emp) => {
         setForm(s => ({
@@ -167,13 +184,13 @@ export default function TrainingDiary() {
             <div className="space-y-4">
                 {filtered.map(t => (
                     <div key={t._id} className="bg-white border rounded-xl p-5">
-                        <div className="flex justify-between items-start mb-3">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-3">
                             <div>
                                 <h3 className="text-base font-semibold text-slate-800">{t.topic}</h3>
                                 {t.lecturer && <p className="text-sm text-slate-500 mt-0.5">Лектор: {t.lecturer}</p>}
                                 <p className="text-xs text-slate-400 mt-1">{new Date(t.date).toLocaleDateString("bg-BG")}</p>
                             </div>
-                            <div className="flex gap-3 text-sm shrink-0 ml-4">
+                            <div className="flex gap-3 text-sm shrink-0">
                                 <button onClick={() => setEditingTraining(t)} className="text-blue-600 hover:text-blue-800">Редактирай</button>
                                 <button onClick={() => onDelete(t._id)} className="text-red-600 hover:text-red-800">Изтрий</button>
                             </div>

@@ -32,7 +32,16 @@ export default function FridgeTemperatureDiary() {
     const selectedFridge = fridges.find(f => f._id === form.fridge_id);
 
     useEffect(() => {
-        api.get("/objects").then(res => setObjects(res.data));
+        api.get("/objects").then(res => {
+            setObjects(res.data);
+            const saved = localStorage.getItem("easyhaccp_object_id");
+            if (saved) {
+                const found = res.data.find(o => o._id === saved);
+                if (found) {
+                    setForm(s => ({ ...s, object_id: saved }));
+                }
+            }
+        });
     }, []);
 
     useEffect(() => {
@@ -60,6 +69,11 @@ export default function FridgeTemperatureDiary() {
     };
 
     const onChange = (e) => {
+        if (e.target.name === "object_id") {
+            const id = e.target.value;
+            if (id) localStorage.setItem("easyhaccp_object_id", id);
+            else localStorage.removeItem("easyhaccp_object_id");
+        }
         setForm(s => ({ ...s, [e.target.name]: e.target.value }));
     };
 
@@ -160,7 +174,7 @@ export default function FridgeTemperatureDiary() {
                     {visibleLogs.map(l => {
                         const outOfNorm = isOutOfNorm(l.measured_temp, l.fridge_id?.norm_min, l.fridge_id?.norm_max);
                         return (
-                            <div key={l._id} className="bg-white border rounded-xl p-5 flex justify-between items-start">
+                            <div key={l._id} className="bg-white border rounded-xl p-5 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
                                 <div className="space-y-1 flex-1">
                                     <h3 className="text-lg font-semibold">{l.fridge_id?.name || "Неизвестен хладилник"}</h3>
                                     <div className="text-sm text-slate-600">
@@ -181,7 +195,7 @@ export default function FridgeTemperatureDiary() {
                                     )}
                                     <div className="text-xs text-slate-400 pt-1">{new Date(l.date).toLocaleString("bg-BG")}</div>
                                 </div>
-                                <div className="flex gap-3 text-sm ml-4">
+                                <div className="flex gap-3 text-sm shrink-0 sm:ml-4">
                                     <button onClick={() => setEditingLog(l)} className="text-blue-600 hover:text-blue-800">Редактирай</button>
                                     <button onClick={() => onDelete(l._id)} className="text-red-600 hover:text-red-800">Изтрий</button>
                                 </div>

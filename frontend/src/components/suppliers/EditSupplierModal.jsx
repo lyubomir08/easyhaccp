@@ -38,7 +38,7 @@ export default function EditSupplierModal({ supplier, objectId, onClose, onUpdat
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
             <div className="relative bg-white rounded-xl p-6 w-full max-w-md">

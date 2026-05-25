@@ -1,48 +1,55 @@
 import ProducedFood from "../models/logs/ProducedFood.js";
-import FoodLog from "../models/logs/FoodLog.js"; // <-- смени ако пътя е друг
+import FoodLog from "../models/logs/FoodLog.js";
 import ObjectModel from "../models/Object.js";
 import Recipe from "../models/Recipe.js";
 import buildDateFilter from "../utils/buildDateFilter.js";
 
 const norm = (s) => String(s || "").trim().toLowerCase().replace(/\s+/g, " ");
 
-async function getAvailabilityFIFO({ objectId, ingredientName }) {
-    const target = norm(ingredientName);
+async function getAvailabilityFIFO({ objectId, ingredientName, foodLogId }) {
+    let target = norm(ingredientName);
+
+    if (foodLogId) {
+        const refLog = await FoodLog.findById(foodLogId).select("product_type");
+        if (refLog?.product_type) target = norm(refLog.product_type);
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     const logs = await FoodLog.find({
         object_id: objectId,
-        quantity: { $gt: 0 }
+        quantity: { $gt: 0 },
+        shelf_life: { $gte: today }
     }).sort({ date: 1, created_at: 1 });
 
     const matching = logs.filter(l => norm(l.product_type) === target);
-
     const total = matching.reduce((sum, l) => sum + Number(l.quantity || 0), 0);
     return { total, matching };
 }
 
 async function deductFromLogsFIFO({ matchingLogs, gramsNeeded }) {
     let remaining = gramsNeeded;
-
     for (const l of matchingLogs) {
         if (remaining <= 0) break;
-
         const available = Number(l.quantity || 0);
         if (available <= 0) continue;
-
         const take = Math.min(available, remaining);
         l.quantity = available - take;
-        await l.save();
-
+        if (l.quantity <= 0) {
+            await l.deleteOne();
+        } else {
+            await l.save();
+        }
         remaining -= take;
     }
-
     if (remaining > 0) {
         throw new Error(`Количеството се промени. Липсват: ${remaining} гр. Опитай пак.`);
     }
 }
 
 const createProducedFood = async (data) => {
-    const { object_id, recipe_id, portions } = data;
+    const { object_id, recipe_id, portions, ingredient_log_map = {} } = data;
 
     const objectExists = await ObjectModel.findById(object_id);
     if (!objectExists) throw new Error("Object not found");
@@ -53,7 +60,7 @@ const createProducedFood = async (data) => {
 
     const portionsNum = Number(portions);
     if (!portionsNum || portionsNum <= 0) {
-        throw new Error("Моля, въведете валиден брой порции (иначе няма как да се намалят наличностите).");
+        throw new Error("Моля, въведете валиден брой порции.");
     }
 
     const ingredients = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
@@ -67,10 +74,12 @@ const createProducedFood = async (data) => {
         if (!ingredientName || gramsPerPortion <= 0) continue;
 
         const gramsNeeded = gramsPerPortion * portionsNum;
+        const foodLogId = ingredient_log_map[ingredientName] || null;
 
         const { total, matching } = await getAvailabilityFIFO({
             objectId: object_id,
-            ingredientName
+            ingredientName,
+            foodLogId
         });
 
         if (total < gramsNeeded) {
@@ -82,11 +91,11 @@ const createProducedFood = async (data) => {
             });
         }
 
-        plan.push({
-            ingredientName,
-            gramsNeeded,
-            matchingLogs: matching
-        });
+        plan.push({ ingredientName, gramsNeeded, matchingLogs: matching });
+    }
+
+    if (plan.length === 0) {
+        throw new Error("Рецептата няма зададени количества за съставките. Моля, добавете грамаж към съставките в рецептата.");
     }
 
     if (shortages.length > 0) {
@@ -126,33 +135,15 @@ const getProducedFoodsByObject = async (object_id, queryParams = {}) => {
         ProducedFood.countDocuments(query)
     ]);
 
-    return {
-        logs,
-        total,
-        page,
-        totalPages: Math.ceil(total / limit)
-    };
+    return { logs, total, page, totalPages: Math.ceil(total / limit) };
 };
 
 const updateProducedFood = async (id, updateData) => {
     const unsetFields = {};
-
-    if (!updateData.ingredient_id) {
-        delete updateData.ingredient_id;
-        unsetFields.ingredient_id = "";
-    }
-
-    if (!updateData.recipe_id) {
-        delete updateData.recipe_id;
-        unsetFields.recipe_id = "";
-    }
-
+    if (!updateData.ingredient_id) { delete updateData.ingredient_id; unsetFields.ingredient_id = ""; }
+    if (!updateData.recipe_id) { delete updateData.recipe_id; unsetFields.recipe_id = ""; }
     const update = { $set: updateData };
-
-    if (Object.keys(unsetFields).length > 0) {
-        update.$unset = unsetFields;
-    }
-
+    if (Object.keys(unsetFields).length > 0) update.$unset = unsetFields;
     const updated = await ProducedFood.findByIdAndUpdate(id, update, { new: true });
     if (!updated) throw new Error("Produced food record not found");
     return updated;
@@ -164,9 +155,4 @@ const deleteProducedFood = async (id) => {
     return true;
 };
 
-export default {
-    createProducedFood,
-    getProducedFoodsByObject,
-    updateProducedFood,
-    deleteProducedFood,
-};
+export default { createProducedFood, getProducedFoodsByObject, updateProducedFood, deleteProducedFood };

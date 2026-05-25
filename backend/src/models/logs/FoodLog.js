@@ -4,6 +4,7 @@ const foodLogSchema = new mongoose.Schema({
     object_id: { type: mongoose.Schema.Types.ObjectId, ref: "ObjectModel", required: true },
     date: { type: Date },
     supplier_id: { type: mongoose.Schema.Types.ObjectId, ref: "Supplier" },
+    food_product_id: { type: mongoose.Schema.Types.ObjectId, ref: "FoodProduct" },
     product_type: { type: String, trim: true },
     batch_number: { type: String, trim: true },
     shelf_life: {type: Date },  

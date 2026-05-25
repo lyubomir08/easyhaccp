@@ -10,6 +10,7 @@ export const UserProvider = ({ children }) => {
     const [selectedFirmId, setSelectedFirmId] = useState(null);
     const [selectedObjectId, setSelectedObjectId] = useState(null);
     const [objectTypes, setObjectTypes] = useState([]);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     useEffect(() => {
         if (!user) {
@@ -41,6 +42,17 @@ export const UserProvider = ({ children }) => {
         }
     }, [user]);
 
+    // Listen for 401 events dispatched by api.js interceptor
+    useEffect(() => {
+        const handleForceLogout = () => {
+            clearUserData();
+            localStorage.removeItem("easyhaccp_object_id");
+            setUser(null);
+        };
+        window.addEventListener("auth:logout", handleForceLogout);
+        return () => window.removeEventListener("auth:logout", handleForceLogout);
+    }, []);
+
     const login = async (username, password) => {
         const data = await authService.login(username, password);
         setUser(data);
@@ -51,8 +63,9 @@ export const UserProvider = ({ children }) => {
     };
 
     const logout = async () => {
-        await authService.logout();
+        try { await authService.logout(); } catch {}
         clearUserData();
+        localStorage.removeItem("easyhaccp_object_id");
         setUser(null);
     };
 
@@ -75,6 +88,8 @@ export const UserProvider = ({ children }) => {
                 objectTypes,
                 isCatering,
                 isWholesale,
+                sidebarOpen,
+                setSidebarOpen,
                 login,
                 register,
                 logout,

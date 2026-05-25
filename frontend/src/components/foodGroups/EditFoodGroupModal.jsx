@@ -37,7 +37,7 @@ export default function EditFoodGroupModal({ group, onClose, onUpdated }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/50" onClick={onClose} />
             <div className="relative bg-white rounded-xl p-6 w-full max-w-lg">
                 <h2 className="text-xl font-bold mb-4">Редакция на група</h2>

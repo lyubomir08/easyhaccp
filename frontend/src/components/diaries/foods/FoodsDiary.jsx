@@ -55,7 +55,17 @@ export default function FoodsDiary() {
     });
 
     useEffect(() => {
-        api.get("/objects").then(res => setObjects(res.data));
+        api.get("/objects").then(res => {
+            setObjects(res.data);
+            const saved = localStorage.getItem("easyhaccp_object_id");
+            if (saved) {
+                const found = res.data.find(o => o._id === saved);
+                if (found) {
+                    setSelectedObject(found);
+                    setForm(s => ({ ...s, object_id: saved }));
+                }
+            }
+        });
     }, []);
 
     useEffect(() => {
@@ -67,7 +77,8 @@ export default function FoodsDiary() {
 
     const loadLogs = async (page = 1) => {
         const res = await api.get(`/food-logs/${form.object_id}?page=${page}&limit=10`);
-        setAllLogs(res.data.logs);
+        const logs = (res.data.logs || []).filter(l => Number(l.quantity || 0) > 0);
+        setAllLogs(logs);
         setCurrentPage(res.data.page);
         setTotalPages(res.data.totalPages);
     };
@@ -179,6 +190,8 @@ export default function FoodsDiary() {
                         setForm(s => ({ ...s, object_id: id }));
                         setSelectedObject(objects.find(o => o._id === id));
                         setImage(null);
+                        if (id) localStorage.setItem("easyhaccp_object_id", id);
+                        else localStorage.removeItem("easyhaccp_object_id");
                     }}
                     className="border px-3 py-2 rounded-md w-full"
                 >
@@ -349,19 +362,19 @@ export default function FoodsDiary() {
                                 className={`border rounded-xl overflow-hidden ${status?.expired ? "border-red-200" : status?.warning ? "border-yellow-200" : "border-slate-200"}`}
                             >
                                 <div
-                                    className={`flex items-center justify-between px-4 py-3 cursor-pointer select-none ${status?.expired ? "bg-red-50" : status?.warning ? "bg-yellow-50" : "bg-white"}`}
+                                    className={`flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 py-3 cursor-pointer select-none gap-2 ${status?.expired ? "bg-red-50" : status?.warning ? "bg-yellow-50" : "bg-white"}`}
                                     onClick={() => toggleExpand(l._id)}
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <span className={`text-lg font-bold leading-none transition-transform ${isExpanded ? "rotate-45" : ""}`}>+</span>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-semibold">{l.product_type}</span>
+                                    <div className="flex items-start gap-3 min-w-0">
+                                        <span className={`text-lg font-bold leading-none transition-transform shrink-0 mt-0.5 ${isExpanded ? "rotate-45" : ""}`}>+</span>
+                                        <div className="min-w-0">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <span className="font-semibold break-words">{l.product_type}</span>
                                                 {status?.expired && (
-                                                    <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">Изтекъл срок</span>
+                                                    <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full whitespace-nowrap">Изтекъл срок</span>
                                                 )}
                                                 {status?.warning && (
-                                                    <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">{status.label}</span>
+                                                    <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full whitespace-nowrap">{status.label}</span>
                                                 )}
                                             </div>
                                             <div className="text-sm text-slate-500">
@@ -370,7 +383,7 @@ export default function FoodsDiary() {
                                         </div>
                                     </div>
 
-                                    <div className="flex gap-3 text-sm shrink-0 ml-4" onClick={e => e.stopPropagation()}>
+                                    <div className="flex gap-3 text-sm shrink-0 pl-7 sm:pl-0" onClick={e => e.stopPropagation()}>
                                         <button onClick={() => setEditingLog(l)} className="text-blue-600 hover:text-blue-800">Редактирай</button>
                                         <button onClick={() => onDelete(l._id)} className="text-red-600 hover:text-red-800">Изтрий</button>
                                     </div>

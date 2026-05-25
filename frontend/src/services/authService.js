@@ -12,6 +12,6 @@ export const register = async (formData) => {
 };
 
 export const logout = async () => {
-    await api.post("/auth/logout");
+    try { await api.post("/auth/logout"); } catch {}
     clearUserData();
 };

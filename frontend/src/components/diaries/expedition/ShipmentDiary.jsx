@@ -30,7 +30,15 @@ export default function ShipmentDiary() {
 
     useEffect(() => {
         api.get("/objects").then(res => {
-            setObjects(res.data.filter(o => o.object_type === "wholesale" || o.object_type === "catering"));
+            const filtered = res.data.filter(o => o.object_type === "wholesale" || o.object_type === "catering");
+            setObjects(filtered);
+            const saved = localStorage.getItem("easyhaccp_object_id");
+            if (saved) {
+                const found = filtered.find(o => o._id === saved);
+                if (found) {
+                    setForm(s => ({ ...s, object_id: saved }));
+                }
+            }
         });
     }, []);
 
@@ -75,7 +83,14 @@ export default function ShipmentDiary() {
         }
     };
 
-    const onChange = (e) => setForm(s => ({ ...s, [e.target.name]: e.target.value }));
+    const onChange = (e) => {
+        if (e.target.name === "object_id") {
+            const id = e.target.value;
+            if (id) localStorage.setItem("easyhaccp_object_id", id);
+            else localStorage.removeItem("easyhaccp_object_id");
+        }
+        setForm(s => ({ ...s, [e.target.name]: e.target.value }));
+    };
 
     const onFoodLogChange = (e) => {
         const id = e.target.value;
@@ -252,7 +267,7 @@ export default function ShipmentDiary() {
                     <div className="space-y-4">
                         {visibleLogs.map(l => (
                             <div key={l._id} className="bg-white border rounded-xl p-4">
-                                <div className="flex justify-between items-start mb-2">
+                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <h3 className="text-base font-semibold">
                                             {l.food_log_id ? l.food_log_id.product_type : (l.produced_food_id?.recipe_id?.name || "Без ime")}
@@ -261,7 +276,7 @@ export default function ShipmentDiary() {
                                             {l.food_log_id ? "Търговия на едро" : "Кетъринг"}
                                         </span>
                                     </div>
-                                    <div className="flex gap-3 text-sm shrink-0 ml-2">
+                                    <div className="flex gap-3 text-sm shrink-0">
                                         <button onClick={() => setEditingLog(l)} className="text-blue-600 hover:text-blue-800">Редактирай</button>
                                         <button onClick={() => onDelete(l._id)} className="text-red-600 hover:text-red-800">Изтрий</button>
                                     </div>

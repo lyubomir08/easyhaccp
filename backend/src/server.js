@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 
 import connectDB from "./config/db.js";
 import { startFridgeCron } from "./cron/fridgeCron.js";
+import { startHealthCardCron } from "./cron/healthCardCron.js";
 
 import adminRoutes from "./routes/adminRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -83,10 +84,19 @@ app.use("/api/shipments", shipmentRoutes);
 
 const startServer = async () => {
     await connectDB();
+
+    // Clean up food log records with zero or negative quantity
+    const { default: FoodLog } = await import("./models/logs/FoodLog.js");
+    const deleted = await FoodLog.deleteMany({ quantity: { $lte: 0 } });
+    if (deleted.deletedCount > 0) {
+        console.log(`Cleaned up ${deleted.deletedCount} food log(s) with zero quantity`);
+    }
+
     app.listen(process.env.PORT, () => {
         console.log(`Server running on port ${process.env.PORT}`);
     });
     startFridgeCron();
+    startHealthCardCron();
 };
 
 startServer();

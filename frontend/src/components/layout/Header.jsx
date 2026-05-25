@@ -5,7 +5,7 @@ import useUser from "../../hooks/useUser";
 const baseLink = "text-slate-100 hover:text-white transition text-sm";
 
 export default function Header() {
-    const { user, logout } = useUser();
+    const { user, logout, sidebarOpen, setSidebarOpen } = useUser();
     const [menuOpen, setMenuOpen] = useState(false);
 
     return (
@@ -15,6 +15,7 @@ export default function Header() {
                     Easy<span className="text-blue-500">HACCP</span>
                 </Link>
 
+                {/* Desktop nav — unchanged */}
                 <nav className="hidden md:flex items-center gap-7">
                     <NavLink to="/" className={baseLink}>Начало</NavLink>
                     <NavLink to="/about" className={baseLink}>За нас</NavLink>
@@ -39,11 +40,13 @@ export default function Header() {
                     )}
                 </nav>
 
+                {/* Mobile button — sidebar toggle when logged in, dropdown toggle when logged out */}
                 <button
                     className="md:hidden text-slate-200 hover:text-white"
-                    onClick={() => setMenuOpen(!menuOpen)}
+                    onClick={() => user ? setSidebarOpen(s => !s) : setMenuOpen(!menuOpen)}
+                    aria-label="Меню"
                 >
-                    {menuOpen ? (
+                    {(user ? sidebarOpen : menuOpen) ? (
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -55,29 +58,17 @@ export default function Header() {
                 </button>
             </div>
 
-            {menuOpen && (
+            {/* Mobile dropdown — only for logged-out users */}
+            {!user && menuOpen && (
                 <div className="md:hidden bg-slate-900 border-t border-slate-800 px-4 py-4 flex flex-col gap-3">
                     <NavLink to="/" onClick={() => setMenuOpen(false)} className={baseLink}>Начало</NavLink>
                     <NavLink to="/about" onClick={() => setMenuOpen(false)} className={baseLink}>За нас</NavLink>
-                    {!user && (
-                        <>
-                            <NavLink to="/sign-in" onClick={() => setMenuOpen(false)} className="px-4 py-2 rounded-md border border-slate-600 text-slate-200 text-sm text-center">
-                                Вход
-                            </NavLink>
-                            <NavLink to="/sign-up" onClick={() => setMenuOpen(false)} className="px-4 py-2 rounded-md bg-white text-black font-medium text-sm text-center">
-                                Регистрация
-                            </NavLink>
-                        </>
-                    )}
-                    {user && (
-                        <>
-                            <NavLink to="/dashboard" onClick={() => setMenuOpen(false)} className={baseLink}>Табло</NavLink>
-                            <NavLink to="/profile" onClick={() => setMenuOpen(false)} className={baseLink}>Профил</NavLink>
-                            <button onClick={() => { logout(); setMenuOpen(false); }} className="px-4 py-2 rounded-md border border-slate-600 text-slate-200 text-sm text-left">
-                                Изход
-                            </button>
-                        </>
-                    )}
+                    <NavLink to="/sign-in" onClick={() => setMenuOpen(false)} className="px-4 py-2 rounded-md border border-slate-600 text-slate-200 text-sm text-center">
+                        Вход
+                    </NavLink>
+                    <NavLink to="/sign-up" onClick={() => setMenuOpen(false)} className="px-4 py-2 rounded-md bg-white text-black font-medium text-sm text-center">
+                        Регистрация
+                    </NavLink>
                 </div>
             )}
         </header>

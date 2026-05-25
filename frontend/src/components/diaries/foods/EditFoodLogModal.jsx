@@ -8,16 +8,20 @@ export default function EditFoodLogModal({
   onClose,
   onUpdated,
 }) {
+  const grams = log.quantity ?? 0;
+  const useKg = grams >= 1000;
+
+  const [unit, setUnit] = useState(useKg ? "кг" : "гр");
   const [form, setForm] = useState({
     date: String(log.date).slice(0, 10),
-    supplier_id: log.supplier_id,
+    supplier_id: log.supplier_id?._id || log.supplier_id || "",
     product_type: log.product_type || "",
     batch_number: log.batch_number || "",
     shelf_life: log.shelf_life ? String(log.shelf_life).slice(0, 10) : "",
-    quantity: log.quantity ?? "",
+    quantity: useKg ? parseFloat((grams / 1000).toFixed(3)) : grams,
     transport_type: log.transport_type || "",
     document: log.document || "",
-    employee_id: log.employee_id,
+    employee_id: log.employee_id?._id || log.employee_id || "",
   });
 
   const onChange = (e) => {
@@ -27,13 +31,17 @@ export default function EditFoodLogModal({
   const onSubmit = async (e) => {
     e.preventDefault();
     try {
+      const quantityInGrams = unit === "кг"
+        ? Math.round(Number(form.quantity) * 1000)
+        : Math.round(Number(form.quantity));
+
       await api.put(`/food-logs/edit/${log._id}`, {
         date: form.date,
         supplier_id: form.supplier_id,
         product_type: form.product_type,
         batch_number: form.batch_number,
-        shelf_life: form.shelf_life, // YYYY-MM-DD
-        quantity: Number(form.quantity),
+        shelf_life: form.shelf_life,
+        quantity: quantityInGrams,
         transport_type: form.transport_type,
         document: form.document,
         employee_id: form.employee_id,
@@ -48,7 +56,7 @@ export default function EditFoodLogModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <h2 className="text-lg font-semibold mb-4">Редактиране на запис</h2>
 
@@ -123,16 +131,31 @@ export default function EditFoodLogModal({
 
           <div>
             <label className="block text-sm font-medium mb-1">Количество</label>
-            <input
-              type="number"
-              step="0.01"
-              name="quantity"
-              value={form.quantity}
-              onChange={onChange}
-              required
-              placeholder="Количество"
-              className="border px-3 py-2 rounded-md w-full"
-            />
+            <div className="flex gap-2">
+              <input
+                type="number"
+                step="0.001"
+                min="0"
+                name="quantity"
+                value={form.quantity}
+                onChange={onChange}
+                required
+                placeholder={unit === "кг" ? "напр. 5.5" : "напр. 500"}
+                className="border px-3 py-2 rounded-md flex-1 min-w-0"
+              />
+              <div className="flex border rounded-md overflow-hidden shrink-0">
+                {["кг", "гр"].map((u) => (
+                  <button
+                    key={u}
+                    type="button"
+                    onClick={() => setUnit(u)}
+                    className={`px-3 py-2 text-sm font-medium transition ${unit === u ? "bg-blue-600 text-white" : "bg-white text-slate-600 hover:bg-slate-50"}`}
+                  >
+                    {u}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div>

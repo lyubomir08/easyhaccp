@@ -11,6 +11,9 @@ const isExpired = (shelf_life) => {
     return expiry < today;
 };
 
+const normStr = s => String(s || "").trim().toLowerCase().replace(/\s+/g, " ");
+const fmtGrams = g => g >= 1000 ? `${parseFloat((g / 1000).toFixed(2))} кг` : `${g} гр`;
+
 export default function ProducedFoodDiary() {
     const [objects, setObjects] = useState([]);
     const [recipes, setRecipes] = useState([]);
@@ -39,6 +42,10 @@ export default function ProducedFoodDiary() {
         api.get("/objects").then(res => {
             const cateringObjects = res.data.filter(obj => obj.object_type === "catering");
             setObjects(cateringObjects);
+            const saved = localStorage.getItem("easyhaccp_object_id");
+            if (saved && cateringObjects.find(o => o._id === saved)) {
+                setForm(s => ({ ...s, object_id: saved }));
+            }
         });
     }, []);
 
@@ -51,9 +58,9 @@ export default function ProducedFoodDiary() {
     const loadObjectSpecificData = async () => {
         try {
             try {
-                const foodLogsRes = await api.get(`/food-logs/${form.object_id}`);
+                const foodLogsRes = await api.get(`/food-logs/${form.object_id}?limit=1000`);
                 const logsData = foodLogsRes.data;
-                setFoodLogs(Array.isArray(logsData) ? logsData : logsData?.logs || logsData?.data || []);
+                setFoodLogs(Array.isArray(logsData) ? logsData : logsData?.logs || []);
             } catch { setFoodLogs([]); }
 
             const foodGroupsRes = await api.get(`/food-groups/${form.object_id}`);
@@ -85,19 +92,24 @@ export default function ProducedFoodDiary() {
         } catch (err) {
             console.error("Load logs error:", err.response?.data);
             setLogs([]);
-            setCurrentPage(1);
-            setTotalPages(1);
         }
     };
 
     const checkExpiredIngredients = (recipe) => {
         if (!recipe?.ingredients) return [];
         return recipe.ingredients.reduce((acc, ing) => {
-            const match = Array.isArray(foodLogs) ? foodLogs.find(fl =>
-                fl.product_type?.toLowerCase() === ing.ingredient?.toLowerCase()
-            ) : null;
-            if (match && isExpired(match.shelf_life)) {
-                acc.push({ name: ing.ingredient, shelf_life: match.shelf_life, batch: match.batch_number });
+            const allMatches = Array.isArray(foodLogs) ? foodLogs.filter(fl =>
+                normStr(fl.product_type) === normStr(ing.ingredient)
+            ) : [];
+            // Блокирай само ако НЯМА валидна партида с достатъчно количество
+            const hasValidStock = allMatches.some(fl =>
+                !isExpired(fl.shelf_life) && Number(fl.quantity || 0) > 0
+            );
+            if (!hasValidStock) {
+                const expiredMatch = allMatches.find(fl => isExpired(fl.shelf_life));
+                if (expiredMatch) {
+                    acc.push({ name: ing.ingredient, shelf_life: expiredMatch.shelf_life, batch: expiredMatch.batch_number });
+                }
             }
             return acc;
         }, []);
@@ -132,23 +144,41 @@ export default function ProducedFoodDiary() {
         setError("");
         if (!form.date) { setError("Моля, въведете дата"); return; }
         if (!form.recipe_id) { setError("Моля, изберете рецепта"); return; }
+        if (!form.portions || Number(form.portions) <= 0) { setError("Моля, въведете брой порции"); return; }
         if (expiredIngredients.length > 0) {
             setError(`Не може да се запази — следните съставки имат изтекъл срок: ${expiredIngredients.map(i => i.name).join(", ")}`);
             return;
         }
+
+        // Auto-match ingredients to food logs by name for backend reference
+        const ingredient_log_map = {};
+        const recipe = recipes.find(r => r._id === form.recipe_id);
+        if (recipe?.ingredients) {
+            for (const ing of recipe.ingredients) {
+                if (!ing.ingredient || Number(ing.quantity || 0) <= 0) continue;
+                const autoMatch = foodLogs.find(fl =>
+                    normStr(fl.product_type) === normStr(ing.ingredient) &&
+                    Number(fl.quantity || 0) > 0
+                );
+                if (autoMatch) ingredient_log_map[ing.ingredient] = autoMatch._id;
+            }
+        }
+
         try {
             const payload = {
                 object_id: form.object_id,
                 date: new Date(form.date).toISOString(),
                 recipe_id: form.recipe_id,
-                portions: form.portions ? Number(form.portions) : undefined,
+                portions: Number(form.portions),
                 product_batch_number: form.product_batch_number || undefined,
                 product_shelf_life: form.product_shelf_life || undefined,
-                recipe_production_date: form.recipe_production_date || undefined
+                recipe_production_date: form.recipe_production_date || undefined,
+                ingredient_log_map: Object.keys(ingredient_log_map).length > 0 ? ingredient_log_map : undefined
             };
             Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
             await api.post("/produced-foods", payload);
             await loadLogs(1);
+            await loadObjectSpecificData();
             setExpiredIngredients([]);
             setForm(s => ({ ...s, date: "", recipe_id: "", portions: "", product_batch_number: "", product_shelf_life: "", recipe_production_date: "" }));
         } catch (err) {
@@ -174,6 +204,29 @@ export default function ProducedFoodDiary() {
         return `${g} гр`;
     };
 
+    const buildShortages = () => {
+        const recipe = recipes.find(r => r._id === form.recipe_id);
+        const portions = Number(form.portions) || 0;
+        if (!recipe?.ingredients?.length || portions <= 0) return [];
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return recipe.ingredients
+            .filter(ing => ing.ingredient && Number(ing.quantity || 0) > 0)
+            .map(ing => {
+                const needed = Number(ing.quantity) * portions;
+                const validMatches = foodLogs.filter(fl =>
+                    normStr(fl.product_type) === normStr(ing.ingredient) &&
+                    Number(fl.quantity || 0) > 0 &&
+                    fl.shelf_life && new Date(fl.shelf_life) >= today
+                );
+                const totalAvailable = validMatches.reduce((s, fl) => s + Number(fl.quantity || 0), 0);
+                return { name: ing.ingredient, needed, totalAvailable, missing: needed - totalAvailable };
+            })
+            .filter(i => i.missing > 0);
+    };
+
+    const shortages = buildShortages();
+
     const filteredLogs = (logs || []).filter(l =>
         (l.recipe_id?.name || "").toLowerCase().includes(search.toLowerCase()) ||
         (l.product_batch_number || "").toLowerCase().includes(search.toLowerCase())
@@ -185,7 +238,7 @@ export default function ProducedFoodDiary() {
 
             <div>
                 <label className="block text-sm font-medium mb-2">Изберете обект</label>
-                <select name="object_id" value={form.object_id} onChange={onChange} className="border px-3 py-2 rounded-md w-full">
+                <select name="object_id" value={form.object_id} onChange={e => { onChange(e); if (e.target.value) localStorage.setItem("easyhaccp_object_id", e.target.value); else localStorage.removeItem("easyhaccp_object_id"); }} className="border px-3 py-2 rounded-md w-full">
                     <option value="">-- Избери обект --</option>
                     {objects.map(o => <option key={o._id} value={o._id}>{o.name}</option>)}
                 </select>
@@ -209,20 +262,32 @@ export default function ProducedFoodDiary() {
                                 {recipes.length === 0 && <p className="text-xs text-gray-500 mt-1">Няма рецепти</p>}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium mb-1">Брой порции</label>
-                                <input type="number" name="portions" value={form.portions} onChange={onChange} placeholder="Брой порции" className="border px-3 py-2 rounded-md w-full" />
+                                <label className="block text-sm font-medium mb-1">Брой порции <span className="text-red-500">*</span></label>
+                                <input type="number" min="1" name="portions" value={form.portions} onChange={onChange} placeholder="Брой порции" required className="border px-3 py-2 rounded-md w-full" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-1">Партиден номер на готовия продукт</label>
                                 <input type="text" name="product_batch_number" value={form.product_batch_number} readOnly placeholder="Автоматично при избор на рецепта" className={`border px-3 py-2 rounded-md w-full ${form.product_batch_number ? "bg-blue-50 border-blue-300" : "bg-slate-50"}`} />
-                                {form.product_batch_number && <p className="text-xs text-blue-600 mt-1">✓ Номер на рецепта + дата</p>}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-1">Срок на годност на готовия продукт</label>
                                 <input type="text" name="product_shelf_life" value={form.product_shelf_life} onChange={onChange} placeholder="Автоматично от вида храна" className={`border px-3 py-2 rounded-md w-full ${form.product_shelf_life ? "bg-blue-50 border-blue-300" : ""}`} />
-                                {form.recipe_id && form.product_shelf_life && <p className="text-xs text-blue-600 mt-1">✓ От вида храна</p>}
                             </div>
                         </div>
+
+                
+                        {shortages.length > 0 && (
+                            <div className="bg-orange-50 border border-orange-300 rounded-md p-4">
+                                <p className="text-orange-700 font-semibold text-sm mb-2">⚠ Недостатъчни наличности:</p>
+                                <ul className="space-y-1">
+                                    {shortages.map((s, i) => (
+                                        <li key={i} className="text-sm text-orange-700">
+                                            • <strong>{s.name}</strong> — налично: {fmtGrams(s.totalAvailable)}, нужни: {fmtGrams(s.needed)}, <span className="font-semibold">липсват: {fmtGrams(s.missing)}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
 
                         {expiredIngredients.length > 0 && (
                             <div className="bg-red-50 border border-red-300 rounded-md p-4">
@@ -242,7 +307,7 @@ export default function ProducedFoodDiary() {
                         <div className="flex justify-end">
                             <button
                                 type="submit"
-                                disabled={expiredIngredients.length > 0}
+                                disabled={expiredIngredients.length > 0 || shortages.length > 0}
                                 className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Запази
@@ -271,7 +336,7 @@ export default function ProducedFoodDiary() {
                                             </span>
                                             <div className="min-w-0">
                                                 <span className="font-semibold text-slate-800 block truncate">
-                                                    {l.recipe_id?.name || "Без ime"}
+                                                    {l.recipe_id?.name || "—"}
                                                 </span>
                                                 <span className="text-sm text-gray-400">
                                                     {new Date(l.date).toLocaleDateString("bg-BG")}
@@ -305,7 +370,7 @@ export default function ProducedFoodDiary() {
                                                         {l.recipe_id.ingredients.map((ing, idx) => {
                                                             const totalGrams = ing.quantity && l.portions ? ing.quantity * l.portions : null;
                                                             const matchingLog = Array.isArray(foodLogs) ? foodLogs.find(fl =>
-                                                                fl.product_type?.toLowerCase() === ing.ingredient?.toLowerCase()
+                                                                normStr(fl.product_type) === normStr(ing.ingredient)
                                                             ) : null;
                                                             const expired = matchingLog && isExpired(matchingLog.shelf_life);
                                                             return (
@@ -325,7 +390,7 @@ export default function ProducedFoodDiary() {
                                                                                 {ing.quantity} гр./порция
                                                                                 {totalGrams && <span className="ml-2 text-blue-600 font-semibold">= {formatAmount(totalGrams)}</span>}
                                                                             </>
-                                                                        ) : "—"}
+                                                                        ) : <span className="text-orange-500">— няма кол.</span>}
                                                                     </span>
                                                                 </div>
                                                             );
@@ -343,23 +408,11 @@ export default function ProducedFoodDiary() {
                 </>
             )}
 
-            {form.object_id && logs.length > 0 && totalPages > 1 && (
+            {form.object_id && totalPages > 1 && (
                 <div className="flex justify-center gap-4 mt-4 items-center">
-                    <button
-                        onClick={() => loadLogs(currentPage - 1)}
-                        disabled={currentPage === 1}
-                        className="px-4 py-2 border rounded-md disabled:opacity-50"
-                    >
-                        Назад
-                    </button>
+                    <button onClick={() => loadLogs(currentPage - 1)} disabled={currentPage === 1} className="px-4 py-2 border rounded-md disabled:opacity-50">Назад</button>
                     <span className="text-sm font-medium">{currentPage} / {totalPages}</span>
-                    <button
-                        onClick={() => loadLogs(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                        className="px-4 py-2 border rounded-md disabled:opacity-50"
-                    >
-                        Напред
-                    </button>
+                    <button onClick={() => loadLogs(currentPage + 1)} disabled={currentPage === totalPages} className="px-4 py-2 border rounded-md disabled:opacity-50">Напред</button>
                 </div>
             )}
 

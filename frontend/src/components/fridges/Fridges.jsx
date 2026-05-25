@@ -23,6 +23,12 @@ export default function Fridges() {
             setObjects(res.data);
             if (res.data.length === 1) {
                 setSelectedObjectId(res.data[0]._id);
+            } else {
+                const saved = localStorage.getItem("easyhaccp_object_id");
+                if (saved) {
+                    const found = res.data.find(o => o._id === saved);
+                    if (found) setSelectedObjectId(saved);
+                }
             }
         });
     }, []);
@@ -81,7 +87,12 @@ export default function Fridges() {
             <section className="bg-white border rounded-xl p-4">
                 <select
                     value={selectedObjectId}
-                    onChange={(e) => setSelectedObjectId(e.target.value)}
+                    onChange={(e) => {
+                        const id = e.target.value;
+                        setSelectedObjectId(id);
+                        if (id) localStorage.setItem("easyhaccp_object_id", id);
+                        else localStorage.removeItem("easyhaccp_object_id");
+                    }}
                     className="border px-3 py-2 rounded-md w-full"
                 >
                     <option value="">-- Избери обект --</option>

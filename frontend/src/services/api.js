@@ -2,7 +2,7 @@ import axios from "axios";
 import { getToken, clearUserData } from "../utils/storage";
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
+    baseURL: import.meta.env.VITE_API_URL || "http://localhost:5001/api",
 });
 
 api.interceptors.request.use((config) => {
@@ -17,6 +17,7 @@ api.interceptors.response.use(
     (err) => {
         if (err.response?.status === 401) {
             clearUserData();
+            window.dispatchEvent(new Event("auth:logout"));
         }
         return Promise.reject(err);
     }

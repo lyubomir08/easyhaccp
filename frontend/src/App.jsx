@@ -8,6 +8,7 @@ import AdminGuard from "./guards/AdminGuard";
 
 import Header from "./components/layout/Header.jsx";
 import MainLayout from "./components/layout/MainLayout.jsx";
+import GlobalSidebar from "./components/layout/GlobalSidebar.jsx";
 import Dashboard from "./components/dashboard/Dashboard.jsx";
 import AdminApprovals from "./components/admin/AdminApprovals/AdminApprovals.jsx";
 
@@ -46,6 +47,7 @@ export default function App() {
     return (
         <UserProvider>
             <Header />
+            <GlobalSidebar />
 
             <Routes>
                 <Route path="/" element={<Home />} />

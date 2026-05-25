@@ -57,6 +57,7 @@ const getFoodLogs = async (object_id, queryParams) => {
 
     const query = {
         object_id,
+        quantity: { $gt: 0 },
         ...buildDateFilter(queryParams, "date"),
     };
 
@@ -91,6 +92,11 @@ const updateFoodLog = async (logId, updateData) => {
             throw new Error("Невалиден срок на годност. Ползвай дата: YYYY-MM-DD");
         }
         updateData.shelf_life = shelfLifeDate;
+    }
+
+    if (Number(updateData.quantity) <= 0) {
+        await FoodLog.findByIdAndDelete(logId);
+        return null;
     }
 
     const log = await FoodLog.findByIdAndUpdate(logId, updateData, { new: true });

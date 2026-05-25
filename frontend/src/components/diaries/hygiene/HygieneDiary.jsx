@@ -24,7 +24,16 @@ export default function HygieneDiary() {
     });
 
     useEffect(() => {
-        api.get("/objects").then(res => setObjects(res.data));
+        api.get("/objects").then(res => {
+            setObjects(res.data);
+            const saved = localStorage.getItem("easyhaccp_object_id");
+            if (saved) {
+                const found = res.data.find(o => o._id === saved);
+                if (found) {
+                    setForm(s => ({ ...s, object_id: saved }));
+                }
+            }
+        });
     }, []);
 
     useEffect(() => {
@@ -44,6 +53,11 @@ export default function HygieneDiary() {
     };
 
     const onChange = (e) => {
+        if (e.target.name === "object_id") {
+            const id = e.target.value;
+            if (id) localStorage.setItem("easyhaccp_object_id", id);
+            else localStorage.removeItem("easyhaccp_object_id");
+        }
         setForm(s => ({ ...s, [e.target.name]: e.target.value }));
     };
 
@@ -166,7 +180,7 @@ export default function HygieneDiary() {
 
             {form.object_id && (<div className="space-y-3">
                 {visibleLogs.map(l => (
-                    <div key={l._id} className="bg-white border rounded-lg p-4 flex justify-between">
+                    <div key={l._id} className="bg-white border rounded-lg p-4 flex flex-col sm:flex-row sm:justify-between gap-2">
                         <div>
                             <strong>{l.room_id?.name}</strong>
                             <div className="text-sm text-slate-600">
@@ -180,7 +194,7 @@ export default function HygieneDiary() {
                             </div>
                         </div>
 
-                        <div className="flex gap-3">
+                        <div className="flex gap-3 shrink-0">
                             <button
                                 onClick={() => setEditingLog(l)}
                                 className="text-blue-600 text-sm"

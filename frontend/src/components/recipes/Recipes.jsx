@@ -14,7 +14,7 @@ export default function Recipes() {
     const [form, setForm] = useState({
         name: "",
         food_group_id: "",
-        items: [{ product: "", quantity: "" }],
+        items: [{ product: "", quantity: "", unit: "гр" }],
     });
 
     useEffect(() => {
@@ -27,6 +27,15 @@ export default function Recipes() {
         if (res.data.length === 1) {
             setSelectedObjectId(res.data[0]._id);
             setSelectedObject(res.data[0]);
+        } else {
+            const saved = localStorage.getItem("easyhaccp_object_id");
+            if (saved) {
+                const found = res.data.find(o => o._id === saved);
+                if (found) {
+                    setSelectedObjectId(saved);
+                    setSelectedObject(found);
+                }
+            }
         }
     };
 
@@ -60,7 +69,7 @@ export default function Recipes() {
     const addItem = () => {
         setForm(s => ({
             ...s,
-            items: [...s.items, { product: "", quantity: "" }],
+            items: [...s.items, { product: "", quantity: "", unit: "гр" }],
         }));
     };
 
@@ -85,7 +94,7 @@ export default function Recipes() {
             food_group_id: form.food_group_id,
             ingredients: form.items.map(i => ({
                 ingredient: i.product,
-                quantity: i.quantity ? Number(i.quantity) : undefined,
+                quantity: i.quantity ? (i.unit === "кг" ? Number(i.quantity) * 1000 : Number(i.quantity)) : undefined,
             })),
         };
 
@@ -94,7 +103,7 @@ export default function Recipes() {
         setForm({
             name: "",
             food_group_id: "",
-            items: [{ product: "", quantity: "" }],
+            items: [{ product: "", quantity: "", unit: "гр" }],
         });
 
         loadRecipes();
@@ -122,7 +131,12 @@ export default function Recipes() {
                 <label className="block text-sm font-medium mb-2">Избери обект</label>
                 <select
                     value={selectedObjectId}
-                    onChange={(e) => setSelectedObjectId(e.target.value)}
+                    onChange={(e) => {
+                        const id = e.target.value;
+                        if (id) localStorage.setItem("easyhaccp_object_id", id);
+                        else localStorage.removeItem("easyhaccp_object_id");
+                        setSelectedObjectId(id);
+                    }}
                     className="border px-3 py-2 rounded-md w-full"
                 >
                     <option value="">-- Избери обект --</option>
@@ -168,34 +182,44 @@ export default function Recipes() {
                         <div className="border-t pt-4">
                             <label className="block text-sm font-medium mb-2">Съставки</label>
                             {form.items.map((item, idx) => (
-                                <div key={idx} className="grid grid-cols-12 gap-3 mb-3">
-                                    <div className="col-span-7">
-                                        <input
-                                            value={item.product}
-                                            onChange={(e) => onChangeItem(idx, "product", e.target.value)}
-                                            placeholder="Продукт"
-                                            className="border px-3 py-2 rounded-md w-full"
-                                            required
-                                        />
-                                    </div>
-
-                                    <div className="col-span-4">
+                                <div key={idx} className="mb-3 space-y-2">
+                                    {/* Product - full width */}
+                                    <input
+                                        value={item.product}
+                                        onChange={(e) => onChangeItem(idx, "product", e.target.value)}
+                                        placeholder="Продукт"
+                                        className="border px-3 py-2 rounded-md w-full"
+                                        required
+                                    />
+                                    {/* Quantity + unit toggle + remove button in a row */}
+                                    <div className="flex gap-2 items-center">
                                         <input
                                             type="number"
                                             step="0.01"
+                                            min="0.01"
                                             value={item.quantity}
                                             onChange={(e) => onChangeItem(idx, "quantity", e.target.value)}
-                                            placeholder="Количество (гр.)"
-                                            className="border px-3 py-2 rounded-md w-full"
+                                            placeholder="Количество *"
+                                            required
+                                            className="border px-3 py-2 rounded-md flex-1 min-w-0"
                                         />
-                                    </div>
-
-                                    <div className="col-span-1 flex items-center">
+                                        <div className="flex border rounded-md overflow-hidden shrink-0">
+                                            {["кг", "гр"].map(u => (
+                                                <button
+                                                    key={u}
+                                                    type="button"
+                                                    onClick={() => onChangeItem(idx, "unit", u)}
+                                                    className={`px-3 py-2 text-sm font-medium transition ${item.unit === u ? "bg-blue-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
+                                                >
+                                                    {u}
+                                                </button>
+                                            ))}
+                                        </div>
                                         {form.items.length > 1 && (
                                             <button
                                                 type="button"
                                                 onClick={() => removeItem(idx)}
-                                                className="text-red-600 text-lg hover:text-red-800 w-full"
+                                                className="text-red-600 text-lg hover:text-red-800 shrink-0 px-1"
                                             >
                                                 ✕
                                             </button>
@@ -256,12 +280,18 @@ export default function Recipes() {
                         </div>
 
                         <ul className="text-sm mt-2 space-y-1">
-                            {r.ingredients.map((i, idx) => (
-                                <li key={idx} className="text-gray-700">
-                                    • {i.ingredient}
-                                    {i.quantity && ` — ${i.quantity}`}
-                                </li>
-                            ))}
+                            {r.ingredients.map((i, idx) => {
+                                const qty = i.quantity;
+                                const display = qty >= 1000
+                                    ? `${parseFloat((qty / 1000).toFixed(3))} кг`
+                                    : `${qty} гр`;
+                                return (
+                                    <li key={idx} className={`${!qty ? "text-orange-600" : "text-gray-700"}`}>
+                                        • {i.ingredient}
+                                        {qty ? ` — ${display}` : " — ⚠ няма количество (задължително за намаляване на наличностите)"}
+                                    </li>
+                                );
+                            })}
                         </ul>
                     </div>
                 ))}
