@@ -59,25 +59,32 @@ export default function FoodsDiary() {
             setObjects(res.data);
 
             if (res.data.length === 1) {
-                const object = res.data[0];
-
                 setForm(s => ({
                     ...s,
-                    object_id: object._id
+                    object_id: res.data[0]._id
                 }));
-
-                setSelectedObject(object);
-
-                if (["restaurant", "catering"].includes(object.object_type)) {
-                    setInputMode("table");
-                }
-
-                if (["retail", "wholesale"].includes(object.object_type)) {
-                    setInputMode("table");
-                }
             }
         });
     }, []);
+
+    useEffect(() => {
+        const object = objects.find(o => o._id === form.object_id);
+
+        setSelectedObject(object || null);
+
+        if (!object) {
+            setInputMode(null);
+            return;
+        }
+
+        if (
+            ["restaurant", "catering", "retail", "wholesale"].includes(
+                object.object_type
+            )
+        ) {
+            setInputMode("table");
+        }
+    }, [form.object_id, objects]);
 
     useEffect(() => {
         if (!form.object_id) return;
