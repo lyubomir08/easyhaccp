@@ -1,8 +1,9 @@
 import api from "./api";
 
-export const getAllFirms = async () => {
-    const { data } = await api.get("/firms");
-    return data;
+export const getAllFirms = async (search) => {
+    const params = search ? { search } : {};
+    const res = await api.get("/firms", { params });
+    return res.data;
 };
 
 export const getMyFirm = async () => {
