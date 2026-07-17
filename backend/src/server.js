@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import connectDB from "./config/db.js";
 import { startFridgeCron } from "./cron/fridgeCron.js";
 import { startHealthCardCron } from "./cron/healthCardCron.js";
+import { startDiaryCron } from "./cron/diaryCron.js";
 
 import adminRoutes from "./routes/adminRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -97,6 +98,7 @@ const startServer = async () => {
     });
     startFridgeCron();
     startHealthCardCron();
+    startDiaryCron();
 };
 
 startServer();
