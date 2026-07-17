@@ -1,8 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-    getAllFirms,
-    deleteFirm,
-} from "../../../services/firmService";
+import { getAllFirms, deleteFirm } from "../../../services/firmService";
 import EditFirmModal from "./EditFirmModal";
 import CreateObjectForFirmModal from "../CreateObjectForFirmModal";
 import CreateUserForFirmModal from "../CreateUserForFirmModal";
@@ -13,15 +10,25 @@ export default function AdminFirms() {
     const [editingFirm, setEditingFirm] = useState(null);
     const [creatingObjectForFirm, setCreatingObjectForFirm] = useState(null);
     const [creatingUserForFirm, setCreatingUserForFirm] = useState(null);
+    const [search, setSearch] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
 
     useEffect(() => {
-        loadFirms();
-    }, []);
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+        }, 400);
 
-    const loadFirms = async () => {
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    useEffect(() => {
+        loadFirms(debouncedSearch);
+    }, [debouncedSearch]);
+
+    const loadFirms = async (searchTerm) => {
         setLoading(true);
         try {
-            const data = await getAllFirms();
+            const data = await getAllFirms(searchTerm);
             setFirms(data);
         } catch (err) {
             alert("Грешка при зареждане на фирмите");
@@ -47,10 +54,20 @@ export default function AdminFirms() {
                 Администратор – Фирми
             </h1>
 
+            <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Търси по име, булстат, МОЛ, имейл или телефон..."
+                className="w-full max-w-md px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
             {loading && <p className="text-slate-500">Зареждане...</p>}
 
             {!loading && firms.length === 0 && (
-                <p className="text-slate-500">Няма фирми</p>
+                <p className="text-slate-500">
+                    {debouncedSearch ? "Няма резултати" : "Няма фирми"}
+                </p>
             )}
 
             <div className="space-y-3">
@@ -108,7 +125,7 @@ export default function AdminFirms() {
                 <EditFirmModal
                     firm={editingFirm}
                     onClose={() => setEditingFirm(null)}
-                    onUpdated={loadFirms}
+                    onUpdated={() => loadFirms(debouncedSearch)}
                 />
             )}
 
@@ -116,7 +133,7 @@ export default function AdminFirms() {
                 <CreateObjectForFirmModal
                     firm={creatingObjectForFirm}
                     onClose={() => setCreatingObjectForFirm(null)}
-                    onCreated={loadFirms}
+                    onCreated={() => loadFirms(debouncedSearch)}
                 />
             )}
 
@@ -124,7 +141,7 @@ export default function AdminFirms() {
                 <CreateUserForFirmModal
                     firm={creatingUserForFirm}
                     onClose={() => setCreatingUserForFirm(null)}
-                    onCreated={loadFirms}
+                    onCreated={() => loadFirms(debouncedSearch)}
                 />
             )}
         </div>

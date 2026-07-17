@@ -6,7 +6,7 @@ const getAllFirms = async (req, res) => {
             return res.status(403).json({ message: "Admins only" });
         }
 
-        const firms = await firmService.getAllFirms();
+        const firms = await firmService.getAllFirms(req.query.search);
         res.status(200).json(firms);
     } catch (err) {
         res.status(500).json({ message: err.message });

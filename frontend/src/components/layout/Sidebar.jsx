@@ -43,7 +43,13 @@ export default function Sidebar({ onClose }) {
             <nav className="py-4 flex-1 overflow-y-auto">
                 {role === "admin" && (
                     <>
-                        <div className={section}>Администрация</div>
+                        <div className="px-4 mt-6 mb-3">
+                            <div className="text-xs font-bold uppercase tracking-wider text-blue-700">
+                                Администрация
+                            </div>
+                            <div className="mt-1 h-px bg-blue-200 rounded-full"></div>
+                        </div>
+
                         <NL to="/admin/approvals">Одобрения</NL>
                         <NL to="/admin/firms">Фирми</NL>
                         <NL to="/admin/objects">Обекти</NL>
@@ -53,7 +59,13 @@ export default function Sidebar({ onClose }) {
 
                 {role === "owner" && (
                     <>
-                        <div className={section}>Моята фирма</div>
+                        <div className="px-4 mt-6 mb-3">
+                            <div className="text-xs font-bold uppercase tracking-wider text-blue-700">
+                                Моята фирма
+                            </div>
+                            <div className="mt-1 h-px bg-blue-200 rounded-full"></div>
+                        </div>
+
                         <NL to="/myFirm">Профил на фирмата</NL>
                         <NL to="/myObjects">Моите обекти</NL>
                     </>
@@ -61,16 +73,27 @@ export default function Sidebar({ onClose }) {
 
                 {role === "manager" && (
                     <>
-                        <div className={section}>Моят обект</div>
+                        <div className="px-4 mt-6 mb-3">
+                            <div className="text-xs font-bold uppercase tracking-wider text-blue-700">
+                                Моят обект
+                            </div>
+                            <div className="mt-1 h-px bg-blue-200 rounded-full"></div>
+                        </div>
+
                         <NL to="/myObject">Данни за обекта</NL>
                     </>
                 )}
 
-                <div className={section}>Добавяне</div>
+                <div className="px-4 mt-6 mb-3">
+                    <div className="text-xs font-bold uppercase tracking-wider text-blue-700">
+                        Добавяне
+                    </div>
+                    <div className="mt-1 h-px bg-blue-200 rounded-full"></div>
+                </div>
+
                 <NL to="/employees">Служители</NL>
 
                 {(isCatering || isRestaurant) && <NL to="/foods">Групи храни</NL>}
-
                 {(isCatering || isRestaurant) && <NL to="/recipes">Рецепти</NL>}
 
                 <NL to="/suppliers">Доставчици</NL>
@@ -83,24 +106,40 @@ export default function Sidebar({ onClose }) {
 
                 {(isWholesale || isCatering) && <NL to="/partners">Фирми получатели</NL>}
 
-                <div className={section}>Дневници</div>
+                <div className="px-4 mt-6 mb-3">
+                    <div className="text-xs font-bold uppercase tracking-wider text-blue-700">
+                        Дневници
+                    </div>
+                    <div className="mt-1 h-px bg-blue-200 rounded-full"></div>
+                </div>
 
                 <NL to="/diaries/foods">Храни и опаковки</NL>
-
                 <NL to="/diaries/hygiene">Хигиена на обекта</NL>
-
                 <NL to="/diaries/personal">Лична хигиена на персонала</NL>
-
                 <NL to="/diaries/temperatures">Температури</NL>
-
                 <NL to="/diaries/trainingdiary">Обучения на служители</NL>
-                {(isCatering || isRestaurant) && <NL to="/diaries/oil">Смяна на мазнина</NL>}
 
-                {(isCatering) && <NL to="/diaries/cooking">Температура на храните при готвене</NL>}
+                {(isCatering || isRestaurant) && (
+                    <NL to="/diaries/oil">Смяна на мазнина</NL>
+                )}
 
-                {(isCatering) && <NL to="/diaries/production">Произведени храни</NL>}
+                {isCatering && (
+                    <NL to="/diaries/cooking">
+                        Температура на храните при готвене
+                    </NL>
+                )}
 
-                {(isWholesale || isCatering) && <NL to="/diaries/expedition">Експедиция на храни</NL>}
+                {isCatering && (
+                    <NL to="/diaries/production">
+                        Произведени храни
+                    </NL>
+                )}
+
+                {(isWholesale || isCatering) && (
+                    <NL to="/diaries/expedition">
+                        Експедиция на храни
+                    </NL>
+                )}
             </nav>
 
             <div className="border-t border-slate-200 px-4 py-4 flex flex-col gap-1">

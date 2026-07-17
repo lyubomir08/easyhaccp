@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import EditEmployeeModal from "./EditEmployeeModal";
+import useObjects from "../../hooks/useObjects";
 
 export default function Employees() {
-    const [objects, setObjects] = useState([]);
-    const [selectedObjectId, setSelectedObjectId] = useState("");
+    const { objects, selectedObjectId, setSelectedObjectId, isSingleObject, selectedObjectName } = useObjects();
+
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -14,26 +15,6 @@ export default function Employees() {
     const [position, setPosition] = useState("");
     const [healthExpiry, setHealthExpiry] = useState("");
     const [editingEmployee, setEditingEmployee] = useState(null);
-
-    useEffect(() => { loadObjects(); }, []);
-
-    const loadObjects = async () => {
-        try {
-            const res = await api.get("/objects");
-            setObjects(res.data);
-            if (res.data.length === 1) {
-                setSelectedObjectId(res.data[0]._id);
-            } else {
-                const saved = localStorage.getItem("easyhaccp_object_id");
-                if (saved) {
-                    const found = res.data.find(o => o._id === saved);
-                    if (found) setSelectedObjectId(saved);
-                }
-            }
-        } catch (err) {
-            setError("Грешка при зареждане на обектите");
-        }
-    };
 
     useEffect(() => {
         if (!selectedObjectId) { setEmployees([]); return; }
@@ -93,22 +74,28 @@ export default function Employees() {
             <h1 className="text-2xl font-semibold">Служители</h1>
 
             <section className="bg-white border rounded-xl p-4">
-                <label className="block text-sm font-medium mb-2">Изберете обект</label>
-                <select
-                    value={selectedObjectId}
-                    onChange={(e) => {
-                        const id = e.target.value;
-                        setSelectedObjectId(id);
-                        if (id) localStorage.setItem("easyhaccp_object_id", id);
-                        else localStorage.removeItem("easyhaccp_object_id");
-                    }}
-                    className="border px-3 py-2 rounded-md w-full"
-                >
-                    <option value="">-- Избери обект --</option>
-                    {objects.map((o) => (
-                        <option key={o._id} value={o._id}>{o.name}</option>
-                    ))}
-                </select>
+                {isSingleObject ? (
+                    <>
+                        <label className="block text-sm font-medium mb-2">Обект</label>
+                        <div className="border rounded-md px-3 py-2 w-full bg-slate-50 text-slate-700">
+                            {selectedObjectName}
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <label className="block text-sm font-medium mb-2">Изберете обект</label>
+                        <select
+                            value={selectedObjectId}
+                            onChange={(e) => setSelectedObjectId(e.target.value)}
+                            className="border px-3 py-2 rounded-md w-full"
+                        >
+                            <option value="">-- Избери обект --</option>
+                            {objects.map((o) => (
+                                <option key={o._id} value={o._id}>{o.name}</option>
+                            ))}
+                        </select>
+                    </>
+                )}
             </section>
 
             {selectedObjectId && (

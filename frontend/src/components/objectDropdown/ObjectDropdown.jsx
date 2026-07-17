@@ -28,6 +28,14 @@ export default function ObjectDropdown({ value, onChange }) {
         return <p>Зареждане на обекти...</p>;
     }
 
+    if (objects.length === 1) {
+        return (
+            <div className="border rounded-md px-3 py-2 w-full bg-slate-50 text-slate-700">
+                {objects[0].name}
+            </div>
+        );
+    }
+
     return (
         <select
             value={value}

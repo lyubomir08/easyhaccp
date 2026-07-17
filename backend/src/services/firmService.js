@@ -1,7 +1,20 @@
 import Firm from "../models/Firm.js";
 
-const getAllFirms = async () => {
-    return await Firm.find().sort({ created_at: -1 });
+const getAllFirms = async (search) => {
+    const query = {};
+
+    if (search && search.trim()) {
+        const regex = new RegExp(search.trim(), "i");
+        query.$or = [
+            { name: regex },
+            { bulstat: regex },
+            { mol: regex },
+            { email: regex },
+            { phone: regex },
+        ];
+    }
+
+    return await Firm.find(query).sort({ created_at: -1 });
 };
 
 const getFirmById = async (firmId) => {

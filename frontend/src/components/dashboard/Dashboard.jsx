@@ -30,6 +30,22 @@ export default function Dashboard() {
                 </p>
             </div>
 
+            {allAlerts.length > 0 && (
+                <div className="bg-white rounded-xl border border-slate-200 p-6">
+                    <h2 className="text-lg font-medium text-slate-700 mb-4 flex items-center gap-2">
+                        ⚠️ Здравни книжки — изискват внимание
+                    </h2>
+                    <div className="space-y-3">
+                        {expiredEmployees.map(emp => (
+                            <AlertRow key={emp._id} emp={emp} expired={true} />
+                        ))}
+                        {expiringSoon.map(emp => (
+                            <AlertRow key={emp._id} emp={emp} expired={false} />
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                 <StatCard
                     title="Обекти"
@@ -54,22 +70,6 @@ export default function Dashboard() {
                     warning={allAlerts.length > 0}
                 />
             </div>
-
-            {allAlerts.length > 0 && (
-                <div className="bg-white rounded-xl border border-slate-200 p-6">
-                    <h2 className="text-lg font-medium text-slate-700 mb-4 flex items-center gap-2">
-                        ⚠️ Здравни книжки — изискват внимание
-                    </h2>
-                    <div className="space-y-3">
-                        {expiredEmployees.map(emp => (
-                            <AlertRow key={emp._id} emp={emp} expired={true} />
-                        ))}
-                        {expiringSoon.map(emp => (
-                            <AlertRow key={emp._id} emp={emp} expired={false} />
-                        ))}
-                    </div>
-                </div>
-            )}
 
             <div className="bg-white rounded-xl border border-slate-200 p-6">
                 <h2 className="text-lg font-medium text-slate-700 mb-2">Обобщение</h2>

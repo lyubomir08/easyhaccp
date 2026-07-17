@@ -57,12 +57,22 @@ export default function FoodsDiary() {
     useEffect(() => {
         api.get("/objects").then(res => {
             setObjects(res.data);
-            const saved = localStorage.getItem("easyhaccp_object_id");
-            if (saved) {
-                const found = res.data.find(o => o._id === saved);
-                if (found) {
-                    setSelectedObject(found);
-                    setForm(s => ({ ...s, object_id: saved }));
+
+            if (res.data.length === 1) {
+                const object = res.data[0];
+
+                setForm(s => ({
+                    ...s,
+                    object_id: object._id
+                }));
+
+                setSelectedObject(object);
+                setImage(null);
+
+                if (["restaurant", "catering", "retail", "wholesale"].includes(object.object_type)) {
+                    setInputMode("table");
+                } else {
+                    setInputMode(null);
                 }
             }
         });
@@ -181,25 +191,38 @@ export default function FoodsDiary() {
             <h1 className="text-2xl font-semibold">Дневник за храни и опаковки</h1>
 
             <section className="bg-white border rounded-xl p-4">
-                <label className="block text-sm font-medium mb-2">Изберете обект</label>
-                <select
-                    name="object_id"
-                    value={form.object_id}
-                    onChange={(e) => {
-                        const id = e.target.value;
-                        setForm(s => ({ ...s, object_id: id }));
-                        setSelectedObject(objects.find(o => o._id === id));
-                        setImage(null);
-                        if (id) localStorage.setItem("easyhaccp_object_id", id);
-                        else localStorage.removeItem("easyhaccp_object_id");
-                    }}
-                    className="border px-3 py-2 rounded-md w-full"
-                >
-                    <option value="">-- Избери обект --</option>
-                    {objects.map(o => (
-                        <option key={o._id} value={o._id}>{o.name}</option>
-                    ))}
-                </select>
+                <label className="block text-sm font-medium mb-2">Обект</label>
+
+                {objects.length === 1 ? (
+                    <div className="border rounded-md px-3 py-2 bg-slate-50 text-slate-700">
+                        {objects[0].name}
+                    </div>
+                ) : (
+                    <select
+                        name="object_id"
+                        value={form.object_id}
+                        onChange={(e) => {
+                            const id = e.target.value;
+                            setForm(s => ({ ...s, object_id: id }));
+                            const object = objects.find(o => o._id === id);
+                            setSelectedObject(object);
+                            setImage(null);
+                            if (object) {
+                                if (["restaurant", "catering", "retail", "wholesale"].includes(object.object_type)) {
+                                    setInputMode("table");
+                                } else {
+                                    setInputMode(null);
+                                }
+                            }
+                        }}
+                        className="border px-3 py-2 rounded-md w-full"
+                    >
+                        <option value="">-- Избери обект --</option>
+                        {objects.map(o => (
+                            <option key={o._id} value={o._id}>{o.name}</option>
+                        ))}
+                    </select>
+                )}
             </section>
 
             {form.object_id && isRetailOrWholesale && (
