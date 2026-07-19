@@ -26,11 +26,25 @@ export default function HygieneDiary() {
     useEffect(() => {
         api.get("/objects").then(res => {
             setObjects(res.data);
+
+            if (res.data.length === 1) {
+                setForm(s => ({
+                    ...s,
+                    object_id: res.data[0]._id
+                }));
+                return;
+            }
+
             const saved = localStorage.getItem("easyhaccp_object_id");
+
             if (saved) {
                 const found = res.data.find(o => o._id === saved);
+
                 if (found) {
-                    setForm(s => ({ ...s, object_id: saved }));
+                    setForm(s => ({
+                        ...s,
+                        object_id: saved
+                    }));
                 }
             }
         });
@@ -107,17 +121,25 @@ export default function HygieneDiary() {
             <h1 className="text-2xl font-semibold">Дневник за хигиена на обекта</h1>
 
             <section className="bg-white border rounded-xl p-4">
-                <select
-                    name="object_id"
-                    value={form.object_id}
-                    onChange={onChange}
-                    className="border px-3 py-2 rounded-md w-full"
-                >
-                    <option value="">-- Избери обект --</option>
-                    {objects.map(o => (
-                        <option key={o._id} value={o._id}>{o.name}</option>
-                    ))}
-                </select>
+                {objects.length === 1 ? (
+                    <div className="border rounded-md px-3 py-2 bg-slate-50 text-slate-700">
+                        {objects[0].name}
+                    </div>
+                ) : (
+                    <select
+                        name="object_id"
+                        value={form.object_id}
+                        onChange={onChange}
+                        className="border px-3 py-2 rounded-md w-full"
+                    >
+                        <option value="">-- Избери обект --</option>
+                        {objects.map(o => (
+                            <option key={o._id} value={o._id}>
+                                {o.name}
+                            </option>
+                        ))}
+                    </select>
+                )}
             </section>
 
             {form.object_id && (
