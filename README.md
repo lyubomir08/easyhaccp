@@ -49,22 +49,6 @@ The platform provides different levels of access for **administrators**, **owner
 
 ---
 
-## 📘 HACCP Daily Logs
-
-Each object maintains structured digital logs:
-
-| Log Type | Description |
-|-----------|--------------|
-| **3.3.1. Food & Packaging Log** | Track incoming goods, suppliers, and expiration dates. |
-| **3.3.2. Hygiene Log** | Record room cleaning, disinfectants, and responsible employees. |
-| **3.3.3. Personal Hygiene Log** | Record employee health and uniform conditions. |
-| **3.3.4. Fridge Temperature Log** | Log fridge temperatures; supports auto-generated values. |
-| **3.3.5. Fryer Oil Change Log** | Track fryer oil load/change events with employee info. |
-| **3.3.6. Cooking Temperature Log** | Record food cooking temperatures for catering. |
-| **3.3.7. Produced Food Log** | Record produced meals with recipes and ingredients. |
-| **3.3.8. Shipment Log** | Record shipped goods with client and batch info. |
-
----
 
 ## 🧠 Roles & Access Control
 
