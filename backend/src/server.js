@@ -26,8 +26,6 @@ import roomRoutes from "./routes/roomRoutes.js";
 import disinfectantRoutes from "./routes/disinfectantRoutes.js";
 import clientRoutes from "./routes/clientRoutes.js";
 import trainingRoutes from "./routes/trainingRoutes.js";
-import trainingPlanRoutes from "./routes/trainingPlanRoutes.js";
-import assignedTrainingRoutes from "./routes/assignedTrainingRoutes.js";
 
 import foodLogRoutes from "./routes/foodLogRoutes.js";
 import hygieneLogRoutes from "./routes/hygieneLogRoutes.js";
@@ -75,8 +73,6 @@ app.use("/api/rooms", roomRoutes);
 app.use("/api/disinfectants", disinfectantRoutes);
 app.use("/api/clients", clientRoutes);
 app.use("/api/trainings", trainingRoutes);
-app.use("/api/training-plans", trainingPlanRoutes);
-app.use("/api/assigned-trainings", assignedTrainingRoutes);
 
 app.use("/api/food-logs", foodLogRoutes);
 app.use("/api/hygiene-logs", hygieneLogRoutes);
