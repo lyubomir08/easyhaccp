@@ -164,29 +164,31 @@ export default function TrainingDiary() {
                 </select>
             </div>
 
-            <div className="flex gap-2">
-                <button
-                    type="button"
-                    onClick={() => setMode("training")}
-                    className={`px-4 py-2 rounded ${mode === "training"
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-200"
-                        }`}
-                >
-                    Проведени обучения
-                </button>
+            {form.object_id && (
+                <div className="flex gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setMode("training")}
+                        className={`px-4 py-2 rounded ${mode === "training"
+                                ? "bg-blue-600 text-white"
+                                : "bg-gray-200"
+                            }`}
+                    >
+                        Проведени обучения
+                    </button>
 
-                <button
-                    type="button"
-                    onClick={() => setMode("scheduled")}
-                    className={`px-4 py-2 rounded ${mode === "scheduled"
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-200"
-                        }`}
-                >
-                    Планирани обучения
-                </button>
-            </div>
+                    <button
+                        type="button"
+                        onClick={() => setMode("scheduled")}
+                        className={`px-4 py-2 rounded ${mode === "scheduled"
+                                ? "bg-blue-600 text-white"
+                                : "bg-gray-200"
+                            }`}
+                    >
+                        Планирани обучения
+                    </button>
+                </div>
+            )}
 
             {form.object_id && (
                 <form onSubmit={onSubmit} className="bg-white border rounded-xl p-6 space-y-4">
