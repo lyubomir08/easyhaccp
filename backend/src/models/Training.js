@@ -11,7 +11,8 @@ const trainingSchema = new mongoose.Schema({
     lecturer: { type: String, trim: true },
     date: { type: Date },
     participants: [participantSchema],
-    created_at: { type: Date, default: Date.now }
+    created_at: { type: Date, default: Date.now },
+    scheduled_training_id: { type: mongoose.Schema.Types.ObjectId, ref: "ScheduledTraining", default: null, },
 }, { versionKey: false });
 
 export default mongoose.model("Training", trainingSchema);
