@@ -1,6 +1,6 @@
 import { useEffect, useState, useContext } from "react";
 import api from "../../../services/api";
-import UserContext from "../../../contexts/UserContext";
+import { UserContext } from "../../../contexts/UserContext";
 import TrainingEditModal from "./TrainingEditModal";
 
 export default function TrainingDiary() {
