@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import api from "../../../services/api";
+import UserContext from "../../../contexts/UserContext";
 import TrainingEditModal from "./TrainingEditModal";
 
 export default function TrainingDiary() {
@@ -10,6 +11,7 @@ export default function TrainingDiary() {
     const [search, setSearch] = useState("");
     const [editingTraining, setEditingTraining] = useState(null);
     const [mode, setMode] = useState("training");
+    const { isAdmin } = useContext(UserContext);
 
     const [form, setForm] = useState({
         object_id: "",
@@ -170,8 +172,8 @@ export default function TrainingDiary() {
                         type="button"
                         onClick={() => setMode("training")}
                         className={`px-4 py-2 rounded ${mode === "training"
-                                ? "bg-blue-600 text-white"
-                                : "bg-gray-200"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-200"
                             }`}
                     >
                         Проведени обучения
@@ -181,8 +183,8 @@ export default function TrainingDiary() {
                         type="button"
                         onClick={() => setMode("scheduled")}
                         className={`px-4 py-2 rounded ${mode === "scheduled"
-                                ? "bg-blue-600 text-white"
-                                : "bg-gray-200"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-200"
                             }`}
                     >
                         Планирани обучения
@@ -190,7 +192,7 @@ export default function TrainingDiary() {
                 </div>
             )}
 
-            {form.object_id && (
+            {form.object_id && isAdmin && (
                 <form onSubmit={onSubmit} className="bg-white border rounded-xl p-6 space-y-4">
                     <h2 className="text-lg font-semibold">
                         {mode === "training"
@@ -282,7 +284,7 @@ export default function TrainingDiary() {
                                 )}
                             </div>
                             <div className="flex gap-3 text-sm shrink-0">
-                                {mode === "scheduled" && t.status === "scheduled" && (
+                                {isAdmin && mode === "scheduled" && t.status === "scheduled" && (
                                     <button
                                         onClick={() => completeTraining(t._id)}
                                         className="text-green-600 hover:text-green-800"
@@ -291,19 +293,23 @@ export default function TrainingDiary() {
                                     </button>
                                 )}
 
-                                <button
-                                    onClick={() => setEditingTraining(t)}
-                                    className="text-blue-600 hover:text-blue-800"
-                                >
-                                    Редактирай
-                                </button>
+                                {isAdmin && (
+                                    <button
+                                        onClick={() => setEditingTraining(t)}
+                                        className="text-blue-600 hover:text-blue-800"
+                                    >
+                                        Редактирай
+                                    </button>
+                                )}
 
-                                <button
-                                    onClick={() => onDelete(t._id)}
-                                    className="text-red-600 hover:text-red-800"
-                                >
-                                    Изтрий
-                                </button>
+                                {isAdmin && (
+                                    <button
+                                        onClick={() => onDelete(t._id)}
+                                        className="text-red-600 hover:text-red-800"
+                                    >
+                                        Изтрий
+                                    </button>
+                                )}
                             </div>
                         </div>
                         <div className="border-t pt-3">
