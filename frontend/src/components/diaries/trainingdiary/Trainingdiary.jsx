@@ -11,7 +11,7 @@ export default function TrainingDiary() {
     const [search, setSearch] = useState("");
     const [editingTraining, setEditingTraining] = useState(null);
     const [mode, setMode] = useState("training");
-    const { isAdmin } = useContext(UserContext);
+    const { isAdmin, isOwner } = useContext(UserContext);
 
     const [form, setForm] = useState({
         object_id: "",
@@ -191,13 +191,11 @@ export default function TrainingDiary() {
                     </button>
                 </div>
             )}
-
-            {form.object_id && isAdmin && (
+            {/* {form.object_id && isAdmin && ( */}
+            {form.object_id && isAdmin && mode === "scheduled" && (
                 <form onSubmit={onSubmit} className="bg-white border rounded-xl p-6 space-y-4">
                     <h2 className="text-lg font-semibold">
-                        {mode === "training"
-                            ? "Добави обучение"
-                            : "Планирай обучение"}
+                        Планирай обучение
                     </h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -284,14 +282,16 @@ export default function TrainingDiary() {
                                 )}
                             </div>
                             <div className="flex gap-3 text-sm shrink-0">
-                                {isAdmin && mode === "scheduled" && t.status === "scheduled" && (
-                                    <button
-                                        onClick={() => completeTraining(t._id)}
-                                        className="text-green-600 hover:text-green-800"
-                                    >
-                                        Маркирай като проведено
-                                    </button>
-                                )}
+                                {(isAdmin || isOwner) &&
+                                    mode === "scheduled" &&
+                                    t.status === "scheduled" && (
+                                        <button
+                                            onClick={() => completeTraining(t._id)}
+                                            className="text-green-600 hover:text-green-800"
+                                        >
+                                            Маркирай като проведено
+                                        </button>
+                                    )}
 
                                 {isAdmin && (
                                     <button
