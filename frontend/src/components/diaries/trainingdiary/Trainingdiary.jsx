@@ -9,6 +9,7 @@ export default function TrainingDiary() {
     const [error, setError] = useState("");
     const [search, setSearch] = useState("");
     const [editingTraining, setEditingTraining] = useState(null);
+    const [mode, setMode] = useState("training");
 
     const [form, setForm] = useState({
         object_id: "",
@@ -37,16 +38,25 @@ export default function TrainingDiary() {
 
     useEffect(() => {
         if (!form.object_id) return;
-        api.get(`/employees/${form.object_id}`).then(r => setEmployees(r.data)).catch(() => {});
+        api.get(`/employees/${form.object_id}`).then(r => setEmployees(r.data)).catch(() => { });
+
         loadTrainings();
-    }, [form.object_id]);
+    }, [form.object_id, mode]);
 
     const loadTrainings = async () => {
         if (!form.object_id) return;
+
         try {
-            const res = await api.get(`/trainings/${form.object_id}`);
+            const url =
+                mode === "training"
+                    ? `/trainings/${form.object_id}`
+                    : `/scheduled-trainings/${form.object_id}`;
+
+            const res = await api.get(url);
             setTrainings(res.data);
-        } catch { setTrainings([]); }
+        } catch {
+            setTrainings([]);
+        }
     };
 
     const onChange = (e) => {
@@ -73,34 +83,68 @@ export default function TrainingDiary() {
     const onSubmit = async (e) => {
         e.preventDefault();
         setError("");
+
         if (form.selectedEmployees.length === 0) {
             setError("Изберете поне един служител");
             return;
         }
+
         try {
-            await api.post("/trainings", {
+            const url =
+                mode === "training"
+                    ? "/trainings"
+                    : "/scheduled-trainings";
+
+            await api.post(url, {
                 object_id: form.object_id,
                 topic: form.topic,
                 lecturer: form.lecturer || undefined,
-                date: new Date(form.date).toISOString(),
+                ...(mode === "training"
+                    ? { date: new Date(form.date).toISOString() }
+                    : { planned_date: new Date(form.date).toISOString() }),
                 participants: form.selectedEmployees.map(emp => ({
                     employee_id: emp._id,
                     position: emp.position || ""
                 }))
             });
+
             await loadTrainings();
-            setForm(s => ({ ...s, topic: "", lecturer: "", date: "", selectedEmployees: [] }));
+
+            setForm(s => ({
+                ...s,
+                topic: "",
+                lecturer: "",
+                date: "",
+                selectedEmployees: []
+            }));
         } catch (err) {
             setError(err.response?.data?.message || "Грешка при запис");
         }
     };
 
+    const completeTraining = async (id) => {
+        try {
+            await api.patch(`/scheduled-trainings/complete/${id}`);
+            await loadTrainings();
+        } catch {
+            alert("Грешка при маркиране");
+        }
+    };
+
     const onDelete = async (id) => {
         if (!confirm("Сигурни ли сте?")) return;
+
         try {
-            await api.delete(`/trainings/delete/${id}`);
+            const url =
+                mode === "training"
+                    ? `/trainings/delete/${id}`
+                    : `/scheduled-trainings/delete/${id}`;
+
+            await api.delete(url);
             await loadTrainings();
-        } catch { alert("Грешка при изтриване"); }
+        } catch {
+            alert("Грешка при изтриване");
+        }
     };
 
     const filtered = trainings.filter(t =>
@@ -120,9 +164,37 @@ export default function TrainingDiary() {
                 </select>
             </div>
 
+            <div className="flex gap-2">
+                <button
+                    type="button"
+                    onClick={() => setMode("training")}
+                    className={`px-4 py-2 rounded ${mode === "training"
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-200"
+                        }`}
+                >
+                    Проведени обучения
+                </button>
+
+                <button
+                    type="button"
+                    onClick={() => setMode("scheduled")}
+                    className={`px-4 py-2 rounded ${mode === "scheduled"
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-200"
+                        }`}
+                >
+                    Планирани обучения
+                </button>
+            </div>
+
             {form.object_id && (
                 <form onSubmit={onSubmit} className="bg-white border rounded-xl p-6 space-y-4">
-                    <h2 className="text-lg font-semibold">Добави обучение</h2>
+                    <h2 className="text-lg font-semibold">
+                        {mode === "training"
+                            ? "Добави обучение"
+                            : "Планирай обучение"}
+                    </h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="md:col-span-2">
@@ -169,7 +241,12 @@ export default function TrainingDiary() {
                     {error && <div className="bg-red-50 border border-red-200 rounded-md p-3"><p className="text-red-700 text-sm">{error}</p></div>}
 
                     <div className="flex justify-end">
-                        <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700">Запази</button>
+                        <button
+                            type="submit"
+                            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
+                        >
+                            {mode === "training" ? "Запази" : "Планирай"}
+                        </button>
                     </div>
                 </form>
             )}
@@ -188,11 +265,43 @@ export default function TrainingDiary() {
                             <div>
                                 <h3 className="text-base font-semibold text-slate-800">{t.topic}</h3>
                                 {t.lecturer && <p className="text-sm text-slate-500 mt-0.5">Лектор: {t.lecturer}</p>}
-                                <p className="text-xs text-slate-400 mt-1">{new Date(t.date).toLocaleDateString("bg-BG")}</p>
+                                <p className="text-xs text-slate-400 mt-1">
+                                    {new Date(mode === "training" ? t.date : t.planned_date).toLocaleDateString("bg-BG")}
+                                </p>
+                                {mode === "scheduled" && (
+                                    <span
+                                        className={`inline-block mt-2 px-2 py-1 rounded text-xs ${t.status === "completed"
+                                            ? "bg-green-100 text-green-700"
+                                            : "bg-yellow-100 text-yellow-700"
+                                            }`}
+                                    >
+                                        {t.status === "completed" ? "Проведено" : "Предстои"}
+                                    </span>
+                                )}
                             </div>
                             <div className="flex gap-3 text-sm shrink-0">
-                                <button onClick={() => setEditingTraining(t)} className="text-blue-600 hover:text-blue-800">Редактирай</button>
-                                <button onClick={() => onDelete(t._id)} className="text-red-600 hover:text-red-800">Изтрий</button>
+                                {mode === "scheduled" && t.status === "scheduled" && (
+                                    <button
+                                        onClick={() => completeTraining(t._id)}
+                                        className="text-green-600 hover:text-green-800"
+                                    >
+                                        Маркирай като проведено
+                                    </button>
+                                )}
+
+                                <button
+                                    onClick={() => setEditingTraining(t)}
+                                    className="text-blue-600 hover:text-blue-800"
+                                >
+                                    Редактирай
+                                </button>
+
+                                <button
+                                    onClick={() => onDelete(t._id)}
+                                    className="text-red-600 hover:text-red-800"
+                                >
+                                    Изтрий
+                                </button>
                             </div>
                         </div>
                         <div className="border-t pt-3">
@@ -218,6 +327,7 @@ export default function TrainingDiary() {
                 <TrainingEditModal
                     training={editingTraining}
                     employees={employees}
+                    mode={mode}
                     onClose={() => setEditingTraining(null)}
                     onSaved={loadTrainings}
                 />

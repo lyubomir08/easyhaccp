@@ -1,11 +1,14 @@
 import { useState } from "react";
 import api from "../../../services/api";
 
-export default function TrainingEditModal({ training, employees, onClose, onSaved }) {
+export default function TrainingEditModal({ training, employees, mode, onClose, onSaved }) {
+    if (!training) return null;
     const [form, setForm] = useState({
         topic: training.topic || "",
         lecturer: training.lecturer || "",
-        date: training.date ? String(training.date).split("T")[0] : "",
+        date: (training.date || training.planned_date)
+            ? String(training.date || training.planned_date).split("T")[0]
+            : "",
         selectedEmployees: training.participants.map(p => ({
             _id: p.employee_id?._id,
             first_name: p.employee_id?.first_name,
@@ -38,15 +41,23 @@ export default function TrainingEditModal({ training, employees, onClose, onSave
             return;
         }
         try {
-            await api.put(`/trainings/edit/${training._id}`, {
+            const url =
+                mode === "training"
+                    ? `/trainings/edit/${training._id}`
+                    : `/scheduled-trainings/edit/${training._id}`;
+
+            await api.put(url, {
                 topic: form.topic,
                 lecturer: form.lecturer || undefined,
-                date: new Date(form.date).toISOString(),
+                ...(mode === "training"
+                    ? { date: new Date(form.date).toISOString() }
+                    : { planned_date: new Date(form.date).toISOString() }),
                 participants: form.selectedEmployees.map(emp => ({
                     employee_id: emp._id,
                     position: emp.position || ""
                 }))
             });
+
             await onSaved();
             onClose();
         } catch (err) {
