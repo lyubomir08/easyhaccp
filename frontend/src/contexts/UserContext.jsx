@@ -71,6 +71,7 @@ export const UserProvider = ({ children }) => {
 
     const isCatering = objectTypes.includes("catering");
     const isWholesale = objectTypes.includes("wholesale");
+    const isRestaurant = objectTypes.includes("restaurant");
 
     return (
         <UserContext.Provider
@@ -88,6 +89,7 @@ export const UserProvider = ({ children }) => {
                 objectTypes,
                 isCatering,
                 isWholesale,
+                isRestaurant,
                 sidebarOpen,
                 setSidebarOpen,
                 login,

@@ -1,10 +1,13 @@
 import { useState } from "react";
 import api from "../../../services/api";
 
-export default function ProducedFoodEditModal({ log, recipes, onClose, onSaved }) {
+export default function ProducedFoodEditModal({ log, recipes, foodGroups = [], isRestaurant = false, onClose, onSaved }) {
+    const logIsRestaurant = isRestaurant || !!log.food_group_id;
+
     const [form, setForm] = useState({
         date: log.date.slice(0, 16),
         recipe_id: log.recipe_id?._id ? String(log.recipe_id._id) : "",
+        food_group_id: log.food_group_id?._id ? String(log.food_group_id._id) : "",
         portions: log.portions || "",
         product_batch_number: log.product_batch_number || "",
         product_shelf_life: log.product_shelf_life || ""
@@ -13,6 +16,26 @@ export default function ProducedFoodEditModal({ log, recipes, onClose, onSaved }
     const [error, setError] = useState("");
 
     const onChange = e => setForm(s => ({ ...s, [e.target.name]: e.target.value }));
+
+    const onFoodGroupChange = (e) => {
+        const id = e.target.value;
+        const group = foodGroups.find(g => g._id === id);
+
+        if (group) {
+            const now = new Date();
+            const productBatchNumber = `${group.food_name} - ${now.toLocaleDateString("bg-BG")}`;
+            const shelfLife = group.shelf_life || "";
+
+            setForm(s => ({
+                ...s,
+                food_group_id: id,
+                product_batch_number: productBatchNumber,
+                product_shelf_life: shelfLife
+            }));
+        } else {
+            setForm(s => ({ ...s, food_group_id: "", product_batch_number: "", product_shelf_life: "" }));
+        }
+    };
 
     const onRecipeChange = (e) => {
         const id = e.target.value;
@@ -45,11 +68,17 @@ export default function ProducedFoodEditModal({ log, recipes, onClose, onSaved }
                 portions: form.portions ? Number(form.portions) : undefined,
                 product_batch_number: form.product_batch_number || undefined,
                 product_shelf_life: form.product_shelf_life || undefined,
-                recipe_production_date: form.recipe_id ? new Date().toISOString() : undefined
             };
 
-            if (form.recipe_id && form.recipe_id !== "undefined") {
-                payload.recipe_id = form.recipe_id;
+            if (logIsRestaurant) {
+                if (form.food_group_id && form.food_group_id !== "undefined") {
+                    payload.food_group_id = form.food_group_id;
+                }
+            } else {
+                payload.recipe_production_date = form.recipe_id ? new Date().toISOString() : undefined;
+                if (form.recipe_id && form.recipe_id !== "undefined") {
+                    payload.recipe_id = form.recipe_id;
+                }
             }
 
             Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
@@ -80,20 +109,39 @@ export default function ProducedFoodEditModal({ log, recipes, onClose, onSaved }
                         />
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Готов продукт - Рецепти</label>
-                        <select
-                            name="recipe_id"
-                            value={form.recipe_id}
-                            onChange={onRecipeChange}
-                            className="border px-3 py-2 rounded-md w-full"
-                        >
-                            <option value="">-- Избери рецепта --</option>
-                            {recipes.map(r => (
-                                <option key={r._id} value={r._id}>{r.name}</option>
-                            ))}
-                        </select>
-                    </div>
+                    {logIsRestaurant ? (
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Група храни</label>
+                            <select
+                                name="food_group_id"
+                                value={form.food_group_id}
+                                onChange={onFoodGroupChange}
+                                className="border px-3 py-2 rounded-md w-full"
+                            >
+                                <option value="">-- Избери група храни --</option>
+                                {foodGroups.map(g => (
+                                    <option key={g._id} value={g._id}>
+                                        {g.food_name} ({g.cooking_temp}°C / {g.shelf_life})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    ) : (
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Готов продукт - Рецепти</label>
+                            <select
+                                name="recipe_id"
+                                value={form.recipe_id}
+                                onChange={onRecipeChange}
+                                className="border px-3 py-2 rounded-md w-full"
+                            >
+                                <option value="">-- Избери рецепта --</option>
+                                {recipes.map(r => (
+                                    <option key={r._id} value={r._id}>{r.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
 
                     <div>
                         <label className="block text-sm font-medium mb-1">Брой порции</label>

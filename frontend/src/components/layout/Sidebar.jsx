@@ -94,7 +94,7 @@ export default function Sidebar({ onClose }) {
                 <NL to="/employees">Служители</NL>
 
                 {(isCatering || isRestaurant) && <NL to="/foods">Групи храни</NL>}
-                {(isCatering || isRestaurant) && <NL to="/recipes">Рецепти</NL>}
+                {isCatering && <NL to="/recipes">Рецепти</NL>}
 
                 <NL to="/suppliers">Доставчици</NL>
                 <NL to="/fridges">Хладилници</NL>
@@ -113,7 +113,7 @@ export default function Sidebar({ onClose }) {
                     <div className="mt-1 h-px bg-blue-200 rounded-full"></div>
                 </div>
 
-                <NL to="/diaries/foods">Храни и опаковки</NL>
+                {!isRestaurant && <NL to="/diaries/foods">Храни и опаковки</NL>}
                 <NL to="/diaries/hygiene">Хигиена на обекта</NL>
                 <NL to="/diaries/personal">Лична хигиена на персонала</NL>
                 <NL to="/diaries/temperatures">Температури</NL>
@@ -129,13 +129,13 @@ export default function Sidebar({ onClose }) {
                     </NL>
                 )}
 
-                {isCatering && (
+                {(isCatering || isRestaurant) && (
                     <NL to="/diaries/production">
                         Произведени храни
                     </NL>
                 )}
 
-                {(isWholesale || isCatering) && (
+                {(isWholesale || isCatering || isRestaurant) && (
                     <NL to="/diaries/expedition">
                         Експедиция на храни
                     </NL>

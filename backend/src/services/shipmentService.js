@@ -72,7 +72,10 @@ const getShipmentsByObject = async (object_id, queryParams = {}) => {
             .populate("food_log_id")
             .populate({
                 path: "produced_food_id",
-                populate: { path: "recipe_id", select: "name recipe_number" }
+                populate: [
+                    { path: "recipe_id", select: "name recipe_number" },
+                    { path: "food_group_id", select: "food_name cooking_temp shelf_life" }
+                ]
             })
             .populate("client_id")
             .populate("employee_id")

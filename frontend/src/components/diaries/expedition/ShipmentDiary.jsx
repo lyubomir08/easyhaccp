@@ -5,6 +5,7 @@ import ShipmentEditModal from "./ShipmentEditModal";
 const OBJECT_TYPE_LABELS = {
     wholesale: "Търговия на едро",
     catering: "Кетъринг",
+    restaurant: "Заведение",
 };
 
 export default function ShipmentDiary() {
@@ -30,7 +31,7 @@ export default function ShipmentDiary() {
 
     useEffect(() => {
         api.get("/objects").then(res => {
-            const filtered = res.data.filter(o => o.object_type === "wholesale" || o.object_type === "catering");
+            const filtered = res.data.filter(o => o.object_type === "wholesale" || o.object_type === "catering" || o.object_type === "restaurant");
             setObjects(filtered);
             const saved = localStorage.getItem("easyhaccp_object_id");
             if (saved) {
@@ -46,7 +47,7 @@ export default function ShipmentDiary() {
         if (!form.object_id) return;
 
         const obj = objects.find(o => o._id === form.object_id);
-        if (obj) setShipmentType(obj.object_type === "catering" ? "catering" : "wholesale");
+        if (obj) setShipmentType(obj.object_type === "wholesale" ? "wholesale" : obj.object_type);
 
         api.get(`/food-logs/${form.object_id}?page=1&limit=1000`)
             .then(r => setFoodLogs(r.data.logs || []))
@@ -137,6 +138,7 @@ export default function ShipmentDiary() {
         const s = search.toLowerCase();
         return (
             (l.food_log_id?.product_type || "").toLowerCase().includes(s) ||
+            (l.produced_food_id?.food_group_id?.food_name || "").toLowerCase().includes(s) ||
             (l.produced_food_id?.recipe_id?.name || "").toLowerCase().includes(s) ||
             (l.client_id?.name || "").toLowerCase().includes(s)
         );
@@ -196,14 +198,14 @@ export default function ShipmentDiary() {
                                 </div>
                             )}
 
-                            {shipmentType === "catering" && (
+                            {(shipmentType === "catering" || shipmentType === "restaurant") && (
                                 <div className="md:col-span-2">
                                     <label className="block text-sm font-medium mb-1">Готова храна (от дневник „Произведени храни“) <span className="text-red-500">*</span></label>
                                     <select name="produced_food_id" value={form.produced_food_id} onChange={onProducedFoodChange} required className="border px-3 py-2 rounded-md w-full">
                                         <option value="">-- Избери готова храна --</option>
                                         {producedFoods.map(p => (
                                             <option key={p._id} value={p._id}>
-                                                {p.recipe_id?.name || "Без ime"}{p.product_batch_number ? ` | ${p.product_batch_number}` : ""}{` | ${new Date(p.date).toLocaleDateString("bg-BG")}`}
+                                                {p.food_group_id?.food_name || p.recipe_id?.name || "—"}{p.product_batch_number ? ` | ${p.product_batch_number}` : ""}{` | ${new Date(p.date).toLocaleDateString("bg-BG")}`}
                                             </option>
                                         ))}
                                     </select>
@@ -230,7 +232,7 @@ export default function ShipmentDiary() {
                                 </select>
                             </div>
 
-                            {shipmentType === "catering" && (
+                            {(shipmentType === "catering" || shipmentType === "restaurant") && (
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Партиден номер</label>
                                     <input disabled name="product_batch_number" value={form.product_batch_number} placeholder="Автоматично при избор на храна" className="border px-3 py-2 rounded-md w-full bg-slate-100 text-slate-700" />
@@ -270,10 +272,10 @@ export default function ShipmentDiary() {
                                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <h3 className="text-base font-semibold">
-                                            {l.food_log_id ? l.food_log_id.product_type : (l.produced_food_id?.recipe_id?.name || "Без ime")}
+                                            {l.food_log_id ? l.food_log_id.product_type : (l.produced_food_id?.food_group_id?.food_name || l.produced_food_id?.recipe_id?.name || "—")}
                                         </h3>
-                                        <span className={`text-xs px-2 py-1 rounded ${l.food_log_id ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"}`}>
-                                            {l.food_log_id ? "Търговия на едро" : "Кетъринг"}
+                                        <span className={`text-xs px-2 py-1 rounded ${l.food_log_id ? "bg-blue-100 text-blue-700" : l.produced_food_id?.food_group_id ? "bg-purple-100 text-purple-700" : "bg-green-100 text-green-700"}`}>
+                                            {l.food_log_id ? "Търговия на едро" : l.produced_food_id?.food_group_id ? "Заведение" : "Кетъринг"}
                                         </span>
                                     </div>
                                     <div className="flex gap-3 text-sm shrink-0">

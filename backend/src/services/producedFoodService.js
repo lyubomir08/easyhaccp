@@ -1,7 +1,9 @@
 import ProducedFood from "../models/logs/ProducedFood.js";
 import FoodLog from "../models/logs/FoodLog.js";
+import ShipmentLog from "../models/logs/ShipmentLog.js";
 import ObjectModel from "../models/Object.js";
 import Recipe from "../models/Recipe.js";
+import FoodGroup from "../models/FoodGroup.js";
 import buildDateFilter from "../utils/buildDateFilter.js";
 
 const norm = (s) => String(s || "").trim().toLowerCase().replace(/\s+/g, " ");
@@ -49,19 +51,36 @@ async function deductFromLogsFIFO({ matchingLogs, gramsNeeded }) {
 }
 
 const createProducedFood = async (data) => {
-    const { object_id, recipe_id, portions, ingredient_log_map = {} } = data;
+    const { object_id, recipe_id, food_group_id, portions, ingredient_log_map = {} } = data;
 
     const objectExists = await ObjectModel.findById(object_id);
     if (!objectExists) throw new Error("Object not found");
-
-    if (!recipe_id) throw new Error("Recipe not found");
-    const recipe = await Recipe.findById(recipe_id);
-    if (!recipe) throw new Error("Recipe not found");
 
     const portionsNum = Number(portions);
     if (!portionsNum || portionsNum <= 0) {
         throw new Error("Моля, въведете валиден брой порции.");
     }
+
+    if (objectExists.object_type === "restaurant") {
+        if (!food_group_id) throw new Error("Моля, изберете група храни.");
+        const foodGroup = await FoodGroup.findById(food_group_id);
+        if (!foodGroup) throw new Error("Групата храни не е намерена.");
+
+        const record = await ProducedFood.create(data);
+
+        await ShipmentLog.create({
+            date: record.date,
+            object_id,
+            produced_food_id: record._id,
+            quantity: portionsNum
+        });
+
+        return record;
+    }
+
+    if (!recipe_id) throw new Error("Recipe not found");
+    const recipe = await Recipe.findById(recipe_id);
+    if (!recipe) throw new Error("Recipe not found");
 
     const ingredients = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
 
@@ -128,6 +147,7 @@ const getProducedFoodsByObject = async (object_id, queryParams = {}) => {
     const [logs, total] = await Promise.all([
         ProducedFood.find(query)
             .populate("recipe_id")
+            .populate("food_group_id")
             .populate("ingredient_id")
             .sort({ date: -1 })
             .skip(skip)

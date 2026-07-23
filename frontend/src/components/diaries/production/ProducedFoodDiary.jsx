@@ -16,6 +16,8 @@ const fmtGrams = g => g >= 1000 ? `${parseFloat((g / 1000).toFixed(2))} кг` : 
 
 export default function ProducedFoodDiary() {
     const [objects, setObjects] = useState([]);
+    const [selectedObjectType, setSelectedObjectType] = useState("");
+    const [foodGroups, setFoodGroups] = useState([]);
     const [recipes, setRecipes] = useState([]);
     const [logs, setLogs] = useState([]);
     const [foodLogs, setFoodLogs] = useState([]);
@@ -30,21 +32,30 @@ export default function ProducedFoodDiary() {
         object_id: "",
         date: "",
         recipe_id: "",
+        food_group_id: "",
         portions: "",
         product_batch_number: "",
         product_shelf_life: "",
         recipe_production_date: ""
     });
 
+    const isRestaurant = selectedObjectType === "restaurant";
+
     const fmtDate = (v) => (v ? String(v).split("T")[0] : "");
 
     useEffect(() => {
         api.get("/objects").then(res => {
-            const cateringObjects = res.data.filter(obj => obj.object_type === "catering");
-            setObjects(cateringObjects);
+            const eligible = res.data.filter(obj =>
+                obj.object_type === "catering" || obj.object_type === "restaurant"
+            );
+            setObjects(eligible);
             const saved = localStorage.getItem("easyhaccp_object_id");
-            if (saved && cateringObjects.find(o => o._id === saved)) {
-                setForm(s => ({ ...s, object_id: saved }));
+            if (saved) {
+                const found = eligible.find(o => o._id === saved);
+                if (found) {
+                    setForm(s => ({ ...s, object_id: saved }));
+                    setSelectedObjectType(found.object_type);
+                }
             }
         });
     }, []);
@@ -57,6 +68,17 @@ export default function ProducedFoodDiary() {
 
     const loadObjectSpecificData = async () => {
         try {
+            const obj = objects.find(o => o._id === form.object_id);
+            const objType = obj?.object_type || "";
+
+            if (objType === "restaurant") {
+                const res = await api.get(`/food-groups/${form.object_id}`);
+                setFoodGroups(res.data);
+                setRecipes([]);
+                setFoodLogs([]);
+                return;
+            }
+
             try {
                 const foodLogsRes = await api.get(`/food-logs/${form.object_id}?limit=1000`);
                 const logsData = foodLogsRes.data;
@@ -64,6 +86,7 @@ export default function ProducedFoodDiary() {
             } catch { setFoodLogs([]); }
 
             const foodGroupsRes = await api.get(`/food-groups/${form.object_id}`);
+            setFoodGroups(foodGroupsRes.data);
             const allRecipes = [];
             for (const group of foodGroupsRes.data) {
                 try {
@@ -78,6 +101,7 @@ export default function ProducedFoodDiary() {
             setRecipes(allRecipes);
         } catch {
             setRecipes([]);
+            setFoodGroups([]);
         }
     };
 
@@ -101,7 +125,6 @@ export default function ProducedFoodDiary() {
             const allMatches = Array.isArray(foodLogs) ? foodLogs.filter(fl =>
                 normStr(fl.product_type) === normStr(ing.ingredient)
             ) : [];
-            // Блокирай само ако НЯМА валидна партида с достатъчно количество
             const hasValidStock = allMatches.some(fl =>
                 !isExpired(fl.shelf_life) && Number(fl.quantity || 0) > 0
             );
@@ -113,6 +136,25 @@ export default function ProducedFoodDiary() {
             }
             return acc;
         }, []);
+    };
+
+    const onFoodGroupChange = (e) => {
+        const id = e.target.value;
+        const group = foodGroups.find(g => g._id === id);
+        if (group) {
+            const now = new Date();
+            const productBatchNumber = `${group.food_name} - ${now.toLocaleDateString("bg-BG")}`;
+            const shelfLife = group.shelf_life || "";
+            setForm(s => ({
+                ...s,
+                food_group_id: id,
+                recipe_id: "",
+                product_batch_number: productBatchNumber,
+                product_shelf_life: shelfLife
+            }));
+        } else {
+            setForm(s => ({ ...s, food_group_id: "", product_batch_number: "", product_shelf_life: "" }));
+        }
     };
 
     const onRecipeChange = (e) => {
@@ -127,6 +169,7 @@ export default function ProducedFoodDiary() {
             setForm(s => ({
                 ...s,
                 recipe_id: id,
+                food_group_id: "",
                 product_batch_number: productBatchNumber,
                 product_shelf_life: shelfLife,
                 recipe_production_date: now.toISOString()
@@ -139,28 +182,52 @@ export default function ProducedFoodDiary() {
 
     const onChange = e => setForm(s => ({ ...s, [e.target.name]: e.target.value }));
 
+    const onObjectChange = (e) => {
+        const id = e.target.value;
+        const obj = objects.find(o => o._id === id);
+        setSelectedObjectType(obj?.object_type || "");
+        setForm(s => ({
+            ...s,
+            object_id: id,
+            recipe_id: "",
+            food_group_id: "",
+            product_batch_number: "",
+            product_shelf_life: "",
+            recipe_production_date: ""
+        }));
+        setExpiredIngredients([]);
+        if (id) localStorage.setItem("easyhaccp_object_id", id);
+        else localStorage.removeItem("easyhaccp_object_id");
+    };
+
     const onSubmit = async e => {
         e.preventDefault();
         setError("");
         if (!form.date) { setError("Моля, въведете дата"); return; }
-        if (!form.recipe_id) { setError("Моля, изберете рецепта"); return; }
         if (!form.portions || Number(form.portions) <= 0) { setError("Моля, въведете брой порции"); return; }
-        if (expiredIngredients.length > 0) {
-            setError(`Не може да се запази — следните съставки имат изтекъл срок: ${expiredIngredients.map(i => i.name).join(", ")}`);
-            return;
+
+        if (isRestaurant) {
+            if (!form.food_group_id) { setError("Моля, изберете група храни"); return; }
+        } else {
+            if (!form.recipe_id) { setError("Моля, изберете рецепта"); return; }
+            if (expiredIngredients.length > 0) {
+                setError(`Не може да се запази — следните съставки имат изтекъл срок: ${expiredIngredients.map(i => i.name).join(", ")}`);
+                return;
+            }
         }
 
-        // Auto-match ingredients to food logs by name for backend reference
         const ingredient_log_map = {};
-        const recipe = recipes.find(r => r._id === form.recipe_id);
-        if (recipe?.ingredients) {
-            for (const ing of recipe.ingredients) {
-                if (!ing.ingredient || Number(ing.quantity || 0) <= 0) continue;
-                const autoMatch = foodLogs.find(fl =>
-                    normStr(fl.product_type) === normStr(ing.ingredient) &&
-                    Number(fl.quantity || 0) > 0
-                );
-                if (autoMatch) ingredient_log_map[ing.ingredient] = autoMatch._id;
+        if (!isRestaurant) {
+            const recipe = recipes.find(r => r._id === form.recipe_id);
+            if (recipe?.ingredients) {
+                for (const ing of recipe.ingredients) {
+                    if (!ing.ingredient || Number(ing.quantity || 0) <= 0) continue;
+                    const autoMatch = foodLogs.find(fl =>
+                        normStr(fl.product_type) === normStr(ing.ingredient) &&
+                        Number(fl.quantity || 0) > 0
+                    );
+                    if (autoMatch) ingredient_log_map[ing.ingredient] = autoMatch._id;
+                }
             }
         }
 
@@ -168,19 +235,36 @@ export default function ProducedFoodDiary() {
             const payload = {
                 object_id: form.object_id,
                 date: new Date(form.date).toISOString(),
-                recipe_id: form.recipe_id,
                 portions: Number(form.portions),
                 product_batch_number: form.product_batch_number || undefined,
                 product_shelf_life: form.product_shelf_life || undefined,
-                recipe_production_date: form.recipe_production_date || undefined,
-                ingredient_log_map: Object.keys(ingredient_log_map).length > 0 ? ingredient_log_map : undefined
             };
+
+            if (isRestaurant) {
+                payload.food_group_id = form.food_group_id;
+            } else {
+                payload.recipe_id = form.recipe_id;
+                payload.recipe_production_date = form.recipe_production_date || undefined;
+                if (Object.keys(ingredient_log_map).length > 0) {
+                    payload.ingredient_log_map = ingredient_log_map;
+                }
+            }
+
             Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
             await api.post("/produced-foods", payload);
             await loadLogs(1);
-            await loadObjectSpecificData();
+            if (!isRestaurant) await loadObjectSpecificData();
             setExpiredIngredients([]);
-            setForm(s => ({ ...s, date: "", recipe_id: "", portions: "", product_batch_number: "", product_shelf_life: "", recipe_production_date: "" }));
+            setForm(s => ({
+                ...s,
+                date: "",
+                recipe_id: "",
+                food_group_id: "",
+                portions: "",
+                product_batch_number: "",
+                product_shelf_life: "",
+                recipe_production_date: ""
+            }));
         } catch (err) {
             setError("Грешка при запис: " + (err.response?.data?.message || err.message || "Неизвестна грешка"));
         }
@@ -205,6 +289,7 @@ export default function ProducedFoodDiary() {
     };
 
     const buildShortages = () => {
+        if (isRestaurant) return [];
         const recipe = recipes.find(r => r._id === form.recipe_id);
         const portions = Number(form.portions) || 0;
         if (!recipe?.ingredients?.length || portions <= 0) return [];
@@ -227,18 +312,26 @@ export default function ProducedFoodDiary() {
 
     const shortages = buildShortages();
 
+    const getLogDisplayName = (l) => {
+        if (l.food_group_id?.food_name) return l.food_group_id.food_name;
+        if (l.recipe_id?.name) return l.recipe_id.name;
+        return "—";
+    };
+
     const filteredLogs = (logs || []).filter(l =>
-        (l.recipe_id?.name || "").toLowerCase().includes(search.toLowerCase()) ||
+        getLogDisplayName(l).toLowerCase().includes(search.toLowerCase()) ||
         (l.product_batch_number || "").toLowerCase().includes(search.toLowerCase())
     );
 
     return (
         <div className="max-w-6xl mx-auto space-y-8 p-4">
-            <h1 className="text-2xl font-semibold">ПРОИЗВЕДЕНИ ХРАНИ за кетъринг</h1>
+            <h1 className="text-2xl font-semibold">
+                {isRestaurant ? "ПРОИЗВЕДЕНИ ХРАНИ" : "ПРОИЗВЕДЕНИ ХРАНИ за кетъринг"}
+            </h1>
 
             <div>
                 <label className="block text-sm font-medium mb-2">Изберете обект</label>
-                <select name="object_id" value={form.object_id} onChange={e => { onChange(e); if (e.target.value) localStorage.setItem("easyhaccp_object_id", e.target.value); else localStorage.removeItem("easyhaccp_object_id"); }} className="border px-3 py-2 rounded-md w-full">
+                <select name="object_id" value={form.object_id} onChange={onObjectChange} className="border px-3 py-2 rounded-md w-full">
                     <option value="">-- Избери обект --</option>
                     {objects.map(o => <option key={o._id} value={o._id}>{o.name}</option>)}
                 </select>
@@ -253,21 +346,38 @@ export default function ProducedFoodDiary() {
                                 <label className="block text-sm font-medium mb-1">Дата и час <span className="text-red-500">*</span></label>
                                 <input type="datetime-local" name="date" value={form.date} onChange={onChange} required className="border px-3 py-2 rounded-md w-full" />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Готов продукт - Рецепти <span className="text-red-500">*</span></label>
-                                <select name="recipe_id" value={form.recipe_id} onChange={onRecipeChange} className="border px-3 py-2 rounded-md w-full" required>
-                                    <option value="">-- Избери рецепта --</option>
-                                    {recipes.map(r => <option key={r._id} value={r._id}>{r.name}</option>)}
-                                </select>
-                                {recipes.length === 0 && <p className="text-xs text-gray-500 mt-1">Няма рецепти</p>}
-                            </div>
+
+                            {isRestaurant ? (
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Група храни <span className="text-red-500">*</span></label>
+                                    <select name="food_group_id" value={form.food_group_id} onChange={onFoodGroupChange} className="border px-3 py-2 rounded-md w-full" required>
+                                        <option value="">-- Избери група храни --</option>
+                                        {foodGroups.map(g => (
+                                            <option key={g._id} value={g._id}>
+                                                {g.food_name} ({g.cooking_temp}°C / {g.shelf_life})
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {foodGroups.length === 0 && <p className="text-xs text-gray-500 mt-1">Няма групи храни</p>}
+                                </div>
+                            ) : (
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Готов продукт - Рецепти <span className="text-red-500">*</span></label>
+                                    <select name="recipe_id" value={form.recipe_id} onChange={onRecipeChange} className="border px-3 py-2 rounded-md w-full" required>
+                                        <option value="">-- Избери рецепта --</option>
+                                        {recipes.map(r => <option key={r._id} value={r._id}>{r.name}</option>)}
+                                    </select>
+                                    {recipes.length === 0 && <p className="text-xs text-gray-500 mt-1">Няма рецепти</p>}
+                                </div>
+                            )}
+
                             <div>
                                 <label className="block text-sm font-medium mb-1">Брой порции <span className="text-red-500">*</span></label>
                                 <input type="number" min="1" name="portions" value={form.portions} onChange={onChange} placeholder="Брой порции" required className="border px-3 py-2 rounded-md w-full" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-1">Партиден номер на готовия продукт</label>
-                                <input type="text" name="product_batch_number" value={form.product_batch_number} readOnly placeholder="Автоматично при избор на рецепта" className={`border px-3 py-2 rounded-md w-full ${form.product_batch_number ? "bg-blue-50 border-blue-300" : "bg-slate-50"}`} />
+                                <input type="text" name="product_batch_number" value={form.product_batch_number} readOnly placeholder={isRestaurant ? "Автоматично при избор на група храни" : "Автоматично при избор на рецепта"} className={`border px-3 py-2 rounded-md w-full ${form.product_batch_number ? "bg-blue-50 border-blue-300" : "bg-slate-50"}`} />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-1">Срок на годност на готовия продукт</label>
@@ -275,10 +385,9 @@ export default function ProducedFoodDiary() {
                             </div>
                         </div>
 
-                
-                        {shortages.length > 0 && (
+                        {!isRestaurant && shortages.length > 0 && (
                             <div className="bg-orange-50 border border-orange-300 rounded-md p-4">
-                                <p className="text-orange-700 font-semibold text-sm mb-2">⚠ Недостатъчни наличности:</p>
+                                <p className="text-orange-700 font-semibold text-sm mb-2">Недостатъчни наличности:</p>
                                 <ul className="space-y-1">
                                     {shortages.map((s, i) => (
                                         <li key={i} className="text-sm text-orange-700">
@@ -289,9 +398,9 @@ export default function ProducedFoodDiary() {
                             </div>
                         )}
 
-                        {expiredIngredients.length > 0 && (
+                        {!isRestaurant && expiredIngredients.length > 0 && (
                             <div className="bg-red-50 border border-red-300 rounded-md p-4">
-                                <p className="text-red-700 font-semibold text-sm mb-2">⛔ Не може да се произведе — изтекли съставки:</p>
+                                <p className="text-red-700 font-semibold text-sm mb-2">Не може да се произведе — изтекли съставки:</p>
                                 <ul className="space-y-1">
                                     {expiredIngredients.map((ing, i) => (
                                         <li key={i} className="text-sm text-red-600">
@@ -307,7 +416,7 @@ export default function ProducedFoodDiary() {
                         <div className="flex justify-end">
                             <button
                                 type="submit"
-                                disabled={expiredIngredients.length > 0 || shortages.length > 0}
+                                disabled={!isRestaurant && (expiredIngredients.length > 0 || shortages.length > 0)}
                                 className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Запази
@@ -317,7 +426,7 @@ export default function ProducedFoodDiary() {
 
                     <div>
                         <label className="block text-sm font-medium mb-2">Търсене</label>
-                        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Търси по рецепта или партида..." className="border px-3 py-2 rounded-md w-full" />
+                        <input value={search} onChange={e => setSearch(e.target.value)} placeholder={isRestaurant ? "Търси по група храни или партида..." : "Търси по рецепта или партида..."} className="border px-3 py-2 rounded-md w-full" />
                     </div>
 
                     <div className="space-y-3">
@@ -336,7 +445,7 @@ export default function ProducedFoodDiary() {
                                             </span>
                                             <div className="min-w-0">
                                                 <span className="font-semibold text-slate-800 block truncate">
-                                                    {l.recipe_id?.name || "—"}
+                                                    {getLogDisplayName(l)}
                                                 </span>
                                                 <span className="text-sm text-gray-400">
                                                     {new Date(l.date).toLocaleDateString("bg-BG")}
@@ -354,6 +463,7 @@ export default function ProducedFoodDiary() {
                                         <div className="border-t px-5 py-4 space-y-4 bg-slate-50">
                                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
                                                 <div><span className="text-gray-500 font-medium">Дата:</span> <span className="text-gray-800">{new Date(l.date).toLocaleString("bg-BG")}</span></div>
+                                                {l.food_group_id && <div><span className="text-gray-500 font-medium">Група храни:</span> <span className="text-green-600 font-semibold">{l.food_group_id.food_name}</span></div>}
                                                 {l.recipe_id && <div><span className="text-gray-500 font-medium">Готов продукт:</span> <span className="text-red-600 font-semibold">{l.recipe_id.name}</span></div>}
                                                 {l.portions && <div><span className="text-gray-500 font-medium">Брой порции:</span> <span className="text-gray-800">{l.portions}</span></div>}
                                                 {l.product_batch_number && <div><span className="text-gray-500 font-medium">Партида продукт:</span> <span className="text-gray-800">{l.product_batch_number}</span></div>}
@@ -420,6 +530,8 @@ export default function ProducedFoodDiary() {
                 <ProducedFoodEditModal
                     log={editingLog}
                     recipes={recipes}
+                    foodGroups={foodGroups}
+                    isRestaurant={isRestaurant}
                     foodLogs={Array.isArray(foodLogs) ? foodLogs : []}
                     onClose={() => setEditingLog(null)}
                     onSaved={() => loadLogs(currentPage)}

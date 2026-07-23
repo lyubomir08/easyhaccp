@@ -4,6 +4,7 @@ const producedFoodSchema = new mongoose.Schema({
     date: { type: Date, required: true },
     object_id: { type: mongoose.Schema.Types.ObjectId, ref: "ObjectModel", required: true },
     recipe_id: { type: mongoose.Schema.Types.ObjectId, ref: "Recipe" },
+    food_group_id: { type: mongoose.Schema.Types.ObjectId, ref: "FoodGroup" },
     portions: { type: Number },
     ingredient_id: { type: mongoose.Schema.Types.ObjectId, ref: "FoodGroup" },
     ingredient_quantity: { type: Number },
